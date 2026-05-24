@@ -10,19 +10,19 @@ run = "python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'"
 
 [tasks.test]
 description = "Run tests"
-run = "pytest tests/ -v"
+run = ".venv/bin/pytest tests/ -v"
 
 [tasks.run]
 description = "Run the MCP server"
-run = "python -m nintendo_mcp"
+run = ".venv/bin/python -m nintendo_mcp"
 
 [tasks.lint]
 description = "Run linter"
-run = "ruff check src/ tests/"
+run = ".venv/bin/ruff check src/ tests/"
 
 [tasks.lint-fix]
 description = "Run linter and fix issues"
-run = "ruff check --fix src/ tests/"
+run = ".venv/bin/ruff check --fix src/ tests/"
 
 [tasks.inspect]
 description = "Open MCP Inspector connected to the nintendo_mcp server"
