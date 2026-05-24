@@ -5,8 +5,7 @@ This file ensures the server is always imported as 'nintendo_mcp.server'
 the same FastMCP instance that gets served.
 
 Usage:
-    python -m nintendo_mcp.server   # via server.py if __name__ == '__main__'
-    python -m nintendo_mcp          # via this file
+    python -m nintendo_mcp
 """
 
 from nintendo_mcp.server import main

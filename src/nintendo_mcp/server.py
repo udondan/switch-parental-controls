@@ -83,10 +83,9 @@ mcp = FastMCP(
 # Import tool modules to register their tools on the mcp instance.
 # These imports must happen after mcp is defined so the @mcp.tool decorators
 # can reference the correct FastMCP instance.
-# NOTE: Do NOT run this file directly as __main__ (e.g. python server.py).
-# Use 'python -m nintendo_mcp' or 'python -m nintendo_mcp.server' instead,
-# which routes through __main__.py and ensures this module is always imported
-# as 'nintendo_mcp.server' — never re-executed as '__main__'.
+# NOTE: Do NOT run this file directly (e.g. python server.py or python -m nintendo_mcp.server).
+# Use 'python -m nintendo_mcp' instead, which routes through __main__.py and ensures
+# this module is always imported as 'nintendo_mcp.server' — never executed as '__main__'.
 from nintendo_mcp import applications, auth, devices, players  # noqa: E402, F401
 
 

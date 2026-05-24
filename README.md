@@ -70,7 +70,7 @@ echo 'NINTENDO_SESSION_TOKEN=your-token-here' >> .env
 mise run run
 
 # Or directly
-python -m nintendo_mcp.server
+python -m nintendo_mcp
 ```
 
 ### Environment Variables

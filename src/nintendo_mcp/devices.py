@@ -558,8 +558,8 @@ async def nintendo_set_day_restrictions(params: SetDayRestrictionsInput, ctx: Co
         if params.bedtime_enabled:
             if params.bedtime_end_hour is None or params.bedtime_alarm_hour is None:
                 return "Error: bedtime_alarm_hour and bedtime_end_hour are required when bedtime_enabled is true."
-            bedtime_start = time(params.bedtime_end_hour, params.bedtime_end_minute or 0)
-            bedtime_end = time(params.bedtime_alarm_hour, params.bedtime_alarm_minute or 0)
+            bedtime_start = time(params.bedtime_alarm_hour, params.bedtime_alarm_minute or 0)
+            bedtime_end = time(params.bedtime_end_hour, params.bedtime_end_minute or 0)
 
         await device.set_daily_restrictions(
             enabled=params.playtime_enabled,

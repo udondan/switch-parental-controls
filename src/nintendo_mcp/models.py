@@ -2,7 +2,7 @@
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ResponseFormat(StrEnum):
@@ -80,6 +80,12 @@ class MonthlySummaryInput(BaseModel):
         default=ResponseFormat.MARKDOWN,
         description="Output format: 'markdown' for human-readable or 'json' for machine-readable.",
     )
+
+    @model_validator(mode="after")
+    def validate_year_month(self) -> "MonthlySummaryInput":
+        if self.year is not None and self.month is None:
+            raise ValueError("month is required when year is provided")
+        return self
 
 
 class SetPlaytimeLimitInput(BaseModel):
@@ -163,6 +169,12 @@ class SetDayRestrictionsInput(BaseModel):
         le=59,
     )
 
+    @model_validator(mode="after")
+    def validate_playtime_and_bedtime(self) -> "SetDayRestrictionsInput":
+        if self.playtime_enabled and self.max_playtime_minutes is None:
+            raise ValueError("max_playtime_minutes is required when playtime_enabled is true")
+        return self
+
 
 class SetRestrictionModeInput(BaseModel):
     """Input model for setting the restriction mode."""
@@ -215,6 +227,14 @@ class SetBedtimeAlarmInput(BaseModel):
         le=59,
     )
 
+    @model_validator(mode="after")
+    def validate_alarm_time(self) -> "SetBedtimeAlarmInput":
+        if self.hour == 0 and self.minute != 0:
+            raise ValueError("Use hour=0, minute=0 to disable the bedtime alarm")
+        if self.hour != 0 and self.hour not in range(16, 24):
+            raise ValueError("Bedtime alarm hour must be between 16 and 23, or 0 to disable")
+        return self
+
 
 class SetBedtimeEndInput(BaseModel):
     """Input model for setting the bedtime end time."""
@@ -234,6 +254,14 @@ class SetBedtimeEndInput(BaseModel):
         ge=0,
         le=59,
     )
+
+    @model_validator(mode="after")
+    def validate_end_time(self) -> "SetBedtimeEndInput":
+        if self.hour == 0 and self.minute != 0:
+            raise ValueError("Use hour=0, minute=0 to disable the bedtime end time")
+        if self.hour != 0 and self.hour not in range(5, 10):
+            raise ValueError("Bedtime end hour must be between 5 and 9, or 0 to disable")
+        return self
 
 
 class PlayerInput(BaseModel):
