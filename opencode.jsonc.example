@@ -4,9 +4,10 @@
     "nintendo": {
       "type": "local",
       "command": [
-        "/path/to/switch-parental-controls/.venv/bin/python",
-        "-m",
-        "nintendo_mcp",
+        "uvx",
+        "--from",
+        "switch-parental-controls",
+        "nintendo-mcp",
       ],
       "enabled": true,
       "environment": {

@@ -14,17 +14,10 @@ An [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that e
 
 ## Prerequisites
 
-- [mise](https://mise.jdx.dev/) for environment management
-- Python 3.12+
-
-## Setup
+- [uv](https://docs.astral.sh/uv/) — install once, no Python or clone needed:
 
 ```bash
-# Install mise (if not already installed)
-curl https://mise.run | sh
-
-# Install dependencies
-mise run install
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 ## Authentication: Getting Your Nintendo Session Token
@@ -66,12 +59,10 @@ echo 'NINTENDO_SESSION_TOKEN=your-token-here' >> .env
 ## Running the Server
 
 ```bash
-# Run via mise
-mise run run
-
-# Or directly
-python -m nintendo_mcp
+uvx --from switch-parental-controls nintendo-mcp
 ```
+
+No clone or install required — `uvx` fetches the package from PyPI and runs it in an isolated environment.
 
 ### Environment Variables
 
@@ -91,29 +82,12 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
 {
   "mcpServers": {
     "nintendo": {
-      "command": "python",
-      "args": ["-m", "nintendo_mcp"],
+      "command": "uvx",
+      "args": ["--from", "switch-parental-controls", "nintendo-mcp"],
       "env": {
         "NINTENDO_SESSION_TOKEN": "your-token-here",
         "NINTENDO_TIMEZONE": "America/New_York",
         "NINTENDO_LANG": "en-US"
-      }
-    }
-  }
-}
-```
-
-Or using mise:
-
-```json
-{
-  "mcpServers": {
-    "nintendo": {
-      "command": "mise",
-      "args": ["run", "run"],
-      "cwd": "/path/to/switch-parental-controls",
-      "env": {
-        "NINTENDO_SESSION_TOKEN": "your-token-here"
       }
     }
   }
@@ -172,7 +146,12 @@ Or using mise:
 
 ## Development
 
+Requires [mise](https://mise.jdx.dev/):
+
 ```bash
+# Install dependencies
+mise run install
+
 # Run tests
 mise run test
 
@@ -204,10 +183,7 @@ An example opencode config is provided at [`opencode.jsonc.example`](./opencode.
 # 1. Copy the example config
 cp opencode.jsonc.example opencode.jsonc
 
-# 2. Edit opencode.jsonc:
-#    - Replace /path/to/switch-parental-controls/.venv/bin/python with your actual venv path:
-echo "$(pwd)/.venv/bin/python"
-#    - Optionally set NINTENDO_SESSION_TOKEN
+# 2. Optionally set NINTENDO_SESSION_TOKEN in opencode.jsonc
 
 # 3. Open opencode in this project directory — it will pick up the local config
 opencode
