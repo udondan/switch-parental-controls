@@ -245,6 +245,7 @@ async def nintendo_get_today_summary(params: DeviceInput, ctx: Context) -> str:
                 "Use nintendo_list_devices to see available device IDs."
             )
 
+        await device.update()
         today_str = datetime.now().strftime("%Y-%m-%d")
         summary_list = [s for s in (device.daily_summaries or []) if s.get("date") == today_str]
 
@@ -537,7 +538,6 @@ async def nintendo_set_day_restrictions(params: SetDayRestrictionsInput, ctx: Co
         str: Confirmation message, or an error message.
 
     Error Handling:
-        - Returns "Error: ..." if timer mode is not EACH_DAY_OF_THE_WEEK.
         - Returns "Error: ..." if bedtime values are out of range.
     """
     err = require_client(_state.get("client"))

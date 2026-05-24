@@ -6,7 +6,7 @@ python = "3.14"
 
 [tasks.install]
 description = "Install dependencies (requires Python >=3.12 on PATH)"
-run = "python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'"
+run = "python -m venv .venv && .venv/bin/pip install -e '.[dev]'"
 
 [tasks.test]
 description = "Run tests"

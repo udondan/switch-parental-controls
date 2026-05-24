@@ -58,7 +58,7 @@ def handle_error(e: Exception) -> str:
         return "Error: Request timed out. Nintendo's servers may be slow. Please try again."
     if "NoDevicesFound" in error_type:
         return "Error: No Nintendo Switch devices found on this account."
-    if "NotAuthenticated" in error_type or "client" in message.lower():
+    if "NotAuthenticated" in error_type:
         return (
             "Error: Not authenticated. Set the NINTENDO_SESSION_TOKEN environment variable, "
             "or call nintendo_get_login_url to start the login flow."
