@@ -72,7 +72,7 @@ class MonthlySummaryInput(BaseModel):
     )
     month: int | None = Field(
         default=None,
-        description="Month for the summary (1-12). Required if year is provided.",
+        description="Month for the summary (1-12). Required if year is provided; must be omitted if year is omitted.",
         ge=1,
         le=12,
     )
@@ -85,6 +85,8 @@ class MonthlySummaryInput(BaseModel):
     def validate_year_month(self) -> "MonthlySummaryInput":
         if self.year is not None and self.month is None:
             raise ValueError("month is required when year is provided")
+        if self.month is not None and self.year is None:
+            raise ValueError("year is required when month is provided")
         return self
 
 

@@ -335,6 +335,17 @@ async def test_get_monthly_summary_json(mock_device):
     assert data["summary"]["month"] == "April 2026"
 
 
+def test_get_monthly_summary_month_without_year_rejected():
+    """Should reject month provided without year at model validation time."""
+    import pytest
+    from pydantic import ValidationError
+
+    from nintendo_mcp.models import MonthlySummaryInput
+
+    with pytest.raises(ValidationError, match="year is required when month is provided"):
+        MonthlySummaryInput(device_id="device-001", month=5)
+
+
 # --- nintendo_set_timer_mode ---
 
 
