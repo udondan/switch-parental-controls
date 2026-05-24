@@ -30,4 +30,4 @@ run = ".venv/bin/ruff check --fix src/ tests/"
 
 [tasks.inspect]
 description = "Open MCP Inspector connected to the nintendo_mcp server (requires Node.js / npx on PATH)"
-run = "npx @modelcontextprotocol/inspector python -m nintendo_mcp"
+run = "npx @modelcontextprotocol/inspector .venv/bin/python -m nintendo_mcp"
