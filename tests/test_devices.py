@@ -494,6 +494,22 @@ def test_set_day_restrictions_bedtime_disabled_with_hours_rejected():
         )
 
 
+def test_set_day_restrictions_bedtime_disabled_with_minutes_rejected():
+    """Model should reject non-zero bedtime minutes when bedtime_enabled is false."""
+    from pydantic import ValidationError
+
+    from nintendo_mcp.models import SetDayRestrictionsInput
+
+    with pytest.raises(ValidationError):
+        SetDayRestrictionsInput(
+            device_id="device-001",
+            day_of_week="MONDAY",
+            playtime_enabled=False,
+            bedtime_enabled=False,
+            bedtime_alarm_minute=30,
+        )
+
+
 # --- nintendo_set_bedtime_end_time ---
 
 
