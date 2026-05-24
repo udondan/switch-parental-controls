@@ -127,15 +127,19 @@ def make_mock_client(devices=None):
 
 
 @pytest.fixture(autouse=True)
-def reset_state():
+async def reset_state():
     """Reset the shared _state dict before each test."""
     from nintendo_mcp import server
 
     original_state = dict(server._state)
     yield
+    # Close any real aiohttp session opened during the test to avoid resource leaks.
+    # Mocked sessions have a truthy .closed attribute so the branch is skipped for them.
+    session = server._state.get("http_session")
+    if session is not None and not session.closed:
+        await session.close()
     server._state.clear()
     server._state.update(original_state)
-    # Ensure client is None after each test
     server._state["client"] = None
     server._state["http_session"] = None
     server._state["pending_auth"] = None

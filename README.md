@@ -92,7 +92,7 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
   "mcpServers": {
     "nintendo": {
       "command": "python",
-      "args": ["-m", "nintendo_mcp.server"],
+      "args": ["-m", "nintendo_mcp"],
       "env": {
         "NINTENDO_SESSION_TOKEN": "your-token-here",
         "NINTENDO_TIMEZONE": "America/New_York",
