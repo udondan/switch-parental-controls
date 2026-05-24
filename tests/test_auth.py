@@ -63,9 +63,12 @@ async def test_complete_login_success():
     mock_auth.async_complete_login = AsyncMock()
     mock_auth.session_token = "test-session-token-12345"
 
+    mock_http_session = MagicMock(closed=False)
+    mock_http_session.close = AsyncMock()
     mock_client = MagicMock()
     mock_client.update = AsyncMock()
     server._state["pending_auth"] = mock_auth
+    server._state["http_session"] = mock_http_session
     server._state["timezone"] = "Europe/London"
     server._state["lang"] = "en-GB"
 
@@ -90,7 +93,10 @@ async def test_complete_login_api_error():
     """nintendo_complete_login should return an error if the API call fails."""
     mock_auth = MagicMock()
     mock_auth.async_complete_login = AsyncMock(side_effect=Exception("Invalid redirect URL"))
+    mock_http_session = MagicMock(closed=False)
+    mock_http_session.close = AsyncMock()
     server._state["pending_auth"] = mock_auth
+    server._state["http_session"] = mock_http_session
 
     from nintendo_mcp.auth import nintendo_complete_login
     from nintendo_mcp.models import CompleteLoginInput
