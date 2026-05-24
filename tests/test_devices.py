@@ -58,8 +58,6 @@ async def test_list_devices_markdown(mock_device, mock_client):
 @pytest.mark.asyncio
 async def test_list_devices_json(mock_device, mock_client):
     """Should return JSON list of devices."""
-    import json
-
     from nintendo_mcp.devices import nintendo_list_devices
     from nintendo_mcp.models import ListDevicesInput, ResponseFormat
 
@@ -116,8 +114,6 @@ async def test_get_device_not_found():
 @pytest.mark.asyncio
 async def test_get_device_json(mock_device):
     """Should return JSON device info."""
-    import json
-
     from nintendo_mcp.devices import nintendo_get_device
     from nintendo_mcp.models import DeviceInput, ResponseFormat
 
