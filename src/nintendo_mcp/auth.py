@@ -125,8 +125,8 @@ async def nintendo_complete_login(params: CompleteLoginInput, ctx: Context) -> s
         # Initialize the Nintendo client with the new token
         from pynintendoparental import NintendoParental
 
-        timezone = _state.get("timezone", "Europe/London")
-        lang = _state.get("lang", "en-GB")
+        timezone = _state.get("timezone") or "Europe/London"
+        lang = _state.get("lang") or "en-GB"
         client = await NintendoParental.create(auth, timezone=timezone, lang=lang)
         await client.update()
         _state["client"] = client
