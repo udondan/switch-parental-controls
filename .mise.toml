@@ -10,7 +10,11 @@ run = "python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'"
 
 [tasks.test]
 description = "Run tests"
-run = ".venv/bin/pytest tests/ -v"
+run = ".venv/bin/pytest tests/ -v -m 'not integration'"
+
+[tasks.test-integration]
+description = "Run integration tests against the real Nintendo API (requires .env with NINTENDO_SESSION_TOKEN)"
+run = ".venv/bin/pytest tests/test_integration.py -v -m integration"
 
 [tasks.run]
 description = "Run the MCP server"
