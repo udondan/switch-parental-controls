@@ -1,0 +1,53 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+
+      - name: Install dependencies
+        run: mise run install
+
+      - name: Run linter
+        run: mise run lint
+
+      - name: Run tests
+        run: mise run test
+
+  integration-test:
+    name: Run Integration Tests (read-only)
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' && secrets.NINTENDO_SESSION_TOKEN != ''
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+
+      - name: Install dependencies
+        run: mise run install
+
+      - name: Run integration tests (read-only)
+        run: mise run test-integration
+        env:
+          NINTENDO_SESSION_TOKEN: ${{ secrets.NINTENDO_SESSION_TOKEN }}
+          NINTENDO_TIMEZONE: ${{ secrets.NINTENDO_TIMEZONE }}
+          NINTENDO_LANG: ${{ secrets.NINTENDO_LANG }}
