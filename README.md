@@ -59,7 +59,7 @@ echo 'NINTENDO_SESSION_TOKEN=your-token-here' >> .env
 ## Running the Server
 
 ```bash
-uvx --from switch-parental-controls nintendo-mcp
+uvx --from switch-parental-controls mcp
 ```
 
 No clone or install required — `uvx` fetches the package from PyPI and runs it in an isolated environment.
@@ -83,7 +83,7 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
   "mcpServers": {
     "nintendo": {
       "command": "uvx",
-      "args": ["--from", "switch-parental-controls", "nintendo-mcp"],
+      "args": ["--from", "switch-parental-controls", "mcp"],
       "env": {
         "NINTENDO_SESSION_TOKEN": "your-token-here",
         "NINTENDO_TIMEZONE": "America/New_York",

@@ -22,6 +22,7 @@ env/
 
 # Local opencode config (contains local paths and potentially secrets)
 opencode.jsonc
+.claude
 
 # pytest
 .pytest_cache/

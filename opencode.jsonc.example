@@ -7,7 +7,7 @@
         "uvx",
         "--from",
         "switch-parental-controls",
-        "nintendo-mcp",
+        "mcp",
       ],
       "enabled": true,
       "environment": {
