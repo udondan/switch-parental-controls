@@ -138,8 +138,9 @@ async def reset_state():
 
     original_state = dict(server._state)
     yield
-    # Close any real aiohttp session opened during the test to avoid resource leaks.
-    # Mocked sessions have a truthy .closed attribute so the branch is skipped for them.
+    # Close any session opened during the test to avoid resource leaks.
+    # Real aiohttp sessions and mock sessions with closed=False both pass through here;
+    # mock sessions must expose an async close() so the await succeeds.
     session = server._state.get("http_session")
     if session is not None and not session.closed:
         await session.close()
