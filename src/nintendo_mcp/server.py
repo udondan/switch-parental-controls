@@ -69,6 +69,9 @@ async def lifespan(server: FastMCP):
             await session.close()
         _state["client"] = None
         _state["http_session"] = None
+        _state["pending_auth"] = None
+        _state["timezone"] = None
+        _state["lang"] = None
 
 
 # Initialize the FastMCP server

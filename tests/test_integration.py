@@ -13,9 +13,6 @@ from unittest.mock import MagicMock
 
 import aiohttp
 import pytest
-from dotenv import load_dotenv
-
-load_dotenv()
 
 pytestmark = pytest.mark.integration
 
@@ -23,6 +20,9 @@ pytestmark = pytest.mark.integration
 @pytest.fixture(scope="module")
 async def real_client():
     """Create a real Nintendo Parental Controls client, pre-fetched with a single update()."""
+    from dotenv import load_dotenv
+
+    load_dotenv()
     token = os.environ.get("NINTENDO_SESSION_TOKEN")
     if not token:
         pytest.skip("NINTENDO_SESSION_TOKEN not set")

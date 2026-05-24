@@ -251,7 +251,10 @@ async def nintendo_get_today_summary(params: DeviceInput, ctx: Context) -> str:
             )
 
         await device.update()
-        today_str = datetime.now().strftime("%Y-%m-%d")
+        from zoneinfo import ZoneInfo
+
+        tz = ZoneInfo(_state.get("timezone", "Europe/London"))
+        today_str = datetime.now(tz).strftime("%Y-%m-%d")
         summary_list = [s for s in (device.daily_summaries or []) if s.get("date") == today_str]
 
         if not summary_list:
