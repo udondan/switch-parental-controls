@@ -64,6 +64,7 @@ async def test_complete_login_success():
     mock_auth.session_token = "test-session-token-12345"
 
     mock_client = MagicMock()
+    mock_client.update = AsyncMock()
     server._state["pending_auth"] = mock_auth
     server._state["timezone"] = "Europe/London"
     server._state["lang"] = "en-GB"
