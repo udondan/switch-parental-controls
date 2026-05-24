@@ -128,7 +128,7 @@ def make_mock_client(devices=None):
 
 @pytest.fixture(autouse=True)
 async def reset_state():
-    """Reset the shared _state dict before each test."""
+    """Snapshot _state before each test and restore it in teardown."""
     from nintendo_mcp import server
 
     original_state = dict(server._state)

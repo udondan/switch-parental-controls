@@ -82,6 +82,7 @@ async def nintendo_list_applications(params: DeviceInput, ctx: Context) -> str:
                 "Use nintendo_list_devices to see available device IDs."
             )
 
+        await device.update()
         apps = list(device.applications.values())
 
         if not apps:
@@ -154,6 +155,7 @@ async def nintendo_set_app_allow_list(params: SetAppAllowListInput, ctx: Context
                 "Use nintendo_list_devices to see available device IDs."
             )
 
+        await device.update()
         try:
             app = device.get_application(params.application_id)
         except ValueError:

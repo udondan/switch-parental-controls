@@ -77,6 +77,7 @@ async def nintendo_list_players(params: DeviceInput, ctx: Context) -> str:
                 "Use nintendo_list_devices to see available device IDs."
             )
 
+        await device.update()
         players = list(device.players.values())
 
         if not players:
@@ -147,6 +148,7 @@ async def nintendo_get_player(params: PlayerInput, ctx: Context) -> str:
                 "Use nintendo_list_devices to see available device IDs."
             )
 
+        await device.update()
         try:
             player = device.get_player(params.player_id)
         except ValueError:
