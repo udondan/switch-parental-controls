@@ -36,8 +36,8 @@ _state: dict[str, Any] = {
 async def lifespan(server: FastMCP):
     """Manage the aiohttp session and Nintendo client lifecycle."""
     session_token = os.environ.get("NINTENDO_SESSION_TOKEN")
-    timezone = os.environ.get("NINTENDO_TIMEZONE", "Europe/London")
-    lang = os.environ.get("NINTENDO_LANG", "en-GB")
+    timezone = os.environ.get("NINTENDO_TIMEZONE") or "Europe/London"
+    lang = os.environ.get("NINTENDO_LANG") or "en-GB"
 
     http_session = aiohttp.ClientSession()
     _state["http_session"] = http_session
@@ -64,7 +64,9 @@ async def lifespan(server: FastMCP):
     try:
         yield _state
     finally:
-        await http_session.close()
+        session = _state.get("http_session")
+        if session is not None and not session.closed:
+            await session.close()
         _state["client"] = None
         _state["http_session"] = None
 

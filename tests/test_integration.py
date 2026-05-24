@@ -30,8 +30,8 @@ async def real_client():
     from pynintendoparental import NintendoParental
     from pynintendoparental.authenticator import Authenticator
 
-    timezone = os.environ.get("NINTENDO_TIMEZONE", "Europe/London")
-    lang = os.environ.get("NINTENDO_LANG", "en-GB")
+    timezone = os.environ.get("NINTENDO_TIMEZONE") or "Europe/London"
+    lang = os.environ.get("NINTENDO_LANG") or "en-GB"
 
     session = aiohttp.ClientSession()
     try:

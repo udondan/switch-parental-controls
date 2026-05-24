@@ -115,6 +115,8 @@ async def nintendo_complete_login(params: CompleteLoginInput, ctx: Context) -> s
         if http_session is None or http_session.closed:
             http_session = aiohttp.ClientSession()
             _state["http_session"] = http_session
+            # Authenticator has no public setter; _client_session is the only way to
+            # swap the session when the original has been closed between tool calls.
             auth._client_session = http_session
 
         await auth.async_complete_login(params.redirect_url)
