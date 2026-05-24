@@ -575,7 +575,7 @@ async def nintendo_set_day_restrictions(params: SetDayRestrictionsInput, ctx: Co
             day_of_week=params.day_of_week.value,
             bedtime_start=bedtime_start,
             bedtime_end=bedtime_end,
-            max_daily_playtime=params.max_playtime_minutes,
+            max_daily_playtime=params.max_playtime_minutes if params.playtime_enabled else None,
         )
 
         parts = [f"✓ Restrictions updated for {params.day_of_week.value} on '{device.name}'."]

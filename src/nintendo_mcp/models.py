@@ -173,6 +173,12 @@ class SetDayRestrictionsInput(BaseModel):
     def validate_playtime_and_bedtime(self) -> "SetDayRestrictionsInput":
         if self.playtime_enabled and self.max_playtime_minutes is None:
             raise ValueError("max_playtime_minutes is required when playtime_enabled is true")
+        if not self.playtime_enabled and self.max_playtime_minutes is not None:
+            raise ValueError("max_playtime_minutes must not be set when playtime_enabled is false")
+        if not self.bedtime_enabled and (
+            self.bedtime_alarm_hour is not None or self.bedtime_end_hour is not None
+        ):
+            raise ValueError("bedtime hours must not be set when bedtime_enabled is false")
         return self
 
 
