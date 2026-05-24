@@ -83,9 +83,14 @@ async def nintendo_list_devices(params: ListDevicesInput, ctx: Context) -> str:
                     "device_id": str,
                     "name": str,
                     "model": str,
-                    "limit_time_minutes": int,       # -1 if no limit
+                    "timer_mode": str | null,
+                    "limit_time_minutes": int,
                     "today_playing_time_minutes": int,
                     "today_time_remaining_minutes": int,
+                    "bedtime_alarm": str | null,
+                    "bedtime_end": str | null,
+                    "forced_termination_mode": bool,
+                    "alarms_enabled": bool,
                     "last_sync": str
                 }
             ]
