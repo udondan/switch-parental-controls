@@ -4,6 +4,10 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   test:
@@ -29,7 +33,7 @@ jobs:
   integration-test:
     name: Run Integration Tests (read-only)
     runs-on: ubuntu-latest
-    if: secrets.NINTENDO_SESSION_TOKEN != ''
+    if: github.event_name != 'pull_request' && secrets.NINTENDO_SESSION_TOKEN != ''
 
     steps:
       - name: Checkout code
