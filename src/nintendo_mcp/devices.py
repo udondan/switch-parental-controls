@@ -527,8 +527,8 @@ async def nintendo_set_timer_mode(params: SetTimerModeInput, ctx: Context) -> st
 async def nintendo_set_day_restrictions(params: SetDayRestrictionsInput, ctx: Context) -> str:
     """Set playtime and bedtime restrictions for a specific day of the week.
 
-    This tool only works when the device's timer mode is set to EACH_DAY_OF_THE_WEEK.
-    Use nintendo_set_timer_mode first if needed.
+    For per-day restrictions to take effect, the device's timer mode should be
+    EACH_DAY_OF_THE_WEEK. Use nintendo_set_timer_mode first if needed.
 
     Args:
         params (SetDayRestrictionsInput): Validated input containing:

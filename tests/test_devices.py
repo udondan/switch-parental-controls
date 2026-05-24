@@ -1,7 +1,8 @@
 """Tests for Nintendo MCP device tools."""
 
+import json
 from datetime import time
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -272,6 +273,230 @@ async def test_set_bedtime_alarm_disable(mock_device):
     )
 
     mock_device.set_bedtime_alarm.assert_called_once_with(time(0, 0))
+    assert "disabled" in result
+
+
+# --- nintendo_get_monthly_summary ---
+
+
+@pytest.mark.asyncio
+async def test_get_monthly_summary_default(mock_device):
+    """Should return most-recent monthly summary in markdown when no year/month given."""
+    from nintendo_mcp.devices import nintendo_get_monthly_summary
+    from nintendo_mcp.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    result = await nintendo_get_monthly_summary(MonthlySummaryInput(device_id="device-001"), ctx)
+
+    mock_device.get_monthly_summary.assert_called_once_with(search_date=None)
+    assert "April 2026" in result
+    assert "20h" in result  # 1200 minutes
+
+
+@pytest.mark.asyncio
+async def test_get_monthly_summary_specific_month(mock_device):
+    """Should pass a datetime to get_monthly_summary when year and month are provided."""
+    from datetime import datetime
+
+    from nintendo_mcp.devices import nintendo_get_monthly_summary
+    from nintendo_mcp.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    await nintendo_get_monthly_summary(
+        MonthlySummaryInput(device_id="device-001", year=2025, month=3), ctx
+    )
+
+    mock_device.get_monthly_summary.assert_called_once_with(search_date=datetime(2025, 3, 1))
+
+
+@pytest.mark.asyncio
+async def test_get_monthly_summary_none(mock_device):
+    """Should return 'no summary' message when API returns None."""
+    mock_device.get_monthly_summary = AsyncMock(return_value=None)
+
+    from nintendo_mcp.devices import nintendo_get_monthly_summary
+    from nintendo_mcp.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    result = await nintendo_get_monthly_summary(MonthlySummaryInput(device_id="device-001"), ctx)
+
+    assert "No monthly summary available" in result
+
+
+@pytest.mark.asyncio
+async def test_get_monthly_summary_json(mock_device):
+    """Should return JSON output when response_format is json."""
+    from nintendo_mcp.devices import nintendo_get_monthly_summary
+    from nintendo_mcp.models import MonthlySummaryInput, ResponseFormat
+
+    ctx = MagicMock()
+    result = await nintendo_get_monthly_summary(
+        MonthlySummaryInput(device_id="device-001", response_format=ResponseFormat.JSON), ctx
+    )
+    data = json.loads(result)
+
+    assert data["device_name"] == "My Switch"
+    assert data["summary"]["month"] == "April 2026"
+
+
+# --- nintendo_set_timer_mode ---
+
+
+@pytest.mark.asyncio
+async def test_set_timer_mode_daily(mock_device):
+    """Should call set_timer_mode with DAILY enum and return confirmation."""
+    from pynintendoparental.enum import DeviceTimerMode
+
+    from nintendo_mcp.devices import nintendo_set_timer_mode
+    from nintendo_mcp.models import SetTimerModeInput
+
+    ctx = MagicMock()
+    result = await nintendo_set_timer_mode(
+        SetTimerModeInput(device_id="device-001", mode="DAILY"), ctx
+    )
+
+    mock_device.set_timer_mode.assert_called_once_with(DeviceTimerMode.DAILY)
+    assert "DAILY" in result
+    assert "My Switch" in result
+
+
+@pytest.mark.asyncio
+async def test_set_timer_mode_each_day(mock_device):
+    """Should call set_timer_mode with EACH_DAY_OF_THE_WEEK enum."""
+    from pynintendoparental.enum import DeviceTimerMode
+
+    from nintendo_mcp.devices import nintendo_set_timer_mode
+    from nintendo_mcp.models import SetTimerModeInput
+
+    ctx = MagicMock()
+    result = await nintendo_set_timer_mode(
+        SetTimerModeInput(device_id="device-001", mode="EACH_DAY_OF_THE_WEEK"), ctx
+    )
+
+    mock_device.set_timer_mode.assert_called_once_with(DeviceTimerMode.EACH_DAY_OF_THE_WEEK)
+    assert "EACH_DAY_OF_THE_WEEK" in result
+
+
+# --- nintendo_set_day_restrictions ---
+
+
+@pytest.mark.asyncio
+async def test_set_day_restrictions_playtime_only(mock_device):
+    """Should call set_daily_restrictions with playtime enabled, no bedtime."""
+    from nintendo_mcp.devices import nintendo_set_day_restrictions
+    from nintendo_mcp.models import SetDayRestrictionsInput
+
+    ctx = MagicMock()
+    result = await nintendo_set_day_restrictions(
+        SetDayRestrictionsInput(
+            device_id="device-001",
+            day_of_week="MONDAY",
+            playtime_enabled=True,
+            max_playtime_minutes=120,
+            bedtime_enabled=False,
+        ),
+        ctx,
+    )
+
+    mock_device.set_daily_restrictions.assert_called_once_with(
+        enabled=True,
+        bedtime_enabled=False,
+        day_of_week="MONDAY",
+        bedtime_start=None,
+        bedtime_end=None,
+        max_daily_playtime=120,
+    )
+    assert "MONDAY" in result
+    assert "2h" in result
+    assert "Bedtime: disabled" in result
+
+
+@pytest.mark.asyncio
+async def test_set_day_restrictions_bedtime_only(mock_device):
+    """Should call set_daily_restrictions with bedtime enabled, no playtime."""
+    from nintendo_mcp.devices import nintendo_set_day_restrictions
+    from nintendo_mcp.models import SetDayRestrictionsInput
+
+    ctx = MagicMock()
+    result = await nintendo_set_day_restrictions(
+        SetDayRestrictionsInput(
+            device_id="device-001",
+            day_of_week="FRIDAY",
+            playtime_enabled=False,
+            bedtime_enabled=True,
+            bedtime_alarm_hour=21,
+            bedtime_alarm_minute=30,
+            bedtime_end_hour=7,
+            bedtime_end_minute=0,
+        ),
+        ctx,
+    )
+
+    mock_device.set_daily_restrictions.assert_called_once_with(
+        enabled=False,
+        bedtime_enabled=True,
+        day_of_week="FRIDAY",
+        bedtime_start=time(21, 30),
+        bedtime_end=time(7, 0),
+        max_daily_playtime=None,
+    )
+    assert "21:30" in result
+    assert "07:00" in result
+    assert "Playtime limit: disabled" in result
+
+
+@pytest.mark.asyncio
+async def test_set_day_restrictions_missing_bedtime_hour():
+    """Should return error when bedtime_enabled but bedtime hours are missing."""
+    from nintendo_mcp.devices import nintendo_set_day_restrictions
+    from nintendo_mcp.models import SetDayRestrictionsInput
+
+    ctx = MagicMock()
+    result = await nintendo_set_day_restrictions(
+        SetDayRestrictionsInput(
+            device_id="device-001",
+            day_of_week="MONDAY",
+            playtime_enabled=False,
+            bedtime_enabled=True,
+        ),
+        ctx,
+    )
+
+    assert "Error" in result
+    assert "bedtime_alarm_hour" in result
+
+
+# --- nintendo_set_bedtime_end_time ---
+
+
+@pytest.mark.asyncio
+async def test_set_bedtime_end_time(mock_device):
+    """Should call set_bedtime_end_time with the specified time."""
+    from nintendo_mcp.devices import nintendo_set_bedtime_end_time
+    from nintendo_mcp.models import SetBedtimeEndInput
+
+    ctx = MagicMock()
+    result = await nintendo_set_bedtime_end_time(
+        SetBedtimeEndInput(device_id="device-001", hour=7, minute=30), ctx
+    )
+
+    mock_device.set_bedtime_end_time.assert_called_once_with(time(7, 30))
+    assert "07:30" in result
+    assert "My Switch" in result
+
+
+@pytest.mark.asyncio
+async def test_set_bedtime_end_time_disable(mock_device):
+    """Should return 'disabled' confirmation when hour=0 and minute=0."""
+    from nintendo_mcp.devices import nintendo_set_bedtime_end_time
+    from nintendo_mcp.models import SetBedtimeEndInput
+
+    ctx = MagicMock()
+    result = await nintendo_set_bedtime_end_time(
+        SetBedtimeEndInput(device_id="device-001", hour=0, minute=0), ctx
+    )
+
+    mock_device.set_bedtime_end_time.assert_called_once_with(time(0, 0))
     assert "disabled" in result
 
 
