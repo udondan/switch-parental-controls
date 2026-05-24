@@ -126,6 +126,7 @@ async def nintendo_complete_login(params: CompleteLoginInput, ctx: Context) -> s
         timezone = _state.get("timezone", "Europe/London")
         lang = _state.get("lang", "en-GB")
         client = await NintendoParental.create(auth, timezone=timezone, lang=lang)
+        await client.update()
         _state["client"] = client
         _state["pending_auth"] = None
 

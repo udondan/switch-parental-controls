@@ -52,6 +52,7 @@ async def lifespan(server: FastMCP):
             auth = Authenticator(session_token=session_token, client_session=http_session)
             await auth.async_complete_login(use_session_token=True)
             client = await NintendoParental.create(auth, timezone=timezone, lang=lang)
+            await client.update()
             _state["client"] = client
             logger.info("Nintendo Parental Controls client initialized successfully.")
         except Exception as e:
