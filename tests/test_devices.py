@@ -441,25 +441,20 @@ async def test_set_day_restrictions_bedtime_only(mock_device):
     assert "Playtime limit: disabled" in result
 
 
-@pytest.mark.asyncio
-async def test_set_day_restrictions_missing_bedtime_hour():
-    """Should return error when bedtime_enabled but bedtime hours are missing."""
-    from nintendo_mcp.devices import nintendo_set_day_restrictions
+def test_set_day_restrictions_bedtime_enabled_without_alarm_hour_rejected():
+    """Model should reject bedtime_enabled=True when bedtime_alarm_hour is missing."""
+    from pydantic import ValidationError
+
     from nintendo_mcp.models import SetDayRestrictionsInput
 
-    ctx = MagicMock()
-    result = await nintendo_set_day_restrictions(
+    with pytest.raises(ValidationError, match="bedtime_alarm_hour"):
         SetDayRestrictionsInput(
             device_id="device-001",
             day_of_week="MONDAY",
             playtime_enabled=False,
             bedtime_enabled=True,
-        ),
-        ctx,
-    )
-
-    assert "Error" in result
-    assert "bedtime_alarm_hour" in result
+            bedtime_end_hour=7,
+        )
 
 
 def test_set_day_restrictions_playtime_disabled_with_minutes_rejected():
@@ -507,6 +502,21 @@ def test_set_day_restrictions_bedtime_disabled_with_minutes_rejected():
             playtime_enabled=False,
             bedtime_enabled=False,
             bedtime_alarm_minute=30,
+        )
+
+
+def test_set_day_restrictions_bedtime_enabled_without_hours_rejected():
+    """Model should reject bedtime_enabled=True when required hours are missing."""
+    from pydantic import ValidationError
+
+    from nintendo_mcp.models import SetDayRestrictionsInput
+
+    with pytest.raises(ValidationError):
+        SetDayRestrictionsInput(
+            device_id="device-001",
+            day_of_week="MONDAY",
+            playtime_enabled=False,
+            bedtime_enabled=True,
         )
 
 

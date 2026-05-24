@@ -128,7 +128,12 @@ def make_mock_client(devices=None):
 
 @pytest.fixture(autouse=True)
 async def reset_state():
-    """Snapshot _state before each test and restore it in teardown."""
+    """Reset server state before each test.
+
+    Snapshots _state keys before the test, then on teardown restores the
+    snapshot and unconditionally clears client/http_session/pending_auth to
+    prevent resource or auth leaks across tests.
+    """
     from nintendo_mcp import server
 
     original_state = dict(server._state)
