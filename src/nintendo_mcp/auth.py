@@ -135,7 +135,7 @@ async def nintendo_complete_login(params: CompleteLoginInput, ctx: Context) -> s
             f"```\n{session_token}\n```\n\n"
             "**Save this token** as the `NINTENDO_SESSION_TOKEN` environment variable "
             "to avoid logging in again next time:\n\n"
-            '```bash\nexport NINTENDO_SESSION_TOKEN="' + session_token + '"\n```\n\n'
+            "```bash\nexport NINTENDO_SESSION_TOKEN='" + session_token + "'\n```\n\n"
             "You can now use all Nintendo parental control tools. "
             "Try `nintendo_list_devices` to see your devices."
         )

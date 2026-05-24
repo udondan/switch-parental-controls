@@ -45,7 +45,7 @@ async def real_client():
 
 
 @pytest.fixture(autouse=True)
-def inject_client(real_client, monkeypatch):
+async def inject_client(real_client, monkeypatch):
     """Inject the real client into server state.
 
     The module fixture already called update() once. Stub out subsequent update()
@@ -65,7 +65,7 @@ def inject_client(real_client, monkeypatch):
 
 
 @pytest.fixture(scope="module")
-def first_device_id(real_client):
+async def first_device_id(real_client):
     """Return the ID of the first device on the account (client already updated)."""
     if not real_client.devices:
         pytest.skip("No Nintendo Switch devices found on this account")
