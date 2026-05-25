@@ -75,7 +75,7 @@ This starts an interactive flow:
 3. Right-click the **"Select this person"** button and copy the link
 4. Paste the copied URL at the prompt
 
-On success, the token is saved to `~/.config/switch-parental-controls/credentials` — all other commands will use it automatically. No further setup needed.
+On success, the token is saved to `~/.config/switch-parental-controls/credentials` (respects `XDG_CONFIG_HOME`) — all other commands will use it automatically. No further setup needed.
 
 The CLI also prints an `export NINTENDO_SESSION_TOKEN=...` snippet after login, so you can copy the token value for use in other tools or scripts.
 
@@ -88,12 +88,12 @@ The token lookup order is: **environment variable → credentials file**.
 The `login` command writes the token here automatically. To store it manually:
 
 ```bash
-mkdir -p ~/.config/switch-parental-controls
-echo "your-token-here" > ~/.config/switch-parental-controls/credentials
-chmod 600 ~/.config/switch-parental-controls/credentials
+mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/switch-parental-controls"
+echo "your-token-here" > "${XDG_CONFIG_HOME:-$HOME/.config}/switch-parental-controls/credentials"
+chmod 600 "${XDG_CONFIG_HOME:-$HOME/.config}/switch-parental-controls/credentials"
 ```
 
-The file must contain only the token, one line, no quotes. The `chmod 600` keeps it readable by your user only.
+The default path is `~/.config/switch-parental-controls/credentials`; set `XDG_CONFIG_HOME` to use a different base directory. The file must contain only the token, one line, no quotes. The `chmod 600` keeps it readable by your user only.
 
 **Environment variable (shell profile):**
 
@@ -209,7 +209,7 @@ No clone or install required — `uvx` fetches the package from PyPI and runs it
 | `NINTENDO_TIMEZONE`      | No       | `Europe/London` | IANA timezone (e.g. `America/New_York`) |
 | `NINTENDO_LANG`          | No       | `en-GB`         | Language code (e.g. `en-US`)            |
 
-\*The token can also be provided via the credentials file at `~/.config/switch-parental-controls/credentials`. Since the CLI `login` command writes to that same file, running `switch-parental-controls login` once is sufficient — the MCP server will pick up the stored token automatically, no environment variable needed. The only exception where no token is needed upfront at all is when using the interactive `nintendo_get_login_url` / `nintendo_complete_login` tools to authenticate.
+\*The token can also be provided via the credentials file (`~/.config/switch-parental-controls/credentials` by default; respects `XDG_CONFIG_HOME`). Since the CLI `login` command writes to that same file, running `switch-parental-controls login` once is sufficient — the MCP server will pick up the stored token automatically, no environment variable needed. The only exception where no token is needed upfront at all is when using the interactive `nintendo_get_login_url` / `nintendo_complete_login` tools to authenticate.
 
 ### MCP Client Configuration
 
