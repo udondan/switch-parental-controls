@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/udondan/switch-parental-controls/compare/v0.4.0...v0.5.0) (2026-05-25)
+
+
+### Features
+
+* add --version flag to CLI ([#16](https://github.com/udondan/switch-parental-controls/issues/16)) ([b11a089](https://github.com/udondan/switch-parental-controls/commit/b11a08935290049561a3d5d7fb2ffbfd39a4e9fe))
+
 ## [0.4.0](https://github.com/udondan/switch-parental-controls/compare/v0.3.0...v0.4.0) (2026-05-25)
 
 
