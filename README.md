@@ -2,6 +2,27 @@
 
 A [CLI](#cli-usage) and [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that expose Nintendo Switch Parental Controls as commands and AI-accessible tools. It wraps the [`pynintendoparental`](https://github.com/pantherale0/pynintendoparental) library and allows humans and AI assistants to monitor and manage parental control settings on Nintendo Switch devices.
 
+## Table of Contents
+
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [CLI Usage](#cli-usage)
+  - [Installation](#installation)
+  - [Authentication](#authentication)
+    - [Interactive login](#interactive-login)
+    - [Storing your token](#storing-your-token)
+  - [Global Options](#global-options)
+  - [Commands](#commands)
+- [MCP Server](#mcp-server)
+  - [Running the Server](#running-the-server)
+  - [Environment Variables](#environment-variables)
+  - [MCP Client Configuration](#mcp-client-configuration)
+  - [Available Tools](#available-tools)
+- [Development](#development)
+- [CI](#ci)
+- [Legal](#legal)
+- [License](#license)
+
 ## Features
 
 - **Authentication**: Interactive Nintendo OAuth login flow, or pre-configured session token
@@ -19,42 +40,6 @@ A [CLI](#cli-usage) and [MCP (Model Context Protocol)](https://modelcontextproto
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
-
-## Authentication: Getting Your Nintendo Session Token
-
-The server requires a Nintendo session token to access the Parental Controls API. You can obtain one in two ways:
-
-### Method 1: Interactive MCP Tool (Recommended for first-time setup)
-
-1. Start the MCP server (see below)
-2. Ask your AI assistant to call `nintendo_get_login_url`
-3. Open the returned URL in your browser
-4. Log in with your Nintendo Account
-5. On the "Select this person" page, **right-click** the "Select this person" button and copy the link
-6. Ask your AI assistant to call `nintendo_complete_login` with the copied URL
-7. The tool will return your session token — **save it!**
-
-### Method 2: Manual (if you already have a token)
-
-If you already have a session token, set it as an environment variable:
-
-```bash
-export NINTENDO_SESSION_TOKEN="your-token-here"
-```
-
-### Saving Your Token
-
-Once you have a session token, add it to your environment so you don't need to log in again:
-
-```bash
-# Add to your shell profile (~/.zshrc, ~/.bashrc, etc.)
-export NINTENDO_SESSION_TOKEN="your-token-here"
-
-# Or create a .env file (never commit this!)
-echo 'NINTENDO_SESSION_TOKEN=your-token-here' >> .env
-```
-
-> **Note**: Session tokens can expire. If you get authentication errors, repeat the login flow.
 
 ## CLI Usage
 
@@ -75,7 +60,9 @@ pip install switch-parental-controls
 switch-parental-controls --help
 ```
 
-### Login
+### Authentication
+
+#### Interactive login
 
 ```bash
 switch-parental-controls login
@@ -90,7 +77,40 @@ This starts an interactive flow:
 
 On success, the token is saved to `~/.config/switch-parental-controls/credentials` — all other commands will use it automatically. No further setup needed.
 
-For CI pipelines or other tools that need the token directly, the `export` snippet is also printed during login.
+The CLI also prints an `export NINTENDO_SESSION_TOKEN=...` snippet after login, so you can copy the token value for use in other tools or scripts.
+
+#### Storing your token
+
+The token lookup order is: **environment variable → credentials file**.
+
+**Credentials file (recommended):**
+
+The `login` command writes the token here automatically. To store it manually:
+
+```bash
+mkdir -p ~/.config/switch-parental-controls
+echo "your-token-here" > ~/.config/switch-parental-controls/credentials
+chmod 600 ~/.config/switch-parental-controls/credentials
+```
+
+The file must contain only the token, one line, no quotes. The `chmod 600` keeps it readable by your user only.
+
+**Environment variable (shell profile):**
+
+```bash
+# Add to ~/.zshrc, ~/.bashrc, or equivalent
+export NINTENDO_SESSION_TOKEN="your-token-here"
+```
+
+The environment variable takes precedence over the credentials file, so this is also useful for temporarily overriding a stored token.
+
+**Inline for one-off runs:**
+
+```bash
+NINTENDO_SESSION_TOKEN="your-token-here" switch-parental-controls today-summary
+```
+
+> **Note**: Session tokens can expire. If you get authentication errors, repeat the login flow.
 
 ### Global Options
 
@@ -171,7 +191,9 @@ switch-parental-controls set-app-allow-list [DEVICE] <app-id> --no-allow
 switch-parental-controls mcp
 ```
 
-## Running the Server
+## MCP Server
+
+### Running the Server
 
 ```bash
 uvx switch-parental-controls mcp
@@ -183,11 +205,11 @@ No clone or install required — `uvx` fetches the package from PyPI and runs it
 
 | Variable                 | Required | Default         | Description                             |
 | ------------------------ | -------- | --------------- | --------------------------------------- |
-| `NINTENDO_SESSION_TOKEN` | No\*     | —               | Nintendo session token                  |
+| `NINTENDO_SESSION_TOKEN` | Yes\*    | —               | Nintendo session token                  |
 | `NINTENDO_TIMEZONE`      | No       | `Europe/London` | IANA timezone (e.g. `America/New_York`) |
 | `NINTENDO_LANG`          | No       | `en-GB`         | Language code (e.g. `en-US`)            |
 
-\*Required for any tool that accesses Nintendo data, unless you use the interactive login tools.
+\*The token can also be provided via the credentials file at `~/.config/switch-parental-controls/credentials`. Since the CLI `login` command writes to that same file, running `switch-parental-controls login` once is sufficient — the MCP server will pick up the stored token automatically, no environment variable needed. The only exception where no token is needed upfront at all is when using the interactive `nintendo_get_login_url` / `nintendo_complete_login` tools to authenticate.
 
 ### MCP Client Configuration
 
@@ -209,16 +231,16 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
 }
 ```
 
-## Available Tools
+### Available Tools
 
-### Authentication
+#### Authentication Tools
 
 | Tool                      | Description                                                   |
 | ------------------------- | ------------------------------------------------------------- |
 | `nintendo_get_login_url`  | Generate the Nintendo login URL and step-by-step instructions |
 | `nintendo_complete_login` | Complete login with the redirect URL from the browser         |
 
-### Devices
+#### Devices
 
 | Tool                           | Description                                                 |
 | ------------------------------ | ----------------------------------------------------------- |
@@ -227,7 +249,7 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
 | `nintendo_get_today_summary`   | Get today's usage summary for a device                      |
 | `nintendo_get_monthly_summary` | Get monthly usage summary (optionally for a specific month) |
 
-### Playtime Controls
+#### Playtime Controls
 
 | Tool                                | Description                                               |
 | ----------------------------------- | --------------------------------------------------------- |
@@ -236,7 +258,7 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
 | `nintendo_set_timer_mode`           | Switch between DAILY and EACH_DAY_OF_THE_WEEK modes       |
 | `nintendo_set_day_restrictions`     | Set per-day playtime and bedtime restrictions             |
 
-### Restriction Controls
+#### Restriction Controls
 
 | Tool                                     | Description                              |
 | ---------------------------------------- | ---------------------------------------- |
@@ -245,14 +267,14 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
 | `nintendo_set_bedtime_alarm`             | Set the bedtime alarm time (16:00-23:00) |
 | `nintendo_set_bedtime_end_time`          | Set when bedtime ends (05:00-09:00)      |
 
-### Players
+#### Players
 
 | Tool                    | Description                                    |
 | ----------------------- | ---------------------------------------------- |
 | `nintendo_list_players` | List all players on a device                   |
 | `nintendo_get_player`   | Get player details including apps played today |
 
-### Applications
+#### Applications
 
 | Tool                          | Description                                               |
 | ----------------------------- | --------------------------------------------------------- |
@@ -290,25 +312,15 @@ mise run inspect
 
 This opens the inspector connected to the switch_parental_controls server. You can call any tool directly from the UI, which is useful for testing the authentication flow and verifying tool responses.
 
-### Testing with opencode locally
-
-An example opencode config is provided at [`opencode.jsonc.example`](./opencode.jsonc.example). To use it:
-
-```bash
-# 1. Copy the example config
-cp opencode.jsonc.example opencode.jsonc
-
-# 2. Optionally set NINTENDO_SESSION_TOKEN in opencode.jsonc
-
-# 3. Open opencode in this project directory — it will pick up the local config
-opencode
-```
-
-The local `opencode.jsonc` is gitignored so your session token stays private.
-
 ## CI
 
 Tests run automatically on pull requests via GitHub Actions. See [`.github/workflows/test.yml`](.github/workflows/test.yml).
+
+## Legal
+
+Nintendo and Nintendo Switch are trademarks or registered trademarks of Nintendo in the U.S. and/or other countries.
+
+This project is not affiliated, funded, or in any way associated with Nintendo.
 
 ## License
 
