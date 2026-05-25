@@ -25,7 +25,7 @@ from mcp.server.fastmcp import FastMCP
 
 logger = logging.getLogger(__name__)
 
-# Mutable state shared across tools (populated by lifespan or switch_complete_login)
+# Mutable state shared across tools (populated by lifespan, switch_complete_login, or CLI via _populate_state)
 _state: dict[str, Any] = {
     "client": None,
     "http_session": None,
