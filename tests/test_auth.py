@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from nintendo_mcp import server
+from switch_parental_controls import server
 
 
 @pytest.mark.asyncio
@@ -14,7 +14,7 @@ async def test_get_login_url_returns_instructions():
     mock_auth.login_url = "https://accounts.nintendo.com/connect/1.0.0/authorize?test=1"
 
     with patch("pynintendoparental.authenticator.Authenticator", return_value=mock_auth):
-        from nintendo_mcp.auth import nintendo_get_login_url
+        from switch_parental_controls.auth import nintendo_get_login_url
 
         ctx = MagicMock()
         result = await nintendo_get_login_url(ctx)
@@ -32,7 +32,7 @@ async def test_get_login_url_stores_pending_auth():
     mock_auth.login_url = "https://accounts.nintendo.com/test"
 
     with patch("pynintendoparental.authenticator.Authenticator", return_value=mock_auth):
-        from nintendo_mcp.auth import nintendo_get_login_url
+        from switch_parental_controls.auth import nintendo_get_login_url
 
         ctx = MagicMock()
         await nintendo_get_login_url(ctx)
@@ -45,8 +45,8 @@ async def test_complete_login_without_pending_auth():
     """nintendo_complete_login should return an error if no pending auth exists."""
     server._state["pending_auth"] = None
 
-    from nintendo_mcp.auth import nintendo_complete_login
-    from nintendo_mcp.models import CompleteLoginInput
+    from switch_parental_controls.auth import nintendo_complete_login
+    from switch_parental_controls.models import CompleteLoginInput
 
     ctx = MagicMock()
     params = CompleteLoginInput(redirect_url="npf71b963c1b7b6d119://auth#session_token=abc")
@@ -75,8 +75,8 @@ async def test_complete_login_success():
     with patch("pynintendoparental.NintendoParental") as mock_np_class:
         mock_np_class.create = AsyncMock(return_value=mock_client)
 
-        from nintendo_mcp.auth import nintendo_complete_login
-        from nintendo_mcp.models import CompleteLoginInput
+        from switch_parental_controls.auth import nintendo_complete_login
+        from switch_parental_controls.models import CompleteLoginInput
 
         ctx = MagicMock()
         params = CompleteLoginInput(redirect_url="npf71b963c1b7b6d119://auth#session_token=abc")
@@ -98,8 +98,8 @@ async def test_complete_login_api_error():
     server._state["pending_auth"] = mock_auth
     server._state["http_session"] = mock_http_session
 
-    from nintendo_mcp.auth import nintendo_complete_login
-    from nintendo_mcp.models import CompleteLoginInput
+    from switch_parental_controls.auth import nintendo_complete_login
+    from switch_parental_controls.models import CompleteLoginInput
 
     ctx = MagicMock()
     params = CompleteLoginInput(redirect_url="npf71b963c1b7b6d119://auth#bad=data")

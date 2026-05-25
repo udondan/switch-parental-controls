@@ -14,13 +14,14 @@ dependencies = [
     "pydantic>=2.0.0",
     "pynintendoparental>=2.3.4",
     "aiohttp>=3.9.0",
+    "click>=8.1.0",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0.0", "pytest-asyncio>=0.23.0", "ruff>=0.4.0", "python-dotenv>=1.0.0"]
 
 [project.scripts]
-mcp = "nintendo_mcp.server:main"
+switch-parental-controls = "switch_parental_controls.cli:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]

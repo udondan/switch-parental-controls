@@ -53,7 +53,7 @@ async def inject_client(real_client, monkeypatch):
     """
     from unittest.mock import AsyncMock
 
-    from nintendo_mcp import server
+    from switch_parental_controls import server
 
     monkeypatch.setattr(real_client, "update", AsyncMock())
     for device in real_client.devices.values():
@@ -74,8 +74,8 @@ async def first_device_id(real_client):
 
 async def test_list_devices():
     """Real device list should be returned as a non-empty string without error."""
-    from nintendo_mcp.devices import nintendo_list_devices
-    from nintendo_mcp.models import ListDevicesInput
+    from switch_parental_controls.devices import nintendo_list_devices
+    from switch_parental_controls.models import ListDevicesInput
 
     result = await nintendo_list_devices(ListDevicesInput(), MagicMock())
     assert "Error" not in result
@@ -84,8 +84,8 @@ async def test_list_devices():
 
 async def test_get_device(first_device_id):
     """Real device details should be returned without error."""
-    from nintendo_mcp.devices import nintendo_get_device
-    from nintendo_mcp.models import DeviceInput
+    from switch_parental_controls.devices import nintendo_get_device
+    from switch_parental_controls.models import DeviceInput
 
     result = await nintendo_get_device(DeviceInput(device_id=first_device_id), MagicMock())
     assert "Error" not in result
@@ -94,8 +94,8 @@ async def test_get_device(first_device_id):
 
 async def test_get_today_summary(first_device_id):
     """Today's summary should be returned without an auth error."""
-    from nintendo_mcp.devices import nintendo_get_today_summary
-    from nintendo_mcp.models import DeviceInput
+    from switch_parental_controls.devices import nintendo_get_today_summary
+    from switch_parental_controls.models import DeviceInput
 
     result = await nintendo_get_today_summary(DeviceInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
@@ -104,8 +104,8 @@ async def test_get_today_summary(first_device_id):
 
 async def test_get_monthly_summary(first_device_id):
     """Monthly summary should be returned without an auth error."""
-    from nintendo_mcp.devices import nintendo_get_monthly_summary
-    from nintendo_mcp.models import MonthlySummaryInput
+    from switch_parental_controls.devices import nintendo_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput
 
     result = await nintendo_get_monthly_summary(MonthlySummaryInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
@@ -114,8 +114,8 @@ async def test_get_monthly_summary(first_device_id):
 
 async def test_list_players(first_device_id):
     """Player list should be returned without an auth error."""
-    from nintendo_mcp.models import DeviceInput
-    from nintendo_mcp.players import nintendo_list_players
+    from switch_parental_controls.models import DeviceInput
+    from switch_parental_controls.players import nintendo_list_players
 
     result = await nintendo_list_players(DeviceInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
@@ -124,8 +124,8 @@ async def test_list_players(first_device_id):
 
 async def test_list_applications(first_device_id):
     """Application list should be returned without an auth error."""
-    from nintendo_mcp.applications import nintendo_list_applications
-    from nintendo_mcp.models import DeviceInput
+    from switch_parental_controls.applications import nintendo_list_applications
+    from switch_parental_controls.models import DeviceInput
 
     result = await nintendo_list_applications(DeviceInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)

@@ -5,13 +5,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from nintendo_mcp import server
+from switch_parental_controls import server
 from tests.conftest import make_mock_client, make_mock_device, make_mock_player
 
 
 @pytest.fixture
 def mock_player():
-    return make_mock_player(apps=[{"applicationId": "app-001", "playingTime": 30}])
+    return make_mock_player(apps=[{"meta": {"applicationId": "app-001"}, "playingTime": 30}])
 
 
 @pytest.fixture
@@ -37,8 +37,8 @@ def set_client(mock_client):
 @pytest.mark.asyncio
 async def test_list_players_markdown(mock_player):
     """Should return markdown list of players."""
-    from nintendo_mcp.models import DeviceInput
-    from nintendo_mcp.players import nintendo_list_players
+    from switch_parental_controls.models import DeviceInput
+    from switch_parental_controls.players import nintendo_list_players
 
     ctx = MagicMock()
     result = await nintendo_list_players(DeviceInput(device_id="device-001"), ctx)
@@ -51,8 +51,8 @@ async def test_list_players_markdown(mock_player):
 @pytest.mark.asyncio
 async def test_list_players_json(mock_player):
     """Should return JSON list of players."""
-    from nintendo_mcp.models import DeviceInput, ResponseFormat
-    from nintendo_mcp.players import nintendo_list_players
+    from switch_parental_controls.models import DeviceInput, ResponseFormat
+    from switch_parental_controls.players import nintendo_list_players
 
     ctx = MagicMock()
     result = await nintendo_list_players(
@@ -69,8 +69,8 @@ async def test_list_players_json(mock_player):
 async def test_list_players_no_client():
     """Should return auth error when client is not set."""
     server._state["client"] = None
-    from nintendo_mcp.models import DeviceInput
-    from nintendo_mcp.players import nintendo_list_players
+    from switch_parental_controls.models import DeviceInput
+    from switch_parental_controls.players import nintendo_list_players
 
     ctx = MagicMock()
     result = await nintendo_list_players(DeviceInput(device_id="device-001"), ctx)
@@ -80,8 +80,8 @@ async def test_list_players_no_client():
 @pytest.mark.asyncio
 async def test_list_players_device_not_found():
     """Should return error for unknown device ID."""
-    from nintendo_mcp.models import DeviceInput
-    from nintendo_mcp.players import nintendo_list_players
+    from switch_parental_controls.models import DeviceInput
+    from switch_parental_controls.players import nintendo_list_players
 
     ctx = MagicMock()
     result = await nintendo_list_players(DeviceInput(device_id="nonexistent"), ctx)
@@ -93,8 +93,8 @@ async def test_list_players_device_not_found():
 async def test_list_players_empty(mock_device, mock_client):
     """Should return 'no players' message when device has no players."""
     mock_device.players = {}
-    from nintendo_mcp.models import DeviceInput
-    from nintendo_mcp.players import nintendo_list_players
+    from switch_parental_controls.models import DeviceInput
+    from switch_parental_controls.players import nintendo_list_players
 
     ctx = MagicMock()
     result = await nintendo_list_players(DeviceInput(device_id="device-001"), ctx)
@@ -107,8 +107,8 @@ async def test_list_players_empty(mock_device, mock_client):
 @pytest.mark.asyncio
 async def test_get_player_markdown(mock_player, mock_device):
     """Should return detailed player info in markdown."""
-    from nintendo_mcp.models import PlayerInput
-    from nintendo_mcp.players import nintendo_get_player
+    from switch_parental_controls.models import PlayerInput
+    from switch_parental_controls.players import nintendo_get_player
 
     ctx = MagicMock()
     result = await nintendo_get_player(
@@ -123,8 +123,8 @@ async def test_get_player_markdown(mock_player, mock_device):
 @pytest.mark.asyncio
 async def test_get_player_not_found():
     """Should return error for unknown player ID."""
-    from nintendo_mcp.models import PlayerInput
-    from nintendo_mcp.players import nintendo_get_player
+    from switch_parental_controls.models import PlayerInput
+    from switch_parental_controls.players import nintendo_get_player
 
     ctx = MagicMock()
     result = await nintendo_get_player(
@@ -137,8 +137,8 @@ async def test_get_player_not_found():
 @pytest.mark.asyncio
 async def test_get_player_json(mock_player):
     """Should return JSON player info."""
-    from nintendo_mcp.models import PlayerInput, ResponseFormat
-    from nintendo_mcp.players import nintendo_get_player
+    from switch_parental_controls.models import PlayerInput, ResponseFormat
+    from switch_parental_controls.players import nintendo_get_player
 
     ctx = MagicMock()
     result = await nintendo_get_player(
