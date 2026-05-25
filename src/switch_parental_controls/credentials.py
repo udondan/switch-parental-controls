@@ -28,11 +28,13 @@ def save_token(token: str) -> Path:
     """Write the session token to the credentials file and return its path."""
     path = _credentials_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(token + "\n")
     try:
-        path.chmod(0o600)
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as f:
+            f.write(token + "\n")
     except OSError:
-        pass
+        # Non-POSIX (e.g. Windows) — fall back to plain write without permission control
+        path.write_text(token + "\n")
     return path
 
 

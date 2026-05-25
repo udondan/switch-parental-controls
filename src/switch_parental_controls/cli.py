@@ -78,8 +78,9 @@ def _output(result: str) -> None:
     """Print result and exit 1 if it is an error."""
     for mcp_name, cli_name in _MCP_TO_CLI.items():
         result = result.replace(mcp_name, cli_name)
-    click.echo(result)
-    if result.startswith("Error:"):
+    is_error = result.startswith("Error:")
+    click.echo(result, err=is_error)
+    if is_error:
         sys.exit(1)
 
 
