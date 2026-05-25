@@ -1,6 +1,6 @@
 """Tests for the switch-parental-controls CLI.
 
-Strategy: Each command test mocks `switch_parental_controls.cli.nintendo_client` to return a
+Strategy: Each command test mocks `switch_parental_controls.cli.switch_client` to return a
 pre-configured (mock_client, mock_session) pair, then patches the MCP tool function
 to return a known string. This verifies argument parsing, _state population, and
 output/exit-code behaviour without real network calls.
@@ -98,7 +98,7 @@ def test_invalid_token_shows_relogin_message(runner, monkeypatch):
     ctx.__aenter__ = AsyncMock(side_effect=FakeInvalidSessionTokenException("invalid_grant"))
     ctx.__aexit__ = AsyncMock(return_value=False)
 
-    with patch("switch_parental_controls.cli.nintendo_client", return_value=ctx):
+    with patch("switch_parental_controls.cli.switch_client", return_value=ctx):
         result = runner.invoke(cli, ["list-devices"])
 
     assert result.exit_code == 1
@@ -112,9 +112,9 @@ def test_require_token_reads_credentials_file(runner, monkeypatch, mock_client_w
 
     with (
         patch("switch_parental_controls.credentials.load_token", return_value="token-from-file"),
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_list_devices",
+            "switch_parental_controls.devices.switch_list_devices",
             new=AsyncMock(return_value="# Devices"),
         ),
     ):
@@ -224,9 +224,9 @@ def test_list_devices_markdown(runner, monkeypatch, mock_client_with_device, moc
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_list_devices",
+            "switch_parental_controls.devices.switch_list_devices",
             new=AsyncMock(return_value="# Devices\n- My Switch"),
         ),
     ):
@@ -241,9 +241,9 @@ def test_list_devices_json(runner, monkeypatch, mock_client_with_device, mock_se
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_list_devices",
+            "switch_parental_controls.devices.switch_list_devices",
             new=AsyncMock(return_value='{"count": 1}'),
         ) as mock_tool,
     ):
@@ -261,9 +261,9 @@ def test_list_devices_error_exits_1(runner, monkeypatch, mock_client_with_device
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_list_devices",
+            "switch_parental_controls.devices.switch_list_devices",
             new=AsyncMock(return_value="Error: Not authenticated."),
         ),
     ):
@@ -282,9 +282,9 @@ def test_get_device(runner, monkeypatch, mock_client_with_device, mock_session):
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_get_device",
+            "switch_parental_controls.devices.switch_get_device",
             new=AsyncMock(return_value="# My Switch"),
         ) as mock_tool,
     ):
@@ -305,9 +305,9 @@ def test_today_summary(runner, monkeypatch, mock_client_with_device, mock_sessio
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_get_today_summary",
+            "switch_parental_controls.devices.switch_get_today_summary",
             new=AsyncMock(return_value="# Today's Summary"),
         ) as mock_tool,
     ):
@@ -328,9 +328,9 @@ def test_monthly_summary_no_args(runner, monkeypatch, mock_client_with_device, m
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_get_monthly_summary",
+            "switch_parental_controls.devices.switch_get_monthly_summary",
             new=AsyncMock(return_value="# Monthly Summary"),
         ) as mock_tool,
     ):
@@ -347,9 +347,9 @@ def test_monthly_summary_with_year_month(runner, monkeypatch, mock_client_with_d
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_get_monthly_summary",
+            "switch_parental_controls.devices.switch_get_monthly_summary",
             new=AsyncMock(return_value="# Monthly Summary"),
         ) as mock_tool,
     ):
@@ -365,7 +365,7 @@ def test_monthly_summary_year_without_month_fails(runner, monkeypatch, mock_clie
     monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
-    with patch("switch_parental_controls.cli.nintendo_client", return_value=ctx):
+    with patch("switch_parental_controls.cli.switch_client", return_value=ctx):
         result = runner.invoke(cli, ["monthly-summary", "device-001", "--year", "2024"])
 
     assert result.exit_code == 1
@@ -382,9 +382,9 @@ def test_set_playtime_limit(runner, monkeypatch, mock_client_with_device, mock_s
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_set_daily_playtime_limit",
+            "switch_parental_controls.devices.switch_set_daily_playtime_limit",
             new=AsyncMock(return_value="✓ Daily playtime limit set to 2h for 'My Switch'."),
         ) as mock_tool,
     ):
@@ -400,9 +400,9 @@ def test_set_playtime_limit_remove(runner, monkeypatch, mock_client_with_device,
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_set_daily_playtime_limit",
+            "switch_parental_controls.devices.switch_set_daily_playtime_limit",
             new=AsyncMock(return_value="✓ Daily playtime limit removed."),
         ) as mock_tool,
     ):
@@ -417,7 +417,7 @@ def test_set_playtime_limit_invalid(runner, monkeypatch, mock_client_with_device
     monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
-    with patch("switch_parental_controls.cli.nintendo_client", return_value=ctx):
+    with patch("switch_parental_controls.cli.switch_client", return_value=ctx):
         result = runner.invoke(cli, ["set-playtime-limit", "device-001", "--minutes", "999"])
 
     assert result.exit_code == 1
@@ -434,9 +434,9 @@ def test_add_extra_time(runner, monkeypatch, mock_client_with_device, mock_sessi
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_add_extra_time",
+            "switch_parental_controls.devices.switch_add_extra_time",
             new=AsyncMock(return_value="✓ Added 30m of extra playtime."),
         ) as mock_tool,
     ):
@@ -457,9 +457,9 @@ def test_set_timer_mode_daily(runner, monkeypatch, mock_client_with_device, mock
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_set_timer_mode",
+            "switch_parental_controls.devices.switch_set_timer_mode",
             new=AsyncMock(return_value="✓ Timer mode set to 'DAILY'."),
         ) as mock_tool,
     ):
@@ -486,9 +486,9 @@ def test_set_day_restrictions_playtime_only(runner, monkeypatch, mock_client_wit
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_set_day_restrictions",
+            "switch_parental_controls.devices.switch_set_day_restrictions",
             new=AsyncMock(return_value="✓ Restrictions updated for MONDAY."),
         ) as mock_tool,
     ):
@@ -514,9 +514,9 @@ def test_set_day_restrictions_with_bedtime(runner, monkeypatch, mock_client_with
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_set_day_restrictions",
+            "switch_parental_controls.devices.switch_set_day_restrictions",
             new=AsyncMock(return_value="✓ Restrictions updated for FRIDAY."),
         ) as mock_tool,
     ):
@@ -543,7 +543,7 @@ def test_set_day_restrictions_playtime_enabled_without_minutes_fails(
     monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
-    with patch("switch_parental_controls.cli.nintendo_client", return_value=ctx):
+    with patch("switch_parental_controls.cli.switch_client", return_value=ctx):
         result = runner.invoke(
             cli,
             ["set-day-restrictions", "device-001", "MONDAY", "--playtime-enabled", "--bedtime-disabled"],
@@ -563,9 +563,9 @@ def test_set_restriction_mode(runner, monkeypatch, mock_client_with_device, mock
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_set_restriction_mode",
+            "switch_parental_controls.devices.switch_set_restriction_mode",
             new=AsyncMock(return_value="✓ Restriction mode set."),
         ) as mock_tool,
     ):
@@ -586,9 +586,9 @@ def test_set_content_restriction(runner, monkeypatch, mock_client_with_device, m
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_set_content_restriction_level",
+            "switch_parental_controls.devices.switch_set_content_restriction_level",
             new=AsyncMock(return_value="✓ Content restriction level set."),
         ) as mock_tool,
     ):
@@ -609,9 +609,9 @@ def test_set_bedtime_alarm(runner, monkeypatch, mock_client_with_device, mock_se
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_set_bedtime_alarm",
+            "switch_parental_controls.devices.switch_set_bedtime_alarm",
             new=AsyncMock(return_value="✓ Bedtime alarm set to 21:00."),
         ) as mock_tool,
     ):
@@ -627,7 +627,7 @@ def test_set_bedtime_alarm_invalid_hour(runner, monkeypatch, mock_client_with_de
     monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
-    with patch("switch_parental_controls.cli.nintendo_client", return_value=ctx):
+    with patch("switch_parental_controls.cli.switch_client", return_value=ctx):
         result = runner.invoke(cli, ["set-bedtime-alarm", "device-001", "14", "0"])
 
     assert result.exit_code == 1
@@ -644,9 +644,9 @@ def test_set_bedtime_end(runner, monkeypatch, mock_client_with_device, mock_sess
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.nintendo_set_bedtime_end_time",
+            "switch_parental_controls.devices.switch_set_bedtime_end_time",
             new=AsyncMock(return_value="✓ Bedtime end set to 07:00."),
         ) as mock_tool,
     ):
@@ -667,9 +667,9 @@ def test_list_players(runner, monkeypatch, mock_client_with_device, mock_session
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.players.nintendo_list_players",
+            "switch_parental_controls.players.switch_list_players",
             new=AsyncMock(return_value="# Players"),
         ) as mock_tool,
     ):
@@ -690,9 +690,9 @@ def test_get_player(runner, monkeypatch, mock_client_with_device, mock_session):
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.players.nintendo_get_player",
+            "switch_parental_controls.players.switch_get_player",
             new=AsyncMock(return_value="# Player: TestKid"),
         ) as mock_tool,
     ):
@@ -714,9 +714,9 @@ def test_list_applications(runner, monkeypatch, mock_client_with_device, mock_se
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.applications.nintendo_list_applications",
+            "switch_parental_controls.applications.switch_list_applications",
             new=AsyncMock(return_value="# Applications"),
         ) as mock_tool,
     ):
@@ -737,9 +737,9 @@ def test_set_app_allow_list_allow(runner, monkeypatch, mock_client_with_device, 
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.applications.nintendo_set_app_allow_list",
+            "switch_parental_controls.applications.switch_set_app_allow_list",
             new=AsyncMock(return_value="✓ App added to allow list."),
         ) as mock_tool,
     ):
@@ -756,9 +756,9 @@ def test_set_app_allow_list_deny(runner, monkeypatch, mock_client_with_device, m
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx),
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.applications.nintendo_set_app_allow_list",
+            "switch_parental_controls.applications.switch_set_app_allow_list",
             new=AsyncMock(return_value="✓ App removed from allow list."),
         ) as mock_tool,
     ):
@@ -779,9 +779,9 @@ def test_global_timezone_option(runner, monkeypatch, mock_client_with_device, mo
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx) as mock_nc,
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx) as mock_nc,
         patch(
-            "switch_parental_controls.devices.nintendo_list_devices",
+            "switch_parental_controls.devices.switch_list_devices",
             new=AsyncMock(return_value="# Devices"),
         ),
     ):
@@ -795,9 +795,9 @@ def test_global_lang_option(runner, monkeypatch, mock_client_with_device, mock_s
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
-        patch("switch_parental_controls.cli.nintendo_client", return_value=ctx) as mock_nc,
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx) as mock_nc,
         patch(
-            "switch_parental_controls.devices.nintendo_list_devices",
+            "switch_parental_controls.devices.switch_list_devices",
             new=AsyncMock(return_value="# Devices"),
         ),
     ):

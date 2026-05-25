@@ -6,7 +6,7 @@ devices linked to a Nintendo account.
 
 Authentication:
     Set the NINTENDO_SESSION_TOKEN environment variable before starting the server,
-    or use the nintendo_get_login_url / nintendo_complete_login tools to authenticate
+    or use the switch_get_login_url / switch_complete_login tools to authenticate
     interactively.
 
 Environment Variables:
@@ -25,7 +25,7 @@ from mcp.server.fastmcp import FastMCP
 
 logger = logging.getLogger(__name__)
 
-# Mutable state shared across tools (populated by lifespan or nintendo_complete_login)
+# Mutable state shared across tools (populated by lifespan, switch_complete_login, or CLI via _populate_state)
 _state: dict[str, Any] = {
     "client": None,
     "http_session": None,
@@ -59,9 +59,9 @@ async def lifespan(server: FastMCP):
             logger.info("Nintendo Parental Controls client initialized successfully.")
         except Exception as e:
             logger.warning("Failed to initialize Nintendo client on startup: %s", e)
-            logger.warning("Use nintendo_get_login_url to authenticate interactively.")
+            logger.warning("Use switch_get_login_url to authenticate interactively.")
     else:
-        logger.info("NINTENDO_SESSION_TOKEN not set. Use nintendo_get_login_url to authenticate.")
+        logger.info("NINTENDO_SESSION_TOKEN not set. Use switch_get_login_url to authenticate.")
 
     try:
         yield _state
@@ -81,9 +81,9 @@ mcp = FastMCP(
     "switch_parental_controls",
     instructions=(
         "This server provides tools to manage Nintendo Switch Parental Controls. "
-        "If not yet authenticated, call nintendo_get_login_url first to start the login flow, "
-        "then nintendo_complete_login with the redirect URL. "
-        "Once authenticated, use nintendo_list_devices to see available devices."
+        "If not yet authenticated, call switch_get_login_url first to start the login flow, "
+        "then switch_complete_login with the redirect URL. "
+        "Once authenticated, use switch_list_devices to see available devices."
     ),
     lifespan=lifespan,
 )

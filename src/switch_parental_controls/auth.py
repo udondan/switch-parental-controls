@@ -15,7 +15,7 @@ from switch_parental_controls.utils import handle_error
 
 
 @mcp.tool(
-    name="nintendo_get_login_url",
+    name="switch_get_login_url",
     annotations={
         "title": "Get Nintendo Login URL",
         "readOnlyHint": True,
@@ -24,7 +24,7 @@ from switch_parental_controls.utils import handle_error
         "openWorldHint": True,
     },
 )
-async def nintendo_get_login_url(ctx: Context) -> str:
+async def switch_get_login_url(ctx: Context) -> str:
     """Get the Nintendo login URL to start the interactive authentication flow.
 
     Use this tool when you don't have a session token yet, or when the current
@@ -34,7 +34,7 @@ async def nintendo_get_login_url(ctx: Context) -> str:
     After opening the URL and logging in with their Nintendo Account, the user
     will see a "Select this person" button. They should right-click it (or
     long-press on mobile) to copy the link, then pass that URL to
-    nintendo_complete_login.
+    switch_complete_login.
 
     Returns:
         str: Step-by-step instructions including the Nintendo login URL.
@@ -50,7 +50,7 @@ async def nintendo_get_login_url(ctx: Context) -> str:
 
         from pynintendoparental.authenticator import Authenticator
 
-        # Store the authenticator in state so nintendo_complete_login can use it
+        # Store the authenticator in state so switch_complete_login can use it
         auth = Authenticator(client_session=http_session)
         _state["pending_auth"] = auth
 
@@ -66,7 +66,7 @@ async def nintendo_get_login_url(ctx: Context) -> str:
             "4. **Right-click** (desktop) or **long-press** (mobile) the 'Select this person' button "
             "and copy the link address.\n\n"
             "5. The copied URL will start with `npf71b963c1b7b6d119://` or similar.\n\n"
-            "6. Call **`nintendo_complete_login`** with that URL as the `redirect_url` parameter.\n\n"
+            "6. Call **`switch_complete_login`** with that URL as the `redirect_url` parameter.\n\n"
             "> **Tip:** Once you have a session token, save it as the `NINTENDO_SESSION_TOKEN` "
             "environment variable to avoid logging in again next time."
         )
@@ -75,7 +75,7 @@ async def nintendo_get_login_url(ctx: Context) -> str:
 
 
 @mcp.tool(
-    name="nintendo_complete_login",
+    name="switch_complete_login",
     annotations={
         "title": "Complete Nintendo Login",
         "readOnlyHint": False,
@@ -84,10 +84,10 @@ async def nintendo_get_login_url(ctx: Context) -> str:
         "openWorldHint": True,
     },
 )
-async def nintendo_complete_login(params: CompleteLoginInput, ctx: Context) -> str:
+async def switch_complete_login(params: CompleteLoginInput, ctx: Context) -> str:
     """Complete the Nintendo login flow using the redirect URL from the browser.
 
-    Call this after nintendo_get_login_url. Paste the URL you copied from the
+    Call this after switch_get_login_url. Paste the URL you copied from the
     'Select this person' button on the Nintendo login page.
 
     On success, this tool returns your session token. Save it as the
@@ -103,13 +103,13 @@ async def nintendo_complete_login(params: CompleteLoginInput, ctx: Context) -> s
 
     Error Handling:
         - Returns "Error: ..." if the redirect URL is invalid or login fails.
-        - Returns "Error: ..." if nintendo_get_login_url was not called first.
+        - Returns "Error: ..." if switch_get_login_url was not called first.
     """
     try:
         auth = _state.get("pending_auth")
         if auth is None:
             return (
-                "Error: No pending login found. Please call nintendo_get_login_url first "
+                "Error: No pending login found. Please call switch_get_login_url first "
                 "to generate a login URL, then complete the browser login before calling this tool."
             )
 
@@ -124,7 +124,7 @@ async def nintendo_complete_login(params: CompleteLoginInput, ctx: Context) -> s
             if not hasattr(auth, "_client_session"):
                 raise AttributeError(
                     "pynintendoparental.Authenticator no longer exposes '_client_session'; "
-                    "update nintendo_complete_login for the installed library version"
+                    "update switch_complete_login for the installed library version"
                 )
             auth._client_session = http_session
 
@@ -149,7 +149,7 @@ async def nintendo_complete_login(params: CompleteLoginInput, ctx: Context) -> s
             "to avoid logging in again next time:\n\n"
             f"```bash\nexport NINTENDO_SESSION_TOKEN={shlex.quote(session_token)}\n```\n\n"
             "You can now use all Nintendo parental control tools. "
-            "Try `nintendo_list_devices` to see your devices."
+            "Try `switch_list_devices` to see your devices."
         )
     except Exception as e:
         return handle_error(e)

@@ -19,7 +19,7 @@ import sys
 
 import click
 
-from switch_parental_controls.client import nintendo_client
+from switch_parental_controls.client import switch_client
 from switch_parental_controls.device_cache import devices_from_client, resolve_device_id, save_cache
 from switch_parental_controls.models import (
     AddExtraTimeInput,
@@ -65,12 +65,12 @@ def _populate_state(client, http_session, obj: dict) -> None:
 
 
 _MCP_TO_CLI = {
-    "nintendo_list_devices": "list-devices",
-    "nintendo_list_players": "list-players",
-    "nintendo_list_applications": "list-applications",
-    "nintendo_set_timer_mode": "set-timer-mode",
-    "nintendo_get_login_url": "login",
-    "nintendo_complete_login": "login",
+    "switch_list_devices": "list-devices",
+    "switch_list_players": "list-players",
+    "switch_list_applications": "list-applications",
+    "switch_set_timer_mode": "set-timer-mode",
+    "switch_get_login_url": "login",
+    "switch_complete_login": "login",
 }
 
 
@@ -261,13 +261,13 @@ def _resolve(client, device: str | None) -> str:
 @click.pass_obj
 def list_devices(obj: dict, fmt: str) -> None:
     """List all Nintendo Switch devices on the account. Refreshes the device cache."""
-    from switch_parental_controls.devices import nintendo_list_devices
+    from switch_parental_controls.devices import switch_list_devices
 
     async def run() -> str:
         token = _require_token()
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
-            result = await nintendo_list_devices(ListDevicesInput(response_format=ResponseFormat(fmt)), None)
+            result = await switch_list_devices(ListDevicesInput(response_format=ResponseFormat(fmt)), None)
             save_cache(devices_from_client(client))
             return result
 
@@ -280,14 +280,14 @@ def list_devices(obj: dict, fmt: str) -> None:
 @click.pass_obj
 def get_device(obj: dict, device: str | None, fmt: str) -> None:
     """Get detailed status for a specific device."""
-    from switch_parental_controls.devices import nintendo_get_device
+    from switch_parental_controls.devices import switch_get_device
 
     async def run() -> str:
         token = _require_token()
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
-            return await nintendo_get_device(DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None)
+            return await switch_get_device(DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None)
 
     _execute(run)
 
@@ -298,14 +298,14 @@ def get_device(obj: dict, device: str | None, fmt: str) -> None:
 @click.pass_obj
 def today_summary(obj: dict, device: str | None, fmt: str) -> None:
     """Get today's usage summary for a device."""
-    from switch_parental_controls.devices import nintendo_get_today_summary
+    from switch_parental_controls.devices import switch_get_today_summary
 
     async def run() -> str:
         token = _require_token()
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
-            return await nintendo_get_today_summary(
+            return await switch_get_today_summary(
                 DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None
             )
 
@@ -320,18 +320,18 @@ def today_summary(obj: dict, device: str | None, fmt: str) -> None:
 @click.pass_obj
 def monthly_summary(obj: dict, device: str | None, year: int | None, month: int | None, fmt: str) -> None:
     """Get the monthly usage summary for a device."""
-    from switch_parental_controls.devices import nintendo_get_monthly_summary
+    from switch_parental_controls.devices import switch_get_monthly_summary
 
     async def run() -> str:
         token = _require_token()
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
             try:
                 params = MonthlySummaryInput(device_id=did, year=year, month=month, response_format=ResponseFormat(fmt))
             except Exception as exc:
                 return f"Error: {exc}"
-            return await nintendo_get_monthly_summary(params, None)
+            return await switch_get_monthly_summary(params, None)
 
     _execute(run)
 
@@ -351,7 +351,7 @@ def set_playtime_limit(obj: dict, device: str | None, minutes: int | None, remov
 
     Use --minutes N to set a limit (0-360), or --no-limit to remove it entirely.
     """
-    from switch_parental_controls.devices import nintendo_set_daily_playtime_limit
+    from switch_parental_controls.devices import switch_set_daily_playtime_limit
 
     async def run() -> str:
         token = _require_token()
@@ -361,14 +361,14 @@ def set_playtime_limit(obj: dict, device: str | None, minutes: int | None, remov
             mins = minutes
         else:
             return "Error: Provide --minutes N or --no-limit."
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
             try:
                 params = SetPlaytimeLimitInput(device_id=did, minutes=mins)
             except Exception as exc:
                 return f"Error: {exc}"
-            return await nintendo_set_daily_playtime_limit(params, None)
+            return await switch_set_daily_playtime_limit(params, None)
 
     _execute(run)
 
@@ -386,7 +386,7 @@ def add_extra_time(obj: dict, args: tuple) -> None:
       add-extra-time 30
       add-extra-time "Switch #1" 30
     """
-    from switch_parental_controls.devices import nintendo_add_extra_time
+    from switch_parental_controls.devices import switch_add_extra_time
 
     async def run() -> str:
         token = _require_token()
@@ -395,14 +395,14 @@ def add_extra_time(obj: dict, args: tuple) -> None:
             minutes = int(rest[0])
         except ValueError:
             return f"Error: MINUTES must be an integer, got '{rest[0]}'."
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device_raw)
             try:
                 params = AddExtraTimeInput(device_id=did, minutes=minutes)
             except Exception as exc:
                 return f"Error: {exc}"
-            return await nintendo_add_extra_time(params, None)
+            return await switch_add_extra_time(params, None)
 
     _execute(run)
 
@@ -420,7 +420,7 @@ def set_timer_mode(obj: dict, args: tuple) -> None:
       set-timer-mode DAILY
       set-timer-mode "Switch #1" EACH_DAY_OF_THE_WEEK
     """
-    from switch_parental_controls.devices import nintendo_set_timer_mode
+    from switch_parental_controls.devices import switch_set_timer_mode
 
     _valid_modes = {"DAILY", "EACH_DAY_OF_THE_WEEK"}
 
@@ -430,10 +430,10 @@ def set_timer_mode(obj: dict, args: tuple) -> None:
         mode = rest[0].upper()
         if mode not in _valid_modes:
             return f"Error: MODE must be one of {sorted(_valid_modes)}, got '{rest[0]}'."
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device_raw)
-            return await nintendo_set_timer_mode(SetTimerModeInput(device_id=did, mode=mode), None)
+            return await switch_set_timer_mode(SetTimerModeInput(device_id=did, mode=mode), None)
 
     _execute(run)
 
@@ -469,7 +469,7 @@ def set_day_restrictions(
       set-day-restrictions MONDAY --playtime-enabled --max-playtime-minutes 90 --bedtime-disabled
       set-day-restrictions "Switch #1" SATURDAY --playtime-disabled --bedtime-disabled
     """
-    from switch_parental_controls.devices import nintendo_set_day_restrictions
+    from switch_parental_controls.devices import switch_set_day_restrictions
 
     _valid_days = {d.value for d in DayOfWeek}
 
@@ -479,7 +479,7 @@ def set_day_restrictions(
         day = rest[0].upper()
         if day not in _valid_days:
             return f"Error: DAY must be one of {sorted(_valid_days)}, got '{rest[0]}'."
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device_raw)
             try:
@@ -496,7 +496,7 @@ def set_day_restrictions(
                 )
             except Exception as exc:
                 return f"Error: {exc}"
-            return await nintendo_set_day_restrictions(params, None)
+            return await switch_set_day_restrictions(params, None)
 
     _execute(run)
 
@@ -519,7 +519,7 @@ def set_restriction_mode(obj: dict, args: tuple) -> None:
       set-restriction-mode ALARM
       set-restriction-mode "Switch #1" FORCED_TERMINATION
     """
-    from switch_parental_controls.devices import nintendo_set_restriction_mode
+    from switch_parental_controls.devices import switch_set_restriction_mode
 
     _valid = {"FORCED_TERMINATION", "ALARM"}
 
@@ -529,10 +529,10 @@ def set_restriction_mode(obj: dict, args: tuple) -> None:
         mode = rest[0].upper()
         if mode not in _valid:
             return f"Error: MODE must be one of {sorted(_valid)}, got '{rest[0]}'."
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device_raw)
-            return await nintendo_set_restriction_mode(SetRestrictionModeInput(device_id=did, mode=mode), None)
+            return await switch_set_restriction_mode(SetRestrictionModeInput(device_id=did, mode=mode), None)
 
     _execute(run)
 
@@ -550,7 +550,7 @@ def set_content_restriction(obj: dict, args: tuple) -> None:
       set-content-restriction CHILDREN
       set-content-restriction "Switch #1" YOUNG_TEENS
     """
-    from switch_parental_controls.devices import nintendo_set_content_restriction_level
+    from switch_parental_controls.devices import switch_set_content_restriction_level
 
     _valid = {"NONE", "CHILDREN", "YOUNG_TEENS", "OLDER_TEENS", "CUSTOM"}
 
@@ -560,10 +560,10 @@ def set_content_restriction(obj: dict, args: tuple) -> None:
         level = rest[0].upper()
         if level not in _valid:
             return f"Error: LEVEL must be one of {sorted(_valid)}, got '{rest[0]}'."
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device_raw)
-            return await nintendo_set_content_restriction_level(
+            return await switch_set_content_restriction_level(
                 SetContentRestrictionInput(device_id=did, level=level), None
             )
 
@@ -583,7 +583,7 @@ def set_bedtime_alarm(obj: dict, args: tuple) -> None:
       set-bedtime-alarm 21 0
       set-bedtime-alarm "Switch #1" 21 30
     """
-    from switch_parental_controls.devices import nintendo_set_bedtime_alarm
+    from switch_parental_controls.devices import switch_set_bedtime_alarm
 
     async def run() -> str:
         token = _require_token()
@@ -592,14 +592,14 @@ def set_bedtime_alarm(obj: dict, args: tuple) -> None:
             hour, minute = int(rest[0]), int(rest[1])
         except ValueError:
             return "Error: HOUR and MINUTE must be integers."
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device_raw)
             try:
                 params = SetBedtimeAlarmInput(device_id=did, hour=hour, minute=minute)
             except Exception as exc:
                 return f"Error: {exc}"
-            return await nintendo_set_bedtime_alarm(params, None)
+            return await switch_set_bedtime_alarm(params, None)
 
     _execute(run)
 
@@ -617,7 +617,7 @@ def set_bedtime_end(obj: dict, args: tuple) -> None:
       set-bedtime-end 7 0
       set-bedtime-end "Switch #1" 7 30
     """
-    from switch_parental_controls.devices import nintendo_set_bedtime_end_time
+    from switch_parental_controls.devices import switch_set_bedtime_end_time
 
     async def run() -> str:
         token = _require_token()
@@ -626,14 +626,14 @@ def set_bedtime_end(obj: dict, args: tuple) -> None:
             hour, minute = int(rest[0]), int(rest[1])
         except ValueError:
             return "Error: HOUR and MINUTE must be integers."
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device_raw)
             try:
                 params = SetBedtimeEndInput(device_id=did, hour=hour, minute=minute)
             except Exception as exc:
                 return f"Error: {exc}"
-            return await nintendo_set_bedtime_end_time(params, None)
+            return await switch_set_bedtime_end_time(params, None)
 
     _execute(run)
 
@@ -649,14 +649,14 @@ def set_bedtime_end(obj: dict, args: tuple) -> None:
 @click.pass_obj
 def list_players(obj: dict, device: str | None, fmt: str) -> None:
     """List all players (Nintendo accounts) on a device."""
-    from switch_parental_controls.players import nintendo_list_players
+    from switch_parental_controls.players import switch_list_players
 
     async def run() -> str:
         token = _require_token()
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
-            return await nintendo_list_players(DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None)
+            return await switch_list_players(DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None)
 
     _execute(run)
 
@@ -675,16 +675,16 @@ def get_player(obj: dict, args: tuple, fmt: str) -> None:
       get-player player-001
       get-player "Switch #1" player-001
     """
-    from switch_parental_controls.players import nintendo_get_player
+    from switch_parental_controls.players import switch_get_player
 
     async def run() -> str:
         token = _require_token()
         device_raw, rest = _split(args, 1, "[DEVICE] PLAYER_ID")
         player_id = rest[0]
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device_raw)
-            return await nintendo_get_player(
+            return await switch_get_player(
                 PlayerInput(device_id=did, player_id=player_id, response_format=ResponseFormat(fmt)), None
             )
 
@@ -702,14 +702,14 @@ def get_player(obj: dict, args: tuple, fmt: str) -> None:
 @click.pass_obj
 def list_applications(obj: dict, device: str | None, fmt: str) -> None:
     """List all tracked applications (games) on a device."""
-    from switch_parental_controls.applications import nintendo_list_applications
+    from switch_parental_controls.applications import switch_list_applications
 
     async def run() -> str:
         token = _require_token()
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
-            return await nintendo_list_applications(
+            return await switch_list_applications(
                 DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None
             )
 
@@ -730,16 +730,16 @@ def set_app_allow_list(obj: dict, args: tuple, allow: bool) -> None:
       set-app-allow-list 0100D71004694000 --allow
       set-app-allow-list "Switch #1" 0100D71004694000 --no-allow
     """
-    from switch_parental_controls.applications import nintendo_set_app_allow_list
+    from switch_parental_controls.applications import switch_set_app_allow_list
 
     async def run() -> str:
         token = _require_token()
         device_raw, rest = _split(args, 1, "[DEVICE] APP_ID")
         application_id = rest[0]
-        async with nintendo_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device_raw)
-            return await nintendo_set_app_allow_list(
+            return await switch_set_app_allow_list(
                 SetAppAllowListInput(device_id=did, application_id=application_id, allow=allow), None
             )
 

@@ -25,7 +25,7 @@ async def create_client(
 
 
 @asynccontextmanager
-async def nintendo_client(
+async def switch_client(
     timezone: str,
     lang: str,
     session_token: str | None,

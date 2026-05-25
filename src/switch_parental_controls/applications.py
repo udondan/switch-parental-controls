@@ -24,7 +24,7 @@ def _app_to_dict(app) -> dict:
 
 
 @mcp.tool(
-    name="nintendo_list_applications",
+    name="switch_list_applications",
     annotations={
         "title": "List Applications on Device",
         "readOnlyHint": True,
@@ -33,7 +33,7 @@ def _app_to_dict(app) -> dict:
         "openWorldHint": True,
     },
 )
-async def nintendo_list_applications(params: DeviceInput, ctx: Context) -> str:
+async def switch_list_applications(params: DeviceInput, ctx: Context) -> str:
     """List all applications (games) tracked on a Nintendo Switch device.
 
     Returns all games and applications that have been played on the device,
@@ -44,7 +44,7 @@ async def nintendo_list_applications(params: DeviceInput, ctx: Context) -> str:
 
     Args:
         params (DeviceInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
+            - device_id (str): The unique device ID (from switch_list_devices).
             - response_format (str): 'markdown' or 'json' (default: 'markdown').
 
     Returns:
@@ -79,7 +79,7 @@ async def nintendo_list_applications(params: DeviceInput, ctx: Context) -> str:
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         await device.update()
@@ -113,7 +113,7 @@ async def nintendo_list_applications(params: DeviceInput, ctx: Context) -> str:
 
 
 @mcp.tool(
-    name="nintendo_set_app_allow_list",
+    name="switch_set_app_allow_list",
     annotations={
         "title": "Set Application Allow-List Status",
         "readOnlyHint": False,
@@ -122,7 +122,7 @@ async def nintendo_list_applications(params: DeviceInput, ctx: Context) -> str:
         "openWorldHint": True,
     },
 )
-async def nintendo_set_app_allow_list(params: SetAppAllowListInput, ctx: Context) -> str:
+async def switch_set_app_allow_list(params: SetAppAllowListInput, ctx: Context) -> str:
     """Set whether an application can bypass content restrictions on a Nintendo Switch device.
 
     Adding an application to the allow-list lets it be launched regardless of the
@@ -131,8 +131,8 @@ async def nintendo_set_app_allow_list(params: SetAppAllowListInput, ctx: Context
 
     Args:
         params (SetAppAllowListInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
-            - application_id (str): The unique app ID (from nintendo_list_applications).
+            - device_id (str): The unique device ID (from switch_list_devices).
+            - application_id (str): The unique app ID (from switch_list_applications).
             - allow (bool): True to add to allow-list, False to remove from allow-list.
 
     Returns:
@@ -152,7 +152,7 @@ async def nintendo_set_app_allow_list(params: SetAppAllowListInput, ctx: Context
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         await device.update()
@@ -161,7 +161,7 @@ async def nintendo_set_app_allow_list(params: SetAppAllowListInput, ctx: Context
         except ValueError:
             return (
                 f"Error: Application '{params.application_id}' not found on device '{device.name}'. "
-                "Use nintendo_list_applications to see available application IDs."
+                "Use switch_list_applications to see available application IDs."
             )
 
         setting = SafeLaunchSetting.ALLOW if params.allow else SafeLaunchSetting.NONE

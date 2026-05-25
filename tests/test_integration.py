@@ -76,40 +76,40 @@ async def first_device_id(real_client):
 
 async def test_list_devices():
     """Real device list should be returned as a non-empty string without error."""
-    from switch_parental_controls.devices import nintendo_list_devices
+    from switch_parental_controls.devices import switch_list_devices
     from switch_parental_controls.models import ListDevicesInput
 
-    result = await nintendo_list_devices(ListDevicesInput(), MagicMock())
+    result = await switch_list_devices(ListDevicesInput(), MagicMock())
     assert "Error" not in result
     assert len(result) > 0
 
 
 async def test_get_device(first_device_id):
     """Real device details should be returned without error."""
-    from switch_parental_controls.devices import nintendo_get_device
+    from switch_parental_controls.devices import switch_get_device
     from switch_parental_controls.models import DeviceInput
 
-    result = await nintendo_get_device(DeviceInput(device_id=first_device_id), MagicMock())
+    result = await switch_get_device(DeviceInput(device_id=first_device_id), MagicMock())
     assert "Error" not in result
     assert first_device_id in result
 
 
 async def test_get_today_summary(first_device_id):
     """Today's summary should be returned without an auth error."""
-    from switch_parental_controls.devices import nintendo_get_today_summary
+    from switch_parental_controls.devices import switch_get_today_summary
     from switch_parental_controls.models import DeviceInput
 
-    result = await nintendo_get_today_summary(DeviceInput(device_id=first_device_id), MagicMock())
+    result = await switch_get_today_summary(DeviceInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
     assert "Error: Not authenticated" not in result
 
 
 async def test_get_monthly_summary(first_device_id):
     """Monthly summary should be returned without an auth error."""
-    from switch_parental_controls.devices import nintendo_get_monthly_summary
+    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
 
-    result = await nintendo_get_monthly_summary(MonthlySummaryInput(device_id=first_device_id), MagicMock())
+    result = await switch_get_monthly_summary(MonthlySummaryInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
     assert "Error: Not authenticated" not in result
 
@@ -117,19 +117,19 @@ async def test_get_monthly_summary(first_device_id):
 async def test_list_players(first_device_id):
     """Player list should be returned without an auth error."""
     from switch_parental_controls.models import DeviceInput
-    from switch_parental_controls.players import nintendo_list_players
+    from switch_parental_controls.players import switch_list_players
 
-    result = await nintendo_list_players(DeviceInput(device_id=first_device_id), MagicMock())
+    result = await switch_list_players(DeviceInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
     assert "Error: Not authenticated" not in result
 
 
 async def test_list_applications(first_device_id):
     """Application list should be returned without an auth error."""
-    from switch_parental_controls.applications import nintendo_list_applications
+    from switch_parental_controls.applications import switch_list_applications
     from switch_parental_controls.models import DeviceInput
 
-    result = await nintendo_list_applications(DeviceInput(device_id=first_device_id), MagicMock())
+    result = await switch_list_applications(DeviceInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
     assert "Error: Not authenticated" not in result
 
@@ -143,7 +143,7 @@ async def test_list_applications(first_device_id):
 def cli_runner(tmp_path, monkeypatch, real_client):
     """CliRunner that reuses the module-scoped real client to avoid extra API calls.
 
-    Patches nintendo_client to yield the already-initialized real_client so CLI
+    Patches switch_client to yield the already-initialized real_client so CLI
     tests don't create a new Nintendo client (and call update()) for each test.
     """
     from contextlib import asynccontextmanager
@@ -155,7 +155,7 @@ def cli_runner(tmp_path, monkeypatch, real_client):
     async def _stub_client(timezone, lang, token):
         yield real_client, None
 
-    monkeypatch.setattr("switch_parental_controls.cli.nintendo_client", _stub_client)
+    monkeypatch.setattr("switch_parental_controls.cli.switch_client", _stub_client)
     return CliRunner()
 
 
