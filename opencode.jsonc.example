@@ -12,12 +12,12 @@
       "enabled": true,
       "environment": {
         // Set your Nintendo session token here, or leave empty and use
-        // the nintendo_get_login_url / nintendo_complete_login tools to authenticate.
-        "NINTENDO_SESSION_TOKEN": "",
+        // the switch_get_login_url / switch_complete_login tools to authenticate.
+        "SWITCH_PARENTAL_CONTROL_SESSION_TOKEN": "",
         // Optional: set your timezone (IANA format, e.g. "America/New_York")
-        "NINTENDO_TIMEZONE": "Europe/London",
+        "SWITCH_PARENTAL_CONTROL_TIMEZONE": "Europe/London",
         // Optional: set your language code (e.g. "en-US")
-        "NINTENDO_LANG": "en-GB",
+        "SWITCH_PARENTAL_CONTROL_LANG": "en-GB",
       },
     },
   },
