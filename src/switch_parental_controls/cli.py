@@ -69,6 +69,8 @@ _MCP_TO_CLI = {
     "nintendo_list_players": "list-players",
     "nintendo_list_applications": "list-applications",
     "nintendo_set_timer_mode": "set-timer-mode",
+    "nintendo_get_login_url": "login",
+    "nintendo_complete_login": "login",
 }
 
 

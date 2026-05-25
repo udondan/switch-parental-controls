@@ -51,7 +51,7 @@ jobs:
     name: Run Integration Tests (read-only)
     runs-on: ubuntu-latest
     needs: [changes]
-    if: always() && (needs.changes.result == 'skipped' || (needs.changes.result == 'success' && needs.changes.outputs.src == 'true'))
+    if: always() && github.event.pull_request.head.repo.fork != true && (needs.changes.result == 'skipped' || (needs.changes.result == 'success' && needs.changes.outputs.src == 'true'))
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
