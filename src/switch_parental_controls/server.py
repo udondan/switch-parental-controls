@@ -92,8 +92,9 @@ mcp = FastMCP(
 # These imports must happen after mcp is defined so the @mcp.tool decorators
 # can reference the correct FastMCP instance.
 # NOTE: Do NOT run this file directly (e.g. python server.py or python -m switch_parental_controls.server).
-# Use 'python -m switch_parental_controls' instead, which routes through __main__.py and ensures
-# this module is always imported as 'switch_parental_controls.server' — never executed as '__main__'.
+# Use 'python -m switch_parental_controls mcp' (or 'switch-parental-controls mcp') instead, which
+# routes through __main__.py and ensures this module is always imported as
+# 'switch_parental_controls.server' — never executed as '__main__'.
 from switch_parental_controls import applications, auth, devices, players  # noqa: E402, F401
 
 
