@@ -46,7 +46,7 @@ def handle_error(e: Exception) -> str:
     if "401" in message or "Unauthorized" in message:
         return (
             "Error: Authentication failed. Your session token may have expired. "
-            "Call nintendo_get_login_url to start a new login flow."
+            "Call switch_get_login_url to start a new login flow."
         )
     if "403" in message or "Forbidden" in message:
         return "Error: Access denied. You don't have permission to perform this action."
@@ -61,7 +61,7 @@ def handle_error(e: Exception) -> str:
     if "NotAuthenticated" in error_type:
         return (
             "Error: Not authenticated. Set the NINTENDO_SESSION_TOKEN environment variable, "
-            "or call nintendo_get_login_url to start the login flow."
+            "or call switch_get_login_url to start the login flow."
         )
 
     return f"Error: {error_type}: {message}"
@@ -77,6 +77,6 @@ def require_client(client: Any) -> str | None:
     if client is None:
         return (
             "Error: Not authenticated. Set the NINTENDO_SESSION_TOKEN environment variable "
-            "before starting the server, or call nintendo_get_login_url to start the interactive login flow."
+            "before starting the server, or call switch_get_login_url to start the interactive login flow."
         )
     return None

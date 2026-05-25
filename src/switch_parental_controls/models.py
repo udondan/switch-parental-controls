@@ -31,7 +31,7 @@ class DeviceInput(BaseModel):
 
     device_id: str = Field(
         ...,
-        description="The unique device ID (e.g. 'abc123'). Use nintendo_list_devices to find it.",
+        description="The unique device ID (e.g. 'abc123'). Use switch_list_devices to find it.",
     )
     response_format: ResponseFormat = Field(
         default=ResponseFormat.MARKDOWN,
@@ -44,7 +44,7 @@ class DeviceOnlyInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
-    device_id: str = Field(..., description="The unique device ID. Use nintendo_list_devices to find it.")
+    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
 
 
 class ListDevicesInput(BaseModel):
@@ -63,7 +63,7 @@ class MonthlySummaryInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
-    device_id: str = Field(..., description="The unique device ID. Use nintendo_list_devices to find it.")
+    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     year: int | None = Field(
         default=None,
         description="Year for the summary (e.g. 2024). If omitted, returns the most recent available summary.",
@@ -95,7 +95,7 @@ class SetPlaytimeLimitInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
-    device_id: str = Field(..., description="The unique device ID. Use nintendo_list_devices to find it.")
+    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     minutes: int = Field(
         ...,
         description="Daily playtime limit in minutes (0-360). Use -1 to remove the limit entirely.",
@@ -109,7 +109,7 @@ class AddExtraTimeInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
-    device_id: str = Field(..., description="The unique device ID. Use nintendo_list_devices to find it.")
+    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     minutes: int = Field(
         ...,
         description="Number of extra minutes to add for today (must be positive).",
@@ -123,7 +123,7 @@ class SetTimerModeInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
-    device_id: str = Field(..., description="The unique device ID. Use nintendo_list_devices to find it.")
+    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     mode: str = Field(
         ...,
         description="Timer mode: 'DAILY' for a single limit for all days, or 'EACH_DAY_OF_THE_WEEK' for per-day limits.",  # noqa: E501
@@ -136,7 +136,7 @@ class SetDayRestrictionsInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
-    device_id: str = Field(..., description="The unique device ID. Use nintendo_list_devices to find it.")
+    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     day_of_week: DayOfWeek = Field(..., description="Day of the week to configure (e.g. 'MONDAY').")
     playtime_enabled: bool = Field(..., description="Whether to enable a playtime limit for this day.")
     max_playtime_minutes: int | None = Field(
@@ -196,7 +196,7 @@ class SetRestrictionModeInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
-    device_id: str = Field(..., description="The unique device ID. Use nintendo_list_devices to find it.")
+    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     mode: str = Field(
         ...,
         description=(
@@ -212,7 +212,7 @@ class SetContentRestrictionInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
-    device_id: str = Field(..., description="The unique device ID. Use nintendo_list_devices to find it.")
+    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     level: str = Field(
         ...,
         description=(
@@ -228,7 +228,7 @@ class SetBedtimeAlarmInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
-    device_id: str = Field(..., description="The unique device ID. Use nintendo_list_devices to find it.")
+    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     hour: int = Field(
         ...,
         description="Hour for the bedtime alarm (16-23). Use 0 with minute=0 to disable the alarm.",
@@ -256,7 +256,7 @@ class SetBedtimeEndInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
-    device_id: str = Field(..., description="The unique device ID. Use nintendo_list_devices to find it.")
+    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     hour: int = Field(
         ...,
         description="Hour when bedtime ends and the device can be used again (5-9). Use 0 with minute=0 to disable.",
@@ -284,8 +284,8 @@ class PlayerInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
-    device_id: str = Field(..., description="The unique device ID. Use nintendo_list_devices to find it.")
-    player_id: str = Field(..., description="The unique player ID. Use nintendo_list_players to find it.")
+    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
+    player_id: str = Field(..., description="The unique player ID. Use switch_list_players to find it.")
     response_format: ResponseFormat = Field(
         default=ResponseFormat.MARKDOWN,
         description="Output format: 'markdown' for human-readable or 'json' for machine-readable.",
@@ -297,10 +297,10 @@ class SetAppAllowListInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
-    device_id: str = Field(..., description="The unique device ID. Use nintendo_list_devices to find it.")
+    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     application_id: str = Field(
         ...,
-        description="The unique application ID. Use nintendo_list_applications to find it.",
+        description="The unique application ID. Use switch_list_applications to find it.",
     )
     allow: bool = Field(
         ...,

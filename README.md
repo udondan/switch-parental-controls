@@ -209,7 +209,7 @@ No clone or install required — `uvx` fetches the package from PyPI and runs it
 | `NINTENDO_TIMEZONE`      | No       | `Europe/London` | IANA timezone (e.g. `America/New_York`) |
 | `NINTENDO_LANG`          | No       | `en-GB`         | Language code (e.g. `en-US`)            |
 
-\*The token can also be provided via the credentials file (`~/.config/switch-parental-controls/credentials` by default; respects `XDG_CONFIG_HOME`). Since the CLI `login` command writes to that same file, running `switch-parental-controls login` once is sufficient — the MCP server will pick up the stored token automatically, no environment variable needed. The only exception where no token is needed upfront at all is when using the interactive `nintendo_get_login_url` / `nintendo_complete_login` tools to authenticate.
+\*The token can also be provided via the credentials file (`~/.config/switch-parental-controls/credentials` by default; respects `XDG_CONFIG_HOME`). Since the CLI `login` command writes to that same file, running `switch-parental-controls login` once is sufficient — the MCP server will pick up the stored token automatically, no environment variable needed. The only exception where no token is needed upfront at all is when using the interactive `switch_get_login_url` / `switch_complete_login` tools to authenticate.
 
 ### MCP Client Configuration
 
@@ -235,51 +235,51 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
 
 #### Authentication Tools
 
-| Tool                      | Description                                                   |
-| ------------------------- | ------------------------------------------------------------- |
-| `nintendo_get_login_url`  | Generate the Nintendo login URL and step-by-step instructions |
-| `nintendo_complete_login` | Complete login with the redirect URL from the browser         |
+| Tool                    | Description                                                   |
+| ----------------------- | ------------------------------------------------------------- |
+| `switch_get_login_url`  | Generate the Nintendo login URL and step-by-step instructions |
+| `switch_complete_login` | Complete login with the redirect URL from the browser         |
 
 #### Devices
 
-| Tool                           | Description                                                 |
-| ------------------------------ | ----------------------------------------------------------- |
-| `nintendo_list_devices`        | List all Nintendo Switch devices on the account             |
-| `nintendo_get_device`          | Get detailed status for a specific device                   |
-| `nintendo_get_today_summary`   | Get today's usage summary for a device                      |
-| `nintendo_get_monthly_summary` | Get monthly usage summary (optionally for a specific month) |
+| Tool                          | Description                                                 |
+| ----------------------------- | ----------------------------------------------------------- |
+| `switch_list_devices`         | List all Nintendo Switch devices on the account             |
+| `switch_get_device`           | Get detailed status for a specific device                   |
+| `switch_get_today_summary`    | Get today's usage summary for a device                      |
+| `switch_get_monthly_summary`  | Get monthly usage summary (optionally for a specific month) |
 
 #### Playtime Controls
 
-| Tool                                | Description                                               |
-| ----------------------------------- | --------------------------------------------------------- |
-| `nintendo_set_daily_playtime_limit` | Set the daily playtime limit (0-360 min, or -1 to remove) |
-| `nintendo_add_extra_time`           | Add extra playtime for today                              |
-| `nintendo_set_timer_mode`           | Switch between DAILY and EACH_DAY_OF_THE_WEEK modes       |
-| `nintendo_set_day_restrictions`     | Set per-day playtime and bedtime restrictions             |
+| Tool                              | Description                                                |
+| --------------------------------- | ---------------------------------------------------------- |
+| `switch_set_daily_playtime_limit` | Set the daily playtime limit (0-360 min, or -1 to remove)  |
+| `switch_add_extra_time`           | Add extra playtime for today                               |
+| `switch_set_timer_mode`           | Switch between DAILY and EACH_DAY_OF_THE_WEEK modes        |
+| `switch_set_day_restrictions`     | Set per-day playtime and bedtime restrictions              |
 
 #### Restriction Controls
 
-| Tool                                     | Description                              |
-| ---------------------------------------- | ---------------------------------------- |
-| `nintendo_set_restriction_mode`          | Set FORCED_TERMINATION or ALARM mode     |
-| `nintendo_set_content_restriction_level` | Set age-based content restrictions       |
-| `nintendo_set_bedtime_alarm`             | Set the bedtime alarm time (16:00-23:00) |
-| `nintendo_set_bedtime_end_time`          | Set when bedtime ends (05:00-09:00)      |
+| Tool                                    | Description                              |
+| --------------------------------------- | ---------------------------------------- |
+| `switch_set_restriction_mode`           | Set FORCED_TERMINATION or ALARM mode     |
+| `switch_set_content_restriction_level`  | Set age-based content restrictions       |
+| `switch_set_bedtime_alarm`              | Set the bedtime alarm time (16:00-23:00) |
+| `switch_set_bedtime_end_time`           | Set when bedtime ends (05:00-09:00)      |
 
 #### Players
 
-| Tool                    | Description                                    |
-| ----------------------- | ---------------------------------------------- |
-| `nintendo_list_players` | List all players on a device                   |
-| `nintendo_get_player`   | Get player details including apps played today |
+| Tool                  | Description                                    |
+| --------------------- | ---------------------------------------------- |
+| `switch_list_players` | List all players on a device                   |
+| `switch_get_player`   | Get player details including apps played today |
 
 #### Applications
 
-| Tool                          | Description                                               |
-| ----------------------------- | --------------------------------------------------------- |
-| `nintendo_list_applications`  | List all tracked applications on a device                 |
-| `nintendo_set_app_allow_list` | Add/remove an app from the content restriction allow-list |
+| Tool                           | Description                                               |
+| ------------------------------ | --------------------------------------------------------- |
+| `switch_list_applications`     | List all tracked applications on a device                 |
+| `switch_set_app_allow_list`    | Add/remove an app from the content restriction allow-list |
 
 ## Development
 

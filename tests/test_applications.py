@@ -31,17 +31,17 @@ def set_client(mock_client):
     server._state["client"] = mock_client
 
 
-# --- nintendo_list_applications ---
+# --- switch_list_applications ---
 
 
 @pytest.mark.asyncio
 async def test_list_applications_markdown(mock_app):
     """Should return markdown list of applications."""
-    from switch_parental_controls.applications import nintendo_list_applications
+    from switch_parental_controls.applications import switch_list_applications
     from switch_parental_controls.models import DeviceInput
 
     ctx = MagicMock()
-    result = await nintendo_list_applications(DeviceInput(device_id="device-001"), ctx)
+    result = await switch_list_applications(DeviceInput(device_id="device-001"), ctx)
 
     assert "Test Game" in result
     assert "app-001" in result
@@ -51,11 +51,11 @@ async def test_list_applications_markdown(mock_app):
 @pytest.mark.asyncio
 async def test_list_applications_json(mock_app):
     """Should return JSON list of applications."""
-    from switch_parental_controls.applications import nintendo_list_applications
+    from switch_parental_controls.applications import switch_list_applications
     from switch_parental_controls.models import DeviceInput, ResponseFormat
 
     ctx = MagicMock()
-    result = await nintendo_list_applications(
+    result = await switch_list_applications(
         DeviceInput(device_id="device-001", response_format=ResponseFormat.JSON), ctx
     )
     data = json.loads(result)
@@ -70,11 +70,11 @@ async def test_list_applications_json(mock_app):
 async def test_list_applications_no_client():
     """Should return auth error when client is not set."""
     server._state["client"] = None
-    from switch_parental_controls.applications import nintendo_list_applications
+    from switch_parental_controls.applications import switch_list_applications
     from switch_parental_controls.models import DeviceInput
 
     ctx = MagicMock()
-    result = await nintendo_list_applications(DeviceInput(device_id="device-001"), ctx)
+    result = await switch_list_applications(DeviceInput(device_id="device-001"), ctx)
     assert "Error" in result
 
 
@@ -82,15 +82,15 @@ async def test_list_applications_no_client():
 async def test_list_applications_empty(mock_device, mock_client):
     """Should return 'no applications' message when device has no apps."""
     mock_device.applications = {}
-    from switch_parental_controls.applications import nintendo_list_applications
+    from switch_parental_controls.applications import switch_list_applications
     from switch_parental_controls.models import DeviceInput
 
     ctx = MagicMock()
-    result = await nintendo_list_applications(DeviceInput(device_id="device-001"), ctx)
+    result = await switch_list_applications(DeviceInput(device_id="device-001"), ctx)
     assert "No applications tracked" in result
 
 
-# --- nintendo_set_app_allow_list ---
+# --- switch_set_app_allow_list ---
 
 
 @pytest.mark.asyncio
@@ -98,11 +98,11 @@ async def test_set_app_allow_list_allow(mock_app):
     """Should add app to allow-list."""
     from pynintendoparental.enum import SafeLaunchSetting
 
-    from switch_parental_controls.applications import nintendo_set_app_allow_list
+    from switch_parental_controls.applications import switch_set_app_allow_list
     from switch_parental_controls.models import SetAppAllowListInput
 
     ctx = MagicMock()
-    result = await nintendo_set_app_allow_list(
+    result = await switch_set_app_allow_list(
         SetAppAllowListInput(device_id="device-001", application_id="app-001", allow=True), ctx
     )
 
@@ -116,11 +116,11 @@ async def test_set_app_allow_list_remove(mock_app):
     """Should remove app from allow-list."""
     from pynintendoparental.enum import SafeLaunchSetting
 
-    from switch_parental_controls.applications import nintendo_set_app_allow_list
+    from switch_parental_controls.applications import switch_set_app_allow_list
     from switch_parental_controls.models import SetAppAllowListInput
 
     ctx = MagicMock()
-    result = await nintendo_set_app_allow_list(
+    result = await switch_set_app_allow_list(
         SetAppAllowListInput(device_id="device-001", application_id="app-001", allow=False), ctx
     )
 
@@ -131,11 +131,11 @@ async def test_set_app_allow_list_remove(mock_app):
 @pytest.mark.asyncio
 async def test_set_app_allow_list_app_not_found():
     """Should return error for unknown application ID."""
-    from switch_parental_controls.applications import nintendo_set_app_allow_list
+    from switch_parental_controls.applications import switch_set_app_allow_list
     from switch_parental_controls.models import SetAppAllowListInput
 
     ctx = MagicMock()
-    result = await nintendo_set_app_allow_list(
+    result = await switch_set_app_allow_list(
         SetAppAllowListInput(device_id="device-001", application_id="nonexistent", allow=True), ctx
     )
     assert "Error" in result
@@ -145,11 +145,11 @@ async def test_set_app_allow_list_app_not_found():
 @pytest.mark.asyncio
 async def test_set_app_allow_list_device_not_found():
     """Should return error for unknown device ID."""
-    from switch_parental_controls.applications import nintendo_set_app_allow_list
+    from switch_parental_controls.applications import switch_set_app_allow_list
     from switch_parental_controls.models import SetAppAllowListInput
 
     ctx = MagicMock()
-    result = await nintendo_set_app_allow_list(
+    result = await switch_set_app_allow_list(
         SetAppAllowListInput(device_id="nonexistent", application_id="app-001", allow=True), ctx
     )
     assert "Error" in result

@@ -53,7 +53,7 @@ def _device_to_dict(device) -> dict:
 
 
 @mcp.tool(
-    name="nintendo_list_devices",
+    name="switch_list_devices",
     annotations={
         "title": "List Nintendo Switch Devices",
         "readOnlyHint": True,
@@ -62,7 +62,7 @@ def _device_to_dict(device) -> dict:
         "openWorldHint": True,
     },
 )
-async def nintendo_list_devices(params: ListDevicesInput, ctx: Context) -> str:
+async def switch_list_devices(params: ListDevicesInput, ctx: Context) -> str:
     """List all Nintendo Switch devices linked to the authenticated account.
 
     Returns a list of all Nintendo Switch consoles associated with the account,
@@ -136,7 +136,7 @@ async def nintendo_list_devices(params: ListDevicesInput, ctx: Context) -> str:
 
 
 @mcp.tool(
-    name="nintendo_get_device",
+    name="switch_get_device",
     annotations={
         "title": "Get Nintendo Switch Device Details",
         "readOnlyHint": True,
@@ -145,7 +145,7 @@ async def nintendo_list_devices(params: ListDevicesInput, ctx: Context) -> str:
         "openWorldHint": True,
     },
 )
-async def nintendo_get_device(params: DeviceInput, ctx: Context) -> str:
+async def switch_get_device(params: DeviceInput, ctx: Context) -> str:
     """Get detailed status and settings for a specific Nintendo Switch device.
 
     Returns comprehensive information about a device including playtime limits,
@@ -153,7 +153,7 @@ async def nintendo_get_device(params: DeviceInput, ctx: Context) -> str:
 
     Args:
         params (DeviceInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
+            - device_id (str): The unique device ID (from switch_list_devices).
             - response_format (str): 'markdown' or 'json' (default: 'markdown').
 
     Returns:
@@ -173,7 +173,7 @@ async def nintendo_get_device(params: DeviceInput, ctx: Context) -> str:
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         await device.update()
@@ -210,7 +210,7 @@ async def nintendo_get_device(params: DeviceInput, ctx: Context) -> str:
 
 
 @mcp.tool(
-    name="nintendo_get_today_summary",
+    name="switch_get_today_summary",
     annotations={
         "title": "Get Today's Usage Summary",
         "readOnlyHint": True,
@@ -219,7 +219,7 @@ async def nintendo_get_device(params: DeviceInput, ctx: Context) -> str:
         "openWorldHint": True,
     },
 )
-async def nintendo_get_today_summary(params: DeviceInput, ctx: Context) -> str:
+async def switch_get_today_summary(params: DeviceInput, ctx: Context) -> str:
     """Get today's usage summary for a Nintendo Switch device.
 
     Returns the daily summary including total playtime, disabled time,
@@ -227,7 +227,7 @@ async def nintendo_get_today_summary(params: DeviceInput, ctx: Context) -> str:
 
     Args:
         params (DeviceInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
+            - device_id (str): The unique device ID (from switch_list_devices).
             - response_format (str): 'markdown' or 'json' (default: 'markdown').
 
     Returns:
@@ -247,7 +247,7 @@ async def nintendo_get_today_summary(params: DeviceInput, ctx: Context) -> str:
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         await device.update()
@@ -280,7 +280,7 @@ async def nintendo_get_today_summary(params: DeviceInput, ctx: Context) -> str:
 
 
 @mcp.tool(
-    name="nintendo_get_monthly_summary",
+    name="switch_get_monthly_summary",
     annotations={
         "title": "Get Monthly Usage Summary",
         "readOnlyHint": True,
@@ -289,7 +289,7 @@ async def nintendo_get_today_summary(params: DeviceInput, ctx: Context) -> str:
         "openWorldHint": True,
     },
 )
-async def nintendo_get_monthly_summary(params: MonthlySummaryInput, ctx: Context) -> str:
+async def switch_get_monthly_summary(params: MonthlySummaryInput, ctx: Context) -> str:
     """Get the monthly usage summary for a Nintendo Switch device.
 
     Returns aggregated usage data for a specific month, including total playtime
@@ -298,7 +298,7 @@ async def nintendo_get_monthly_summary(params: MonthlySummaryInput, ctx: Context
 
     Args:
         params (MonthlySummaryInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
+            - device_id (str): The unique device ID (from switch_list_devices).
             - year (Optional[int]): Year (e.g. 2024). Omit for most recent.
             - month (Optional[int]): Month (1-12). Required if year is provided.
             - response_format (str): 'markdown' or 'json' (default: 'markdown').
@@ -320,7 +320,7 @@ async def nintendo_get_monthly_summary(params: MonthlySummaryInput, ctx: Context
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         search_date = None
@@ -371,7 +371,7 @@ async def nintendo_get_monthly_summary(params: MonthlySummaryInput, ctx: Context
 
 
 @mcp.tool(
-    name="nintendo_set_daily_playtime_limit",
+    name="switch_set_daily_playtime_limit",
     annotations={
         "title": "Set Daily Playtime Limit",
         "readOnlyHint": False,
@@ -380,7 +380,7 @@ async def nintendo_get_monthly_summary(params: MonthlySummaryInput, ctx: Context
         "openWorldHint": True,
     },
 )
-async def nintendo_set_daily_playtime_limit(params: SetPlaytimeLimitInput, ctx: Context) -> str:
+async def switch_set_daily_playtime_limit(params: SetPlaytimeLimitInput, ctx: Context) -> str:
     """Set the daily playtime limit for a Nintendo Switch device.
 
     Sets the maximum number of minutes the device can be used per day.
@@ -388,7 +388,7 @@ async def nintendo_set_daily_playtime_limit(params: SetPlaytimeLimitInput, ctx: 
 
     Args:
         params (SetPlaytimeLimitInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
+            - device_id (str): The unique device ID (from switch_list_devices).
             - minutes (int): Daily limit in minutes (0-360), or -1 to remove the limit.
 
     Returns:
@@ -408,7 +408,7 @@ async def nintendo_set_daily_playtime_limit(params: SetPlaytimeLimitInput, ctx: 
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         await device.update_max_daily_playtime(params.minutes)
@@ -424,7 +424,7 @@ async def nintendo_set_daily_playtime_limit(params: SetPlaytimeLimitInput, ctx: 
 
 
 @mcp.tool(
-    name="nintendo_add_extra_time",
+    name="switch_add_extra_time",
     annotations={
         "title": "Add Extra Playtime",
         "readOnlyHint": False,
@@ -433,7 +433,7 @@ async def nintendo_set_daily_playtime_limit(params: SetPlaytimeLimitInput, ctx: 
         "openWorldHint": True,
     },
 )
-async def nintendo_add_extra_time(params: AddExtraTimeInput, ctx: Context) -> str:
+async def switch_add_extra_time(params: AddExtraTimeInput, ctx: Context) -> str:
     """Add extra playtime for the current day on a Nintendo Switch device.
 
     Grants additional playing time beyond the configured daily limit for today only.
@@ -441,7 +441,7 @@ async def nintendo_add_extra_time(params: AddExtraTimeInput, ctx: Context) -> st
 
     Args:
         params (AddExtraTimeInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
+            - device_id (str): The unique device ID (from switch_list_devices).
             - minutes (int): Number of extra minutes to add (1-360).
 
     Returns:
@@ -461,7 +461,7 @@ async def nintendo_add_extra_time(params: AddExtraTimeInput, ctx: Context) -> st
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         await device.add_extra_time(params.minutes)
@@ -474,7 +474,7 @@ async def nintendo_add_extra_time(params: AddExtraTimeInput, ctx: Context) -> st
 
 
 @mcp.tool(
-    name="nintendo_set_timer_mode",
+    name="switch_set_timer_mode",
     annotations={
         "title": "Set Timer Mode",
         "readOnlyHint": False,
@@ -483,7 +483,7 @@ async def nintendo_add_extra_time(params: AddExtraTimeInput, ctx: Context) -> st
         "openWorldHint": True,
     },
 )
-async def nintendo_set_timer_mode(params: SetTimerModeInput, ctx: Context) -> str:
+async def switch_set_timer_mode(params: SetTimerModeInput, ctx: Context) -> str:
     """Set the timer mode for a Nintendo Switch device.
 
     Controls whether a single daily limit applies to all days, or whether
@@ -491,7 +491,7 @@ async def nintendo_set_timer_mode(params: SetTimerModeInput, ctx: Context) -> st
 
     Args:
         params (SetTimerModeInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
+            - device_id (str): The unique device ID (from switch_list_devices).
             - mode (str): 'DAILY' for a single limit, or 'EACH_DAY_OF_THE_WEEK' for per-day limits.
 
     Returns:
@@ -511,7 +511,7 @@ async def nintendo_set_timer_mode(params: SetTimerModeInput, ctx: Context) -> st
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         mode = DeviceTimerMode(params.mode)
@@ -523,7 +523,7 @@ async def nintendo_set_timer_mode(params: SetTimerModeInput, ctx: Context) -> st
 
 
 @mcp.tool(
-    name="nintendo_set_day_restrictions",
+    name="switch_set_day_restrictions",
     annotations={
         "title": "Set Per-Day Restrictions",
         "readOnlyHint": False,
@@ -532,15 +532,15 @@ async def nintendo_set_timer_mode(params: SetTimerModeInput, ctx: Context) -> st
         "openWorldHint": True,
     },
 )
-async def nintendo_set_day_restrictions(params: SetDayRestrictionsInput, ctx: Context) -> str:
+async def switch_set_day_restrictions(params: SetDayRestrictionsInput, ctx: Context) -> str:
     """Set playtime and bedtime restrictions for a specific day of the week.
 
     For per-day restrictions to take effect, the device's timer mode should be
-    EACH_DAY_OF_THE_WEEK. Use nintendo_set_timer_mode first if needed.
+    EACH_DAY_OF_THE_WEEK. Use switch_set_timer_mode first if needed.
 
     Args:
         params (SetDayRestrictionsInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
+            - device_id (str): The unique device ID (from switch_list_devices).
             - day_of_week (str): Day to configure (e.g. 'MONDAY').
             - playtime_enabled (bool): Whether to enable a playtime limit for this day.
             - max_playtime_minutes (Optional[int]): Limit in minutes (0-360). Required if playtime_enabled.
@@ -566,7 +566,7 @@ async def nintendo_set_day_restrictions(params: SetDayRestrictionsInput, ctx: Co
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         bedtime_start = None
@@ -603,7 +603,7 @@ async def nintendo_set_day_restrictions(params: SetDayRestrictionsInput, ctx: Co
 
 
 @mcp.tool(
-    name="nintendo_set_restriction_mode",
+    name="switch_set_restriction_mode",
     annotations={
         "title": "Set Restriction Mode",
         "readOnlyHint": False,
@@ -612,7 +612,7 @@ async def nintendo_set_day_restrictions(params: SetDayRestrictionsInput, ctx: Co
         "openWorldHint": True,
     },
 )
-async def nintendo_set_restriction_mode(params: SetRestrictionModeInput, ctx: Context) -> str:
+async def switch_set_restriction_mode(params: SetRestrictionModeInput, ctx: Context) -> str:
     """Set the restriction mode for a Nintendo Switch device.
 
     Controls what happens when the daily playtime limit is reached:
@@ -621,7 +621,7 @@ async def nintendo_set_restriction_mode(params: SetRestrictionModeInput, ctx: Co
 
     Args:
         params (SetRestrictionModeInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
+            - device_id (str): The unique device ID (from switch_list_devices).
             - mode (str): 'FORCED_TERMINATION' or 'ALARM'.
 
     Returns:
@@ -641,7 +641,7 @@ async def nintendo_set_restriction_mode(params: SetRestrictionModeInput, ctx: Co
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         mode = RestrictionMode[params.mode]
@@ -659,7 +659,7 @@ async def nintendo_set_restriction_mode(params: SetRestrictionModeInput, ctx: Co
 
 
 @mcp.tool(
-    name="nintendo_set_content_restriction_level",
+    name="switch_set_content_restriction_level",
     annotations={
         "title": "Set Content Restriction Level",
         "readOnlyHint": False,
@@ -668,7 +668,7 @@ async def nintendo_set_restriction_mode(params: SetRestrictionModeInput, ctx: Co
         "openWorldHint": True,
     },
 )
-async def nintendo_set_content_restriction_level(
+async def switch_set_content_restriction_level(
     params: SetContentRestrictionInput, ctx: Context
 ) -> str:
     """Set the content restriction level for a Nintendo Switch device.
@@ -677,7 +677,7 @@ async def nintendo_set_content_restriction_level(
 
     Args:
         params (SetContentRestrictionInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
+            - device_id (str): The unique device ID (from switch_list_devices).
             - level (str): One of: 'NONE', 'CHILDREN', 'YOUNG_TEENS', 'OLDER_TEENS', 'CUSTOM'.
 
     Returns:
@@ -697,7 +697,7 @@ async def nintendo_set_content_restriction_level(
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         level = FunctionalRestrictionLevel(params.level)
@@ -709,7 +709,7 @@ async def nintendo_set_content_restriction_level(
 
 
 @mcp.tool(
-    name="nintendo_set_bedtime_alarm",
+    name="switch_set_bedtime_alarm",
     annotations={
         "title": "Set Bedtime Alarm",
         "readOnlyHint": False,
@@ -718,7 +718,7 @@ async def nintendo_set_content_restriction_level(
         "openWorldHint": True,
     },
 )
-async def nintendo_set_bedtime_alarm(params: SetBedtimeAlarmInput, ctx: Context) -> str:
+async def switch_set_bedtime_alarm(params: SetBedtimeAlarmInput, ctx: Context) -> str:
     """Set the bedtime alarm time for a Nintendo Switch device.
 
     The bedtime alarm notifies that bedtime has arrived. Must be between 16:00 and 23:00.
@@ -726,7 +726,7 @@ async def nintendo_set_bedtime_alarm(params: SetBedtimeAlarmInput, ctx: Context)
 
     Args:
         params (SetBedtimeAlarmInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
+            - device_id (str): The unique device ID (from switch_list_devices).
             - hour (int): Alarm hour (16-23, or 0 to disable).
             - minute (int): Alarm minute (0-59).
 
@@ -747,7 +747,7 @@ async def nintendo_set_bedtime_alarm(params: SetBedtimeAlarmInput, ctx: Context)
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         alarm_time = time(params.hour, params.minute)
@@ -762,7 +762,7 @@ async def nintendo_set_bedtime_alarm(params: SetBedtimeAlarmInput, ctx: Context)
 
 
 @mcp.tool(
-    name="nintendo_set_bedtime_end_time",
+    name="switch_set_bedtime_end_time",
     annotations={
         "title": "Set Bedtime End Time",
         "readOnlyHint": False,
@@ -771,7 +771,7 @@ async def nintendo_set_bedtime_alarm(params: SetBedtimeAlarmInput, ctx: Context)
         "openWorldHint": True,
     },
 )
-async def nintendo_set_bedtime_end_time(params: SetBedtimeEndInput, ctx: Context) -> str:
+async def switch_set_bedtime_end_time(params: SetBedtimeEndInput, ctx: Context) -> str:
     """Set the time when bedtime restrictions end on a Nintendo Switch device.
 
     This is when the device can be used again after bedtime. Must be between 05:00 and 09:00.
@@ -779,7 +779,7 @@ async def nintendo_set_bedtime_end_time(params: SetBedtimeEndInput, ctx: Context
 
     Args:
         params (SetBedtimeEndInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
+            - device_id (str): The unique device ID (from switch_list_devices).
             - hour (int): End hour (5-9, or 0 to disable).
             - minute (int): End minute (0-59).
 
@@ -800,7 +800,7 @@ async def nintendo_set_bedtime_end_time(params: SetBedtimeEndInput, ctx: Context
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         end_time = time(params.hour, params.minute)

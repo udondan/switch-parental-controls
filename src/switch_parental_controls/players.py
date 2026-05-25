@@ -22,7 +22,7 @@ def _player_to_dict(player) -> dict:
 
 
 @mcp.tool(
-    name="nintendo_list_players",
+    name="switch_list_players",
     annotations={
         "title": "List Players on Device",
         "readOnlyHint": True,
@@ -31,7 +31,7 @@ def _player_to_dict(player) -> dict:
         "openWorldHint": True,
     },
 )
-async def nintendo_list_players(params: DeviceInput, ctx: Context) -> str:
+async def switch_list_players(params: DeviceInput, ctx: Context) -> str:
     """List all players (Nintendo accounts) associated with a Nintendo Switch device.
 
     Returns all player profiles linked to the device, including their nicknames,
@@ -39,7 +39,7 @@ async def nintendo_list_players(params: DeviceInput, ctx: Context) -> str:
 
     Args:
         params (DeviceInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
+            - device_id (str): The unique device ID (from switch_list_devices).
             - response_format (str): 'markdown' or 'json' (default: 'markdown').
 
     Returns:
@@ -74,7 +74,7 @@ async def nintendo_list_players(params: DeviceInput, ctx: Context) -> str:
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         await device.update()
@@ -107,7 +107,7 @@ async def nintendo_list_players(params: DeviceInput, ctx: Context) -> str:
 
 
 @mcp.tool(
-    name="nintendo_get_player",
+    name="switch_get_player",
     annotations={
         "title": "Get Player Details",
         "readOnlyHint": True,
@@ -116,7 +116,7 @@ async def nintendo_list_players(params: DeviceInput, ctx: Context) -> str:
         "openWorldHint": True,
     },
 )
-async def nintendo_get_player(params: PlayerInput, ctx: Context) -> str:
+async def switch_get_player(params: PlayerInput, ctx: Context) -> str:
     """Get detailed information for a specific player on a Nintendo Switch device.
 
     Returns the player's profile and a list of applications they played today,
@@ -124,8 +124,8 @@ async def nintendo_get_player(params: PlayerInput, ctx: Context) -> str:
 
     Args:
         params (PlayerInput): Validated input containing:
-            - device_id (str): The unique device ID (from nintendo_list_devices).
-            - player_id (str): The unique player ID (from nintendo_list_players).
+            - device_id (str): The unique device ID (from switch_list_devices).
+            - player_id (str): The unique player ID (from switch_list_players).
             - response_format (str): 'markdown' or 'json' (default: 'markdown').
 
     Returns:
@@ -145,7 +145,7 @@ async def nintendo_get_player(params: PlayerInput, ctx: Context) -> str:
         if device is None:
             return (
                 f"Error: Device '{params.device_id}' not found. "
-                "Use nintendo_list_devices to see available device IDs."
+                "Use switch_list_devices to see available device IDs."
             )
 
         await device.update()
@@ -154,7 +154,7 @@ async def nintendo_get_player(params: PlayerInput, ctx: Context) -> str:
         except ValueError:
             return (
                 f"Error: Player '{params.player_id}' not found on device '{device.name}'. "
-                "Use nintendo_list_players to see available player IDs."
+                "Use switch_list_players to see available player IDs."
             )
 
         if params.response_format == ResponseFormat.JSON:
