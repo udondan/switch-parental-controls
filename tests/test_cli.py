@@ -71,9 +71,11 @@ def auto_save_cache():
 
 
 def test_version(runner):
+    from importlib.metadata import version
+
     result = runner.invoke(cli, ["--version"])
     assert result.exit_code == 0
-    assert "0.4.0" in result.output
+    assert version("switch-parental-controls") in result.output
 
 
 # ---------------------------------------------------------------------------
