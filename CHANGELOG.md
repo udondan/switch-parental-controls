@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/udondan/switch-parental-controls/compare/v0.2.0...v0.3.0) (2026-05-25)
+
+
+### Features
+
+* add CLI with persistent auth and smart device resolution ([#10](https://github.com/udondan/switch-parental-controls/issues/10)) ([816b916](https://github.com/udondan/switch-parental-controls/commit/816b916fe774344abdc8af7342021fca7c8227c2))
+
 ## [0.2.0](https://github.com/udondan/switch-parental-controls/compare/v0.1.0...v0.2.0) (2026-05-24)
 
 
