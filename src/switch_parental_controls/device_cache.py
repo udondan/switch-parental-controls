@@ -65,6 +65,8 @@ def resolve_device_id(client, name_or_id: str | None) -> str:
         return ", ".join(f"'{name}' ({did})" for did, name in cache.items())
 
     if name_or_id is not None:
+        if len(cache) == 0:
+            raise ValueError("No devices found on this account.")
         # Exact ID match
         if name_or_id in cache:
             return name_or_id
