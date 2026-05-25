@@ -104,6 +104,7 @@ def _execute(coro_factory) -> None:
 
 
 @click.group()
+@click.version_option(package_name="switch-parental-controls")
 @click.option(
     "--timezone",
     "-t",
