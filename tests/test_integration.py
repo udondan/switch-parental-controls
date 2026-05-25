@@ -1,4 +1,4 @@
-"""Integration tests for Nintendo MCP tools using real Nintendo API credentials.
+"""Integration tests for Nintendo MCP tools and CLI using real Nintendo API credentials.
 
 These tests call the actual Nintendo Parental Controls API. They require a
 NINTENDO_SESSION_TOKEN set in a .env file or environment. All tests are
@@ -8,11 +8,13 @@ Run:
     pytest -m integration tests/test_integration.py -v
 """
 
+import json
 import os
 from unittest.mock import MagicMock
 
 import aiohttp
 import pytest
+from click.testing import CliRunner
 
 pytestmark = pytest.mark.integration
 
@@ -130,3 +132,93 @@ async def test_list_applications(first_device_id):
     result = await nintendo_list_applications(DeviceInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
     assert "Error: Not authenticated" not in result
+
+
+# ---------------------------------------------------------------------------
+# CLI integration tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture()
+def cli_runner(tmp_path, monkeypatch):
+    """CliRunner with an isolated device cache directory."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    return CliRunner()
+
+
+def test_cli_list_devices(cli_runner):
+    """CLI list-devices should exit 0 and print device names."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["list-devices"])
+    assert result.exit_code == 0, result.output
+    assert "Error" not in result.output
+    assert len(result.output.strip()) > 0
+
+
+def test_cli_list_devices_json(cli_runner):
+    """CLI list-devices --format json should return parseable JSON with a 'devices' key."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["list-devices", "--format", "json"])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert "devices" in data
+
+
+def test_cli_get_device(cli_runner, first_device_id):
+    """CLI get-device should exit 0 and include the device ID in output."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["get-device", first_device_id])
+    assert result.exit_code == 0, result.output
+    assert first_device_id in result.output
+
+
+def test_cli_today_summary(cli_runner, first_device_id):
+    """CLI today-summary should exit 0 without an auth error."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["today-summary", first_device_id])
+    assert result.exit_code == 0, result.output
+    assert "Error" not in result.output
+
+
+def test_cli_monthly_summary(cli_runner, first_device_id):
+    """CLI monthly-summary should exit 0 without an auth error."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["monthly-summary", first_device_id])
+    assert result.exit_code == 0, result.output
+    assert "Error" not in result.output
+
+
+def test_cli_list_players(cli_runner, first_device_id):
+    """CLI list-players should exit 0 without an auth error."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["list-players", first_device_id])
+    assert result.exit_code == 0, result.output
+    assert "Error" not in result.output
+
+
+def test_cli_list_applications(cli_runner, first_device_id):
+    """CLI list-applications should exit 0 without an auth error."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["list-applications", first_device_id])
+    assert result.exit_code == 0, result.output
+    assert "Error" not in result.output
+
+
+def test_cli_auto_select_single_device(cli_runner):
+    """today-summary with no DEVICE arg auto-selects when only one device is on the account."""
+    from switch_parental_controls.cli import cli
+
+    # Populate the cache first so auto-select works without an extra API call.
+    list_result = cli_runner.invoke(cli, ["list-devices"])
+    assert list_result.exit_code == 0, list_result.output
+
+    result = cli_runner.invoke(cli, ["today-summary"])
+    assert result.exit_code == 0, result.output
+    assert "Error" not in result.output
