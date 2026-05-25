@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.4.0](https://github.com/udondan/switch-parental-controls/compare/v0.3.0...v0.4.0) (2026-05-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* rename NINTENDO_ env vars to SWITCH_PARENTAL_CONTROLS_ ([#15](https://github.com/udondan/switch-parental-controls/issues/15))
+* rename MCP tools from nintendo_ to switch_ prefix ([#14](https://github.com/udondan/switch-parental-controls/issues/14))
+
+### Features
+
+* rename MCP tools from nintendo_ to switch_ prefix ([#14](https://github.com/udondan/switch-parental-controls/issues/14)) ([353b44f](https://github.com/udondan/switch-parental-controls/commit/353b44f01f04d40e4fbb1a518d2740d3ac662958))
+
+
+### Documentation
+
+* rework README to lead with CLI and improve auth documentation ([#12](https://github.com/udondan/switch-parental-controls/issues/12)) ([304d9be](https://github.com/udondan/switch-parental-controls/commit/304d9be50f3469e4f65509c39f1666ce58c596f4))
+
+
+### Code Refactoring
+
+* rename NINTENDO_ env vars to SWITCH_PARENTAL_CONTROLS_ ([#15](https://github.com/udondan/switch-parental-controls/issues/15)) ([cf8de67](https://github.com/udondan/switch-parental-controls/commit/cf8de67f3847c5cea53561aa8dbcac20caad9d78))
+
 ## [0.3.0](https://github.com/udondan/switch-parental-controls/compare/v0.2.0...v0.3.0) (2026-05-25)
 
 
