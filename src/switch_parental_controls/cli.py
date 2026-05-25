@@ -96,7 +96,7 @@ def _execute(coro_factory) -> None:
                 err=True,
             )
             sys.exit(1)
-        raise
+        raise click.ClickException(str(exc)) from exc
     _output(result)
 
 
