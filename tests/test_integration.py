@@ -1,7 +1,7 @@
 """Integration tests for Nintendo MCP tools and CLI using real Nintendo API credentials.
 
-These tests call the actual Nintendo Parental Controls API. They require a
-SWITCH_PARENTAL_CONTROL_SESSION_TOKEN set in a .env file or environment. All tests are
+These tests call the actual Nintendo Parental Controls API. They require
+SWITCH_PARENTAL_CONTROL_SESSION_TOKEN to be set in a .env file or environment. All tests are
 read-only — they do not modify any parental control settings.
 
 Run:
