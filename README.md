@@ -58,7 +58,7 @@ echo 'NINTENDO_SESSION_TOKEN=your-token-here' >> .env
 
 ## CLI Usage
 
-The `nintendo` CLI gives you direct terminal access to all parental control features.
+The `switch-parental-controls` CLI gives you direct terminal access to all parental control features.
 
 ### Installation
 
@@ -88,11 +88,9 @@ This starts an interactive flow:
 3. Right-click the **"Select this person"** button and copy the link
 4. Paste the copied URL at the prompt
 
-On success, your session token is printed. Export it so future commands work:
+On success, the token is saved to `~/.config/switch-parental-controls/credentials` — all other commands will use it automatically. No further setup needed.
 
-```bash
-export NINTENDO_SESSION_TOKEN="your-token-here"
-```
+For CI pipelines or other tools that need the token directly, the `export` snippet is also printed during login.
 
 ### Global Options
 

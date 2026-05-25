@@ -146,8 +146,9 @@ def logout_cmd() -> None:
 def login_cmd(obj: dict) -> None:
     """Interactive OAuth login — opens a Nintendo login URL then completes the flow.
 
-    After running this command you will receive a session token. Export it as
-    NINTENDO_SESSION_TOKEN to use all other commands without logging in again.
+    The session token is saved to ~/.config/switch-parental-controls/credentials so
+    all other commands work without any further setup. For CI pipelines or other
+    tools that need the token directly, the export snippet is also printed.
     """
 
     async def run() -> str:
