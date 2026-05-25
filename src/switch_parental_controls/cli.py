@@ -87,6 +87,8 @@ def _execute(coro_factory) -> None:
     """Run an async coroutine factory and output the result."""
     try:
         result = asyncio.run(coro_factory())
+    except (click.exceptions.ClickException, click.exceptions.Abort):
+        raise
     except Exception as exc:
         exc_type = type(exc).__name__
         if "InvalidSessionToken" in exc_type or "invalid_grant" in str(exc):
