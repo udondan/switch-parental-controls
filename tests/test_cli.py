@@ -66,6 +66,19 @@ def auto_save_cache():
 
 
 # ---------------------------------------------------------------------------
+# Global: version
+# ---------------------------------------------------------------------------
+
+
+def test_version(runner):
+    from importlib.metadata import version
+
+    result = runner.invoke(cli, ["--version"])
+    assert result.exit_code == 0
+    assert version("switch-parental-controls") in result.output
+
+
+# ---------------------------------------------------------------------------
 # Global: token guard
 # ---------------------------------------------------------------------------
 
