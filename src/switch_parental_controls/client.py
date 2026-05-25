@@ -47,5 +47,5 @@ async def switch_client(
 
 
 def get_env_token() -> str | None:
-    """Return NINTENDO_SESSION_TOKEN from environment, or None."""
-    return os.environ.get("NINTENDO_SESSION_TOKEN") or None
+    """Return SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN from environment, or None."""
+    return os.environ.get("SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN") or None

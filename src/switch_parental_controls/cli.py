@@ -5,12 +5,12 @@ Provides subcommands for all parental control operations plus login/logout and a
 
 Authentication:
     Run 'switch-parental-controls login' for an interactive OAuth flow, or set
-    NINTENDO_SESSION_TOKEN in the environment before running any other command.
+    SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN in the environment before running any other command.
 
 Environment Variables:
-    NINTENDO_SESSION_TOKEN: Nintendo session token.
-    NINTENDO_TIMEZONE: IANA timezone string (default: Europe/London).
-    NINTENDO_LANG: Language code (default: en-GB).
+    SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN: Nintendo session token.
+    SWITCH_PARENTAL_CONTROLS_TIMEZONE: IANA timezone string (default: Europe/London).
+    SWITCH_PARENTAL_CONTROLS_LANG: Language code (default: en-GB).
 """
 
 import asyncio
@@ -45,7 +45,7 @@ def _require_token() -> str:
     """Return session token from env var or credentials file, or exit with an error."""
     from switch_parental_controls.credentials import load_token
 
-    token = os.environ.get("NINTENDO_SESSION_TOKEN") or load_token()
+    token = os.environ.get("SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN") or load_token()
     if not token:
         click.echo(
             "Error: Not authenticated.\n"
@@ -107,7 +107,7 @@ def _execute(coro_factory) -> None:
 @click.option(
     "--timezone",
     "-t",
-    envvar="NINTENDO_TIMEZONE",
+    envvar="SWITCH_PARENTAL_CONTROLS_TIMEZONE",
     default="Europe/London",
     show_default=True,
     help="IANA timezone (e.g. America/New_York).",
@@ -115,7 +115,7 @@ def _execute(coro_factory) -> None:
 @click.option(
     "--lang",
     "-l",
-    envvar="NINTENDO_LANG",
+    envvar="SWITCH_PARENTAL_CONTROLS_LANG",
     default="en-GB",
     show_default=True,
     help="Language code (e.g. en-US).",
@@ -208,7 +208,7 @@ def login_cmd(obj: dict) -> None:
             f"\n✓ Login successful! Token saved to {creds_path}\n\n"
             "You can now run any command — no further setup needed.\n\n"
             "To use this token in other tools or scripts:\n\n"
-            f"  export NINTENDO_SESSION_TOKEN={shlex.quote(session_token)}"
+            f"  export SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN={shlex.quote(session_token)}"
         )
 
     _execute(run)

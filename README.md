@@ -77,7 +77,7 @@ This starts an interactive flow:
 
 On success, the token is saved to `~/.config/switch-parental-controls/credentials` (respects `XDG_CONFIG_HOME`) — all other commands will use it automatically. No further setup needed.
 
-The CLI also prints an `export NINTENDO_SESSION_TOKEN=...` snippet after login, so you can copy the token value for use in other tools or scripts.
+The CLI also prints an `export SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN=...` snippet after login, so you can copy the token value for use in other tools or scripts.
 
 #### Storing your token
 
@@ -99,7 +99,7 @@ The default path is `~/.config/switch-parental-controls/credentials`; set `XDG_C
 
 ```bash
 # Add to ~/.zshrc, ~/.bashrc, or equivalent
-export NINTENDO_SESSION_TOKEN="your-token-here"
+export SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN="your-token-here"
 ```
 
 The environment variable takes precedence over the credentials file, so this is also useful for temporarily overriding a stored token.
@@ -107,7 +107,7 @@ The environment variable takes precedence over the credentials file, so this is 
 **Inline for one-off runs:**
 
 ```bash
-NINTENDO_SESSION_TOKEN="your-token-here" switch-parental-controls today-summary
+SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN="your-token-here" switch-parental-controls today-summary
 ```
 
 > **Note**: Session tokens can expire. If you get authentication errors, repeat the login flow.
@@ -118,8 +118,8 @@ NINTENDO_SESSION_TOKEN="your-token-here" switch-parental-controls today-summary
 switch-parental-controls [OPTIONS] COMMAND [ARGS]...
 
 Options:
-  -t, --timezone TEXT   IANA timezone  [env: NINTENDO_TIMEZONE; default: Europe/London]
-  -l, --lang TEXT       Language code  [env: NINTENDO_LANG; default: en-GB]
+  -t, --timezone TEXT   IANA timezone  [env: SWITCH_PARENTAL_CONTROLS_TIMEZONE; default: Europe/London]
+  -l, --lang TEXT       Language code  [env: SWITCH_PARENTAL_CONTROLS_LANG; default: en-GB]
 ```
 
 ### Commands
@@ -203,11 +203,11 @@ No clone or install required — `uvx` fetches the package from PyPI and runs it
 
 ### Environment Variables
 
-| Variable                 | Required | Default         | Description                             |
-| ------------------------ | -------- | --------------- | --------------------------------------- |
-| `NINTENDO_SESSION_TOKEN` | Yes\*    | —               | Nintendo session token                  |
-| `NINTENDO_TIMEZONE`      | No       | `Europe/London` | IANA timezone (e.g. `America/New_York`) |
-| `NINTENDO_LANG`          | No       | `en-GB`         | Language code (e.g. `en-US`)            |
+| Variable                                | Required | Default         | Description                             |
+| --------------------------------------- | -------- | --------------- | --------------------------------------- |
+| `SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN` | Yes\*    | —               | Nintendo session token                  |
+| `SWITCH_PARENTAL_CONTROLS_TIMEZONE`      | No       | `Europe/London` | IANA timezone (e.g. `America/New_York`) |
+| `SWITCH_PARENTAL_CONTROLS_LANG`          | No       | `en-GB`         | Language code (e.g. `en-US`)            |
 
 \*The token can also be provided via the credentials file (`~/.config/switch-parental-controls/credentials` by default; respects `XDG_CONFIG_HOME`). Since the CLI `login` command writes to that same file, running `switch-parental-controls login` once is sufficient — the MCP server will pick up the stored token automatically, no environment variable needed. The only exception where no token is needed upfront at all is when using the interactive `switch_get_login_url` / `switch_complete_login` tools to authenticate.
 
@@ -222,9 +222,9 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
       "command": "uvx",
       "args": ["switch-parental-controls", "mcp"],
       "env": {
-        "NINTENDO_SESSION_TOKEN": "your-token-here",
-        "NINTENDO_TIMEZONE": "America/New_York",
-        "NINTENDO_LANG": "en-US"
+        "SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN": "your-token-here",
+        "SWITCH_PARENTAL_CONTROLS_TIMEZONE": "America/New_York",
+        "SWITCH_PARENTAL_CONTROLS_LANG": "en-US"
       }
     }
   }
