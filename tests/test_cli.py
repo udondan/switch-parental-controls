@@ -71,7 +71,7 @@ def auto_save_cache():
 
 
 def test_list_devices_no_token(runner, monkeypatch):
-    monkeypatch.delenv("NINTENDO_SESSION_TOKEN", raising=False)
+    monkeypatch.delenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", raising=False)
     with patch("switch_parental_controls.credentials.load_token", return_value=None):
         result = runner.invoke(cli, ["list-devices"])
     assert result.exit_code == 1
@@ -79,7 +79,7 @@ def test_list_devices_no_token(runner, monkeypatch):
 
 
 def test_get_device_no_token(runner, monkeypatch):
-    monkeypatch.delenv("NINTENDO_SESSION_TOKEN", raising=False)
+    monkeypatch.delenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", raising=False)
     with patch("switch_parental_controls.credentials.load_token", return_value=None):
         result = runner.invoke(cli, ["get-device", "device-001"])
     assert result.exit_code == 1
@@ -87,7 +87,7 @@ def test_get_device_no_token(runner, monkeypatch):
 
 def test_invalid_token_shows_relogin_message(runner, monkeypatch):
     """When the saved token is rejected by Nintendo, the user sees a clear re-login prompt."""
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "expired-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "expired-token")
 
     class FakeInvalidSessionTokenException(Exception):
         pass
@@ -107,7 +107,7 @@ def test_invalid_token_shows_relogin_message(runner, monkeypatch):
 
 def test_require_token_reads_credentials_file(runner, monkeypatch, mock_client_with_device, mock_session):
     """_require_token falls back to credentials file when env var is absent."""
-    monkeypatch.delenv("NINTENDO_SESSION_TOKEN", raising=False)
+    monkeypatch.delenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", raising=False)
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -140,7 +140,7 @@ def test_mcp_subcommand_calls_server_main(runner):
 
 
 def test_login_interactive_flow(runner, monkeypatch):
-    monkeypatch.delenv("NINTENDO_SESSION_TOKEN", raising=False)
+    monkeypatch.delenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", raising=False)
 
     mock_auth = MagicMock()
     mock_auth.login_url = "https://accounts.nintendo.com/login?state=abc"
@@ -164,13 +164,13 @@ def test_login_interactive_flow(runner, monkeypatch):
     assert result.exit_code == 0
     assert "accounts.nintendo.com" in result.output
     assert "test-session-token" in result.output
-    assert "NINTENDO_SESSION_TOKEN" in result.output
+    assert "SWITCH_PARENTAL_CONTROL_SESSION_TOKEN" in result.output
     mock_http_session.close.assert_awaited_once()
 
 
 def test_login_saves_token(runner, monkeypatch):
     """Login saves the session token to the credentials file."""
-    monkeypatch.delenv("NINTENDO_SESSION_TOKEN", raising=False)
+    monkeypatch.delenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", raising=False)
 
     mock_auth = MagicMock()
     mock_auth.login_url = "https://accounts.nintendo.com/login?state=abc"
@@ -220,7 +220,7 @@ def test_logout_no_credentials(runner):
 
 
 def test_list_devices_markdown(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -237,7 +237,7 @@ def test_list_devices_markdown(runner, monkeypatch, mock_client_with_device, moc
 
 
 def test_list_devices_json(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -257,7 +257,7 @@ def test_list_devices_json(runner, monkeypatch, mock_client_with_device, mock_se
 
 
 def test_list_devices_error_exits_1(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -278,7 +278,7 @@ def test_list_devices_error_exits_1(runner, monkeypatch, mock_client_with_device
 
 
 def test_get_device(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -301,7 +301,7 @@ def test_get_device(runner, monkeypatch, mock_client_with_device, mock_session):
 
 
 def test_today_summary(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -324,7 +324,7 @@ def test_today_summary(runner, monkeypatch, mock_client_with_device, mock_sessio
 
 
 def test_monthly_summary_no_args(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -343,7 +343,7 @@ def test_monthly_summary_no_args(runner, monkeypatch, mock_client_with_device, m
 
 
 def test_monthly_summary_with_year_month(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -362,7 +362,7 @@ def test_monthly_summary_with_year_month(runner, monkeypatch, mock_client_with_d
 
 
 def test_monthly_summary_year_without_month_fails(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with patch("switch_parental_controls.cli.switch_client", return_value=ctx):
@@ -378,7 +378,7 @@ def test_monthly_summary_year_without_month_fails(runner, monkeypatch, mock_clie
 
 
 def test_set_playtime_limit(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -396,7 +396,7 @@ def test_set_playtime_limit(runner, monkeypatch, mock_client_with_device, mock_s
 
 
 def test_set_playtime_limit_remove(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -414,7 +414,7 @@ def test_set_playtime_limit_remove(runner, monkeypatch, mock_client_with_device,
 
 
 def test_set_playtime_limit_invalid(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with patch("switch_parental_controls.cli.switch_client", return_value=ctx):
@@ -430,7 +430,7 @@ def test_set_playtime_limit_invalid(runner, monkeypatch, mock_client_with_device
 
 
 def test_add_extra_time(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -453,7 +453,7 @@ def test_add_extra_time(runner, monkeypatch, mock_client_with_device, mock_sessi
 
 
 def test_set_timer_mode_daily(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -471,7 +471,7 @@ def test_set_timer_mode_daily(runner, monkeypatch, mock_client_with_device, mock
 
 
 def test_set_timer_mode_invalid(runner, monkeypatch):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     result = runner.invoke(cli, ["set-timer-mode", "device-001", "INVALID_MODE"])
     assert result.exit_code != 0
 
@@ -482,7 +482,7 @@ def test_set_timer_mode_invalid(runner, monkeypatch):
 
 
 def test_set_day_restrictions_playtime_only(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -510,7 +510,7 @@ def test_set_day_restrictions_playtime_only(runner, monkeypatch, mock_client_wit
 
 
 def test_set_day_restrictions_with_bedtime(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -540,7 +540,7 @@ def test_set_day_restrictions_with_bedtime(runner, monkeypatch, mock_client_with
 def test_set_day_restrictions_playtime_enabled_without_minutes_fails(
     runner, monkeypatch, mock_client_with_device, mock_session
 ):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with patch("switch_parental_controls.cli.switch_client", return_value=ctx):
@@ -559,7 +559,7 @@ def test_set_day_restrictions_playtime_enabled_without_minutes_fails(
 
 
 def test_set_restriction_mode(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -582,7 +582,7 @@ def test_set_restriction_mode(runner, monkeypatch, mock_client_with_device, mock
 
 
 def test_set_content_restriction(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -605,7 +605,7 @@ def test_set_content_restriction(runner, monkeypatch, mock_client_with_device, m
 
 
 def test_set_bedtime_alarm(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -624,7 +624,7 @@ def test_set_bedtime_alarm(runner, monkeypatch, mock_client_with_device, mock_se
 
 
 def test_set_bedtime_alarm_invalid_hour(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with patch("switch_parental_controls.cli.switch_client", return_value=ctx):
@@ -640,7 +640,7 @@ def test_set_bedtime_alarm_invalid_hour(runner, monkeypatch, mock_client_with_de
 
 
 def test_set_bedtime_end(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -663,7 +663,7 @@ def test_set_bedtime_end(runner, monkeypatch, mock_client_with_device, mock_sess
 
 
 def test_list_players(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -686,7 +686,7 @@ def test_list_players(runner, monkeypatch, mock_client_with_device, mock_session
 
 
 def test_get_player(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -710,7 +710,7 @@ def test_get_player(runner, monkeypatch, mock_client_with_device, mock_session):
 
 
 def test_list_applications(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -733,7 +733,7 @@ def test_list_applications(runner, monkeypatch, mock_client_with_device, mock_se
 
 
 def test_set_app_allow_list_allow(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -752,7 +752,7 @@ def test_set_app_allow_list_allow(runner, monkeypatch, mock_client_with_device, 
 
 
 def test_set_app_allow_list_deny(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -775,7 +775,7 @@ def test_set_app_allow_list_deny(runner, monkeypatch, mock_client_with_device, m
 
 
 def test_global_timezone_option(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
@@ -791,7 +791,7 @@ def test_global_timezone_option(runner, monkeypatch, mock_client_with_device, mo
 
 
 def test_global_lang_option(runner, monkeypatch, mock_client_with_device, mock_session):
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "fake-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (

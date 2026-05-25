@@ -60,7 +60,7 @@ def handle_error(e: Exception) -> str:
         return "Error: No Nintendo Switch devices found on this account."
     if "NotAuthenticated" in error_type:
         return (
-            "Error: Not authenticated. Set the NINTENDO_SESSION_TOKEN environment variable, "
+            "Error: Not authenticated. Set the SWITCH_PARENTAL_CONTROL_SESSION_TOKEN environment variable, "
             "or call switch_get_login_url to start the login flow."
         )
 
@@ -76,7 +76,7 @@ def require_client(client: Any) -> str | None:
     """Return an error string if the client is not initialized, else None."""
     if client is None:
         return (
-            "Error: Not authenticated. Set the NINTENDO_SESSION_TOKEN environment variable "
+            "Error: Not authenticated. Set the SWITCH_PARENTAL_CONTROL_SESSION_TOKEN environment variable "
             "before starting the server, or call switch_get_login_url to start the interactive login flow."
         )
     return None

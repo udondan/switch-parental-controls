@@ -1,7 +1,7 @@
 """Integration tests for Nintendo MCP tools and CLI using real Nintendo API credentials.
 
 These tests call the actual Nintendo Parental Controls API. They require a
-NINTENDO_SESSION_TOKEN set in a .env file or environment. All tests are
+SWITCH_PARENTAL_CONTROL_SESSION_TOKEN set in a .env file or environment. All tests are
 read-only — they do not modify any parental control settings.
 
 Run:
@@ -25,15 +25,15 @@ async def real_client():
     from dotenv import load_dotenv
 
     load_dotenv()
-    token = os.environ.get("NINTENDO_SESSION_TOKEN")
+    token = os.environ.get("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN")
     if not token:
-        pytest.skip("NINTENDO_SESSION_TOKEN not set")
+        pytest.skip("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN not set")
 
     from pynintendoparental import NintendoParental
     from pynintendoparental.authenticator import Authenticator
 
-    timezone = os.environ.get("NINTENDO_TIMEZONE") or "Europe/London"
-    lang = os.environ.get("NINTENDO_LANG") or "en-GB"
+    timezone = os.environ.get("SWITCH_PARENTAL_CONTROL_TIMEZONE") or "Europe/London"
+    lang = os.environ.get("SWITCH_PARENTAL_CONTROL_LANG") or "en-GB"
 
     session = aiohttp.ClientSession()
     try:
@@ -149,7 +149,7 @@ def cli_runner(tmp_path, monkeypatch, real_client):
     from contextlib import asynccontextmanager
 
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
-    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "stub-token")
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN", "stub-token")
 
     @asynccontextmanager
     async def _stub_client(timezone, lang, token):

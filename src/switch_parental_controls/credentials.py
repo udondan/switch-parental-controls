@@ -1,7 +1,7 @@
 """Persistent credential storage for the CLI.
 
 Token lookup order:
-  1. NINTENDO_SESSION_TOKEN environment variable (highest priority — CI/scripting)
+  1. SWITCH_PARENTAL_CONTROL_SESSION_TOKEN environment variable (highest priority — CI/scripting)
   2. Credentials file (~/.config/switch-parental-controls/credentials)
 """
 
