@@ -1,4 +1,4 @@
-"""Integration tests for Nintendo MCP tools using real Nintendo API credentials.
+"""Integration tests for Nintendo MCP tools and CLI using real Nintendo API credentials.
 
 These tests call the actual Nintendo Parental Controls API. They require a
 NINTENDO_SESSION_TOKEN set in a .env file or environment. All tests are
@@ -8,11 +8,13 @@ Run:
     pytest -m integration tests/test_integration.py -v
 """
 
+import json
 import os
 from unittest.mock import MagicMock
 
 import aiohttp
 import pytest
+from click.testing import CliRunner
 
 pytestmark = pytest.mark.integration
 
@@ -53,7 +55,7 @@ async def inject_client(real_client, monkeypatch):
     """
     from unittest.mock import AsyncMock
 
-    from nintendo_mcp import server
+    from switch_parental_controls import server
 
     monkeypatch.setattr(real_client, "update", AsyncMock())
     for device in real_client.devices.values():
@@ -74,8 +76,8 @@ async def first_device_id(real_client):
 
 async def test_list_devices():
     """Real device list should be returned as a non-empty string without error."""
-    from nintendo_mcp.devices import nintendo_list_devices
-    from nintendo_mcp.models import ListDevicesInput
+    from switch_parental_controls.devices import nintendo_list_devices
+    from switch_parental_controls.models import ListDevicesInput
 
     result = await nintendo_list_devices(ListDevicesInput(), MagicMock())
     assert "Error" not in result
@@ -84,8 +86,8 @@ async def test_list_devices():
 
 async def test_get_device(first_device_id):
     """Real device details should be returned without error."""
-    from nintendo_mcp.devices import nintendo_get_device
-    from nintendo_mcp.models import DeviceInput
+    from switch_parental_controls.devices import nintendo_get_device
+    from switch_parental_controls.models import DeviceInput
 
     result = await nintendo_get_device(DeviceInput(device_id=first_device_id), MagicMock())
     assert "Error" not in result
@@ -94,8 +96,8 @@ async def test_get_device(first_device_id):
 
 async def test_get_today_summary(first_device_id):
     """Today's summary should be returned without an auth error."""
-    from nintendo_mcp.devices import nintendo_get_today_summary
-    from nintendo_mcp.models import DeviceInput
+    from switch_parental_controls.devices import nintendo_get_today_summary
+    from switch_parental_controls.models import DeviceInput
 
     result = await nintendo_get_today_summary(DeviceInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
@@ -104,8 +106,8 @@ async def test_get_today_summary(first_device_id):
 
 async def test_get_monthly_summary(first_device_id):
     """Monthly summary should be returned without an auth error."""
-    from nintendo_mcp.devices import nintendo_get_monthly_summary
-    from nintendo_mcp.models import MonthlySummaryInput
+    from switch_parental_controls.devices import nintendo_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput
 
     result = await nintendo_get_monthly_summary(MonthlySummaryInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
@@ -114,8 +116,8 @@ async def test_get_monthly_summary(first_device_id):
 
 async def test_list_players(first_device_id):
     """Player list should be returned without an auth error."""
-    from nintendo_mcp.models import DeviceInput
-    from nintendo_mcp.players import nintendo_list_players
+    from switch_parental_controls.models import DeviceInput
+    from switch_parental_controls.players import nintendo_list_players
 
     result = await nintendo_list_players(DeviceInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
@@ -124,9 +126,116 @@ async def test_list_players(first_device_id):
 
 async def test_list_applications(first_device_id):
     """Application list should be returned without an auth error."""
-    from nintendo_mcp.applications import nintendo_list_applications
-    from nintendo_mcp.models import DeviceInput
+    from switch_parental_controls.applications import nintendo_list_applications
+    from switch_parental_controls.models import DeviceInput
 
     result = await nintendo_list_applications(DeviceInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
     assert "Error: Not authenticated" not in result
+
+
+# ---------------------------------------------------------------------------
+# CLI integration tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture()
+def cli_runner(tmp_path, monkeypatch, real_client):
+    """CliRunner that reuses the module-scoped real client to avoid extra API calls.
+
+    Patches nintendo_client to yield the already-initialized real_client so CLI
+    tests don't create a new Nintendo client (and call update()) for each test.
+    """
+    from contextlib import asynccontextmanager
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "stub-token")
+
+    @asynccontextmanager
+    async def _stub_client(timezone, lang, token):
+        yield real_client, None
+
+    monkeypatch.setattr("switch_parental_controls.cli.nintendo_client", _stub_client)
+    return CliRunner()
+
+
+def test_cli_list_devices(cli_runner):
+    """CLI list-devices should exit 0 and print device names."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["list-devices"])
+    assert result.exit_code == 0, result.output
+    assert "Error" not in result.output
+    assert len(result.output.strip()) > 0
+
+
+def test_cli_list_devices_json(cli_runner):
+    """CLI list-devices --format json should return parseable JSON with a 'devices' key."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["list-devices", "--format", "json"])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert "devices" in data
+
+
+def test_cli_get_device(cli_runner, first_device_id):
+    """CLI get-device should exit 0 and include the device ID in output."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["get-device", first_device_id])
+    assert result.exit_code == 0, result.output
+    assert first_device_id in result.output
+
+
+def test_cli_today_summary(cli_runner, first_device_id):
+    """CLI today-summary should exit 0 without an auth error."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["today-summary", first_device_id])
+    assert result.exit_code == 0, result.output
+    assert "Error" not in result.output
+
+
+def test_cli_monthly_summary(cli_runner, first_device_id):
+    """CLI monthly-summary should complete without an auth error.
+
+    Exit code is not asserted because Nintendo's monthly summary API can time
+    out independently of authentication — the same leniency applied to the
+    equivalent MCP integration test.
+    """
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["monthly-summary", first_device_id])
+    assert "Error: Not authenticated" not in result.output
+
+
+def test_cli_list_players(cli_runner, first_device_id):
+    """CLI list-players should exit 0 without an auth error."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["list-players", first_device_id])
+    assert result.exit_code == 0, result.output
+    assert "Error" not in result.output
+
+
+def test_cli_list_applications(cli_runner, first_device_id):
+    """CLI list-applications should exit 0 without an auth error."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["list-applications", first_device_id])
+    assert result.exit_code == 0, result.output
+    assert "Error" not in result.output
+
+
+def test_cli_auto_select_single_device(cli_runner):
+    """today-summary with no DEVICE arg auto-selects when only one device is on the account."""
+    from switch_parental_controls.cli import cli
+
+    # Populate the cache first so auto-select works without an extra API call.
+    list_result = cli_runner.invoke(cli, ["list-devices"])
+    assert list_result.exit_code == 0, list_result.output
+
+    result = cli_runner.invoke(cli, ["today-summary"])
+    assert result.exit_code == 0, result.output
+    assert "Error" not in result.output

@@ -59,9 +59,25 @@ def make_mock_device(
     device.set_bedtime_end_time = AsyncMock()
     device.get_monthly_summary = AsyncMock(
         return_value={
-            "month": "April 2026",
-            "playingTime": 1200,
-            "players": [],
+            "overall": {
+                "stat": {"totalDays": 20, "averageTime": 60},
+                "dailyStats": [
+                    {"date": "2026-04-01", "totalTime": 600, "games": {}},
+                    {"date": "2026-04-02", "totalTime": 600, "games": {}},
+                ],
+            },
+            "players": [
+                {
+                    "profile": {"playerId": "player-001", "nickname": "TestKid"},
+                    "summary": {
+                        "stat": {"totalDays": 2, "averageTime": 60},
+                        "dailyStats": [
+                            {"date": "2026-04-01", "totalTime": 600, "games": {}},
+                            {"date": "2026-04-02", "totalTime": 600, "games": {}},
+                        ],
+                    },
+                }
+            ],
         }
     )
 
@@ -134,7 +150,7 @@ async def reset_state():
     snapshot and unconditionally clears client/http_session/pending_auth to
     prevent resource or auth leaks across tests.
     """
-    from nintendo_mcp import server
+    from switch_parental_controls import server
 
     original_state = dict(server._state)
     yield

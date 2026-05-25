@@ -36,6 +36,13 @@ _state: dict[str, Any] = {
 async def lifespan(server: FastMCP):
     """Manage the aiohttp session and Nintendo client lifecycle."""
     session_token = os.environ.get("NINTENDO_SESSION_TOKEN")
+    if not session_token:
+        try:
+            from switch_parental_controls.credentials import load_token
+
+            session_token = load_token()
+        except Exception:
+            pass
     timezone = os.environ.get("NINTENDO_TIMEZONE") or "Europe/London"
     lang = os.environ.get("NINTENDO_LANG") or "en-GB"
 
@@ -46,14 +53,9 @@ async def lifespan(server: FastMCP):
 
     if session_token:
         try:
-            from pynintendoparental import NintendoParental
-            from pynintendoparental.authenticator import Authenticator
+            from switch_parental_controls.client import create_client
 
-            auth = Authenticator(session_token=session_token, client_session=http_session)
-            await auth.async_complete_login(use_session_token=True)
-            client = await NintendoParental.create(auth, timezone=timezone, lang=lang)
-            await client.update()
-            _state["client"] = client
+            _state["client"] = await create_client(session_token, timezone, lang, http_session)
             logger.info("Nintendo Parental Controls client initialized successfully.")
         except Exception as e:
             logger.warning("Failed to initialize Nintendo client on startup: %s", e)
@@ -76,7 +78,7 @@ async def lifespan(server: FastMCP):
 
 # Initialize the FastMCP server
 mcp = FastMCP(
-    "nintendo_mcp",
+    "switch_parental_controls",
     instructions=(
         "This server provides tools to manage Nintendo Switch Parental Controls. "
         "If not yet authenticated, call nintendo_get_login_url first to start the login flow, "
@@ -89,10 +91,11 @@ mcp = FastMCP(
 # Import tool modules to register their tools on the mcp instance.
 # These imports must happen after mcp is defined so the @mcp.tool decorators
 # can reference the correct FastMCP instance.
-# NOTE: Do NOT run this file directly (e.g. python server.py or python -m nintendo_mcp.server).
-# Use 'python -m nintendo_mcp' instead, which routes through __main__.py and ensures
-# this module is always imported as 'nintendo_mcp.server' — never executed as '__main__'.
-from nintendo_mcp import applications, auth, devices, players  # noqa: E402, F401
+# NOTE: Do NOT run this file directly (e.g. python server.py or python -m switch_parental_controls.server).
+# Use 'python -m switch_parental_controls mcp' (or 'switch-parental-controls mcp') instead, which
+# routes through __main__.py and ensures this module is always imported as
+# 'switch_parental_controls.server' — never executed as '__main__'.
+from switch_parental_controls import applications, auth, devices, players  # noqa: E402, F401
 
 
 def main():

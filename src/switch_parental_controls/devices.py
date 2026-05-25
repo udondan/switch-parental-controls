@@ -9,7 +9,7 @@ from datetime import datetime, time
 from mcp.server.fastmcp import Context
 from pynintendoparental.enum import DeviceTimerMode, FunctionalRestrictionLevel, RestrictionMode
 
-from nintendo_mcp.models import (
+from switch_parental_controls.models import (
     AddExtraTimeInput,
     DeviceInput,
     ListDevicesInput,
@@ -23,8 +23,8 @@ from nintendo_mcp.models import (
     SetRestrictionModeInput,
     SetTimerModeInput,
 )
-from nintendo_mcp.server import _state, mcp
-from nintendo_mcp.utils import (
+from switch_parental_controls.server import _state, mcp
+from switch_parental_controls.utils import (
     format_minutes,
     format_time,
     format_timestamp,
@@ -335,8 +335,17 @@ async def nintendo_get_monthly_summary(params: MonthlySummaryInput, ctx: Context
         if params.response_format == ResponseFormat.JSON:
             return to_json({"device_name": device.name, "summary": summary})
 
-        month_label = summary.get("month", "Unknown month")
-        total_time = summary.get("playingTime", 0)
+        # Derive month label from the first daily stat date (format: "YYYY-MM-DD")
+        daily_stats = summary.get("overall", {}).get("dailyStats", [])
+        if daily_stats and daily_stats[0].get("date"):
+            from datetime import date as dt_date
+
+            first_date = dt_date.fromisoformat(daily_stats[0]["date"])
+            month_label = first_date.strftime("%B %Y")
+        else:
+            month_label = "Unknown month"
+
+        total_time = sum(d.get("totalTime", 0) for d in daily_stats)
 
         lines = [
             f"# Monthly Summary — {device.name}",
@@ -349,10 +358,9 @@ async def nintendo_get_monthly_summary(params: MonthlySummaryInput, ctx: Context
         if players:
             lines.append("## Players")
             for player in players:
-                profile = player.get("profile", {})
-                player_summary = player.get("summary", {})
-                nickname = profile.get("nickname", "Unknown")
-                play_time = player_summary.get("playingTime", 0)
+                nickname = player.get("profile", {}).get("nickname", "Unknown")
+                player_daily = player.get("summary", {}).get("dailyStats", [])
+                play_time = sum(d.get("totalTime", 0) for d in player_daily)
                 lines.append(f"- **{nickname}**: {format_minutes(play_time)}")
             lines.append("")
 

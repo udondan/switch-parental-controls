@@ -9,9 +9,9 @@ import shlex
 import aiohttp
 from mcp.server.fastmcp import Context
 
-from nintendo_mcp.models import CompleteLoginInput
-from nintendo_mcp.server import _state, mcp
-from nintendo_mcp.utils import handle_error
+from switch_parental_controls.models import CompleteLoginInput
+from switch_parental_controls.server import _state, mcp
+from switch_parental_controls.utils import handle_error
 
 
 @mcp.tool(

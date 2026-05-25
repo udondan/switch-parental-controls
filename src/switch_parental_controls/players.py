@@ -5,9 +5,9 @@ Provides tools to read player information associated with Nintendo Switch device
 
 from mcp.server.fastmcp import Context
 
-from nintendo_mcp.models import DeviceInput, PlayerInput, ResponseFormat
-from nintendo_mcp.server import _state, mcp
-from nintendo_mcp.utils import format_minutes, handle_error, require_client, to_json
+from switch_parental_controls.models import DeviceInput, PlayerInput, ResponseFormat
+from switch_parental_controls.server import _state, mcp
+from switch_parental_controls.utils import format_minutes, handle_error, require_client, to_json
 
 
 def _player_to_dict(player) -> dict:
@@ -178,9 +178,8 @@ async def nintendo_get_player(params: PlayerInput, ctx: Context) -> str:
             lines.append("")
             lines.append("## Apps Played Today")
             for app_entry in apps:
-                app_id = app_entry.get("applicationId", "unknown")
+                app_id = app_entry.get("meta", {}).get("applicationId", "unknown")
                 play_time = app_entry.get("playingTime", 0)
-                # Try to get the app name from the device's applications dict
                 app_obj = device.applications.get(app_id)
                 app_name = app_obj.name if app_obj else app_id
                 lines.append(f"- **{app_name}**: {format_minutes(play_time)}")

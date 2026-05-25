@@ -7,9 +7,9 @@ Provides tools to read application information and manage the allow-list
 from mcp.server.fastmcp import Context
 from pynintendoparental.enum import SafeLaunchSetting
 
-from nintendo_mcp.models import DeviceInput, ResponseFormat, SetAppAllowListInput
-from nintendo_mcp.server import _state, mcp
-from nintendo_mcp.utils import format_minutes, handle_error, require_client, to_json
+from switch_parental_controls.models import DeviceInput, ResponseFormat, SetAppAllowListInput
+from switch_parental_controls.server import _state, mcp
+from switch_parental_controls.utils import format_minutes, handle_error, require_client, to_json
 
 
 def _app_to_dict(app) -> dict:
