@@ -13,7 +13,7 @@ description = "Run tests"
 run = ".venv/bin/pytest tests/ -v -m 'not integration'"
 
 [tasks.test-integration]
-description = "Run integration tests against the real Nintendo API (requires .env with SWITCH_PARENTAL_CONTROL_SESSION_TOKEN)"
+description = "Run integration tests against the real Nintendo API (requires .env with SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN)"
 run = ".venv/bin/pytest tests/test_integration.py -v -m integration"
 
 [tasks.run]

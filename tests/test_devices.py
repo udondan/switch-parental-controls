@@ -38,7 +38,7 @@ async def test_list_devices_no_client():
     ctx = MagicMock()
     result = await switch_list_devices(ListDevicesInput(), ctx)
     assert "Error" in result
-    assert "SWITCH_PARENTAL_CONTROL_SESSION_TOKEN" in result
+    assert "SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN" in result
 
 
 @pytest.mark.asyncio

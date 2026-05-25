@@ -67,7 +67,7 @@ async def switch_get_login_url(ctx: Context) -> str:
             "and copy the link address.\n\n"
             "5. The copied URL will start with `npf71b963c1b7b6d119://` or similar.\n\n"
             "6. Call **`switch_complete_login`** with that URL as the `redirect_url` parameter.\n\n"
-            "> **Tip:** Once you have a session token, save it as the `SWITCH_PARENTAL_CONTROL_SESSION_TOKEN` "
+            "> **Tip:** Once you have a session token, save it as the `SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN` "
             "environment variable to avoid logging in again next time."
         )
     except Exception as e:
@@ -91,7 +91,7 @@ async def switch_complete_login(params: CompleteLoginInput, ctx: Context) -> str
     'Select this person' button on the Nintendo login page.
 
     On success, this tool returns your session token. Save it as the
-    SWITCH_PARENTAL_CONTROL_SESSION_TOKEN environment variable to avoid logging in again.
+    SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN environment variable to avoid logging in again.
 
     Args:
         params (CompleteLoginInput): Validated input containing:
@@ -145,9 +145,9 @@ async def switch_complete_login(params: CompleteLoginInput, ctx: Context) -> str
             "## Login Successful!\n\n"
             f"Your Nintendo session token is:\n\n"
             f"```\n{session_token}\n```\n\n"
-            "**Save this token** as the `SWITCH_PARENTAL_CONTROL_SESSION_TOKEN` environment variable "
+            "**Save this token** as the `SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN` environment variable "
             "to avoid logging in again next time:\n\n"
-            f"```bash\nexport SWITCH_PARENTAL_CONTROL_SESSION_TOKEN={shlex.quote(session_token)}\n```\n\n"
+            f"```bash\nexport SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN={shlex.quote(session_token)}\n```\n\n"
             "You can now use all Nintendo parental control tools. "
             "Try `switch_list_devices` to see your devices."
         )

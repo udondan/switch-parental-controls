@@ -5,14 +5,14 @@ AI assistants to monitor and manage parental control settings on Nintendo Switch
 devices linked to a Nintendo account.
 
 Authentication:
-    Set the SWITCH_PARENTAL_CONTROL_SESSION_TOKEN environment variable before starting the server,
+    Set the SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN environment variable before starting the server,
     or use the switch_get_login_url / switch_complete_login tools to authenticate
     interactively.
 
 Environment Variables:
-    SWITCH_PARENTAL_CONTROL_SESSION_TOKEN: Nintendo session token (optional at startup).
-    SWITCH_PARENTAL_CONTROL_TIMEZONE: IANA timezone string (default: Europe/London).
-    SWITCH_PARENTAL_CONTROL_LANG: Language code (default: en-GB).
+    SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN: Nintendo session token (optional at startup).
+    SWITCH_PARENTAL_CONTROLS_TIMEZONE: IANA timezone string (default: Europe/London).
+    SWITCH_PARENTAL_CONTROLS_LANG: Language code (default: en-GB).
 """
 
 import logging
@@ -35,7 +35,7 @@ _state: dict[str, Any] = {
 @asynccontextmanager
 async def lifespan(server: FastMCP):
     """Manage the aiohttp session and Nintendo client lifecycle."""
-    session_token = os.environ.get("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN")
+    session_token = os.environ.get("SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN")
     if not session_token:
         try:
             from switch_parental_controls.credentials import load_token
@@ -43,8 +43,8 @@ async def lifespan(server: FastMCP):
             session_token = load_token()
         except Exception:
             pass
-    timezone = os.environ.get("SWITCH_PARENTAL_CONTROL_TIMEZONE") or "Europe/London"
-    lang = os.environ.get("SWITCH_PARENTAL_CONTROL_LANG") or "en-GB"
+    timezone = os.environ.get("SWITCH_PARENTAL_CONTROLS_TIMEZONE") or "Europe/London"
+    lang = os.environ.get("SWITCH_PARENTAL_CONTROLS_LANG") or "en-GB"
 
     http_session = aiohttp.ClientSession()
     _state["http_session"] = http_session
@@ -61,7 +61,7 @@ async def lifespan(server: FastMCP):
             logger.warning("Failed to initialize Nintendo client on startup: %s", e)
             logger.warning("Use switch_get_login_url to authenticate interactively.")
     else:
-        logger.info("SWITCH_PARENTAL_CONTROL_SESSION_TOKEN not set. Use switch_get_login_url to authenticate.")
+        logger.info("SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN not set. Use switch_get_login_url to authenticate.")
 
     try:
         yield _state

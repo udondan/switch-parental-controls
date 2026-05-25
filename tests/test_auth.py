@@ -22,7 +22,7 @@ async def test_get_login_url_returns_instructions():
     assert "https://accounts.nintendo.com" in result
     assert "switch_complete_login" in result
     assert "Select this person" in result
-    assert "SWITCH_PARENTAL_CONTROL_SESSION_TOKEN" in result
+    assert "SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN" in result
 
 
 @pytest.mark.asyncio

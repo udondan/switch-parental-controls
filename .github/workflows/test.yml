@@ -65,9 +65,9 @@ jobs:
       - name: Run integration tests (read-only)
         run: mise run test-integration
         env:
-          SWITCH_PARENTAL_CONTROL_SESSION_TOKEN: ${{ secrets.SWITCH_PARENTAL_CONTROL_SESSION_TOKEN }}
-          SWITCH_PARENTAL_CONTROL_TIMEZONE: ${{ secrets.SWITCH_PARENTAL_CONTROL_TIMEZONE }}
-          SWITCH_PARENTAL_CONTROL_LANG: ${{ secrets.SWITCH_PARENTAL_CONTROL_LANG }}
+          SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN: ${{ secrets.SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN }}
+          SWITCH_PARENTAL_CONTROLS_TIMEZONE: ${{ secrets.SWITCH_PARENTAL_CONTROLS_TIMEZONE }}
+          SWITCH_PARENTAL_CONTROLS_LANG: ${{ secrets.SWITCH_PARENTAL_CONTROLS_LANG }}
 
   required:
     runs-on: ubuntu-latest
