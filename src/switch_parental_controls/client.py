@@ -1,13 +1,10 @@
 """Shared Nintendo client initialization for MCP server and CLI."""
 
-import logging
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import aiohttp
-
-logger = logging.getLogger(__name__)
 
 
 async def create_client(
@@ -43,7 +40,6 @@ async def nintendo_client(
     try:
         if session_token:
             client = await create_client(session_token, timezone, lang, http_session)
-            logger.info("Nintendo Parental Controls client initialized successfully.")
         yield client, http_session
     finally:
         if not http_session.closed:
