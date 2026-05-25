@@ -1,4 +1,4 @@
-"""Tests for the nintendo CLI.
+"""Tests for the switch-parental-controls CLI.
 
 Strategy: Each command test mocks `switch_parental_controls.cli.nintendo_client` to return a
 pre-configured (mock_client, mock_session) pair, then patches the MCP tool function

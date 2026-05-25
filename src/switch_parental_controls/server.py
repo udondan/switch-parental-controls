@@ -36,6 +36,13 @@ _state: dict[str, Any] = {
 async def lifespan(server: FastMCP):
     """Manage the aiohttp session and Nintendo client lifecycle."""
     session_token = os.environ.get("NINTENDO_SESSION_TOKEN")
+    if not session_token:
+        try:
+            from switch_parental_controls.credentials import load_token
+
+            session_token = load_token()
+        except Exception:
+            pass
     timezone = os.environ.get("NINTENDO_TIMEZONE") or "Europe/London"
     lang = os.environ.get("NINTENDO_LANG") or "en-GB"
 

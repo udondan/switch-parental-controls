@@ -140,9 +140,22 @@ async def test_list_applications(first_device_id):
 
 
 @pytest.fixture()
-def cli_runner(tmp_path, monkeypatch):
-    """CliRunner with an isolated device cache directory."""
+def cli_runner(tmp_path, monkeypatch, real_client):
+    """CliRunner that reuses the module-scoped real client to avoid extra API calls.
+
+    Patches nintendo_client to yield the already-initialized real_client so CLI
+    tests don't create a new Nintendo client (and call update()) for each test.
+    """
+    from contextlib import asynccontextmanager
+
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("NINTENDO_SESSION_TOKEN", "stub-token")
+
+    @asynccontextmanager
+    async def _stub_client(timezone, lang, token):
+        yield real_client, None
+
+    monkeypatch.setattr("switch_parental_controls.cli.nintendo_client", _stub_client)
     return CliRunner()
 
 

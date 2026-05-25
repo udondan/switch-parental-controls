@@ -1,6 +1,7 @@
 """Nintendo Switch Parental Controls CLI.
 
-Each subcommand mirrors an MCP tool. The 'mcp' subcommand starts the MCP server.
+Provides subcommands for all parental control operations plus login/logout and an
+'mcp' subcommand that starts the MCP server.
 
 Authentication:
     Run 'switch-parental-controls login' for an interactive OAuth flow, or set
@@ -63,8 +64,18 @@ def _populate_state(client, http_session, obj: dict) -> None:
     _state["lang"] = obj["lang"]
 
 
+_MCP_TO_CLI = {
+    "nintendo_list_devices": "list-devices",
+    "nintendo_list_players": "list-players",
+    "nintendo_list_applications": "list-applications",
+    "nintendo_set_timer_mode": "set-timer-mode",
+}
+
+
 def _output(result: str) -> None:
     """Print result and exit 1 if it is an error."""
+    for mcp_name, cli_name in _MCP_TO_CLI.items():
+        result = result.replace(mcp_name, cli_name)
     click.echo(result)
     if result.startswith("Error:"):
         sys.exit(1)
