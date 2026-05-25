@@ -27,7 +27,7 @@ def load_cache() -> dict[str, str]:
         if isinstance(data, dict):
             return data
         return {}
-    except (OSError, json.JSONDecodeError):
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
         return {}
 
 

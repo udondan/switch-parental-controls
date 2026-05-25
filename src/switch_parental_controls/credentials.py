@@ -20,7 +20,7 @@ def load_token() -> str | None:
     try:
         token = path.read_text().strip()
         return token or None
-    except OSError:
+    except (OSError, UnicodeDecodeError):
         return None
 
 
@@ -40,4 +40,6 @@ def delete_token() -> bool:
         path.unlink()
         return True
     except FileNotFoundError:
+        return False
+    except OSError:
         return False

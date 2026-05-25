@@ -104,59 +104,65 @@ Options:
 
 ### Commands
 
+All device commands accept an optional `[DEVICE]` argument — a device name or ID. If omitted and the account has exactly one Switch, it is auto-selected. Run `list-devices` once to populate the local cache.
+
 **Device info:**
 
 ```bash
 switch-parental-controls list-devices [--format markdown|json]
-switch-parental-controls get-device <device-id> [--format markdown|json]
-switch-parental-controls today-summary <device-id> [--format markdown|json]
-switch-parental-controls monthly-summary <device-id> [--year YEAR --month MONTH] [--format markdown|json]
+switch-parental-controls get-device [DEVICE] [--format markdown|json]
+switch-parental-controls today-summary [DEVICE] [--format markdown|json]
+switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [--format markdown|json]
+
+# DEVICE may be a name or an ID
+switch-parental-controls today-summary "Switch #1"
+switch-parental-controls today-summary abc123def456
 ```
 
 **Playtime limits:**
 
 ```bash
-switch-parental-controls set-playtime-limit <device-id> --minutes 120   # set 2-hour limit
-switch-parental-controls set-playtime-limit <device-id> --no-limit       # remove limit
-switch-parental-controls add-extra-time <device-id> 30                   # add 30 extra minutes today
-switch-parental-controls set-timer-mode <device-id> DAILY
-switch-parental-controls set-timer-mode <device-id> EACH_DAY_OF_THE_WEEK
+switch-parental-controls set-playtime-limit [DEVICE] --minutes 120   # set 2-hour limit
+switch-parental-controls set-playtime-limit [DEVICE] --no-limit       # remove limit
+switch-parental-controls add-extra-time [DEVICE] 30                   # add 30 extra minutes today
+switch-parental-controls set-timer-mode [DEVICE] DAILY
+switch-parental-controls set-timer-mode [DEVICE] EACH_DAY_OF_THE_WEEK
 ```
 
 **Per-day restrictions:**
 
 ```bash
 # Enable playtime + bedtime on Monday
-switch-parental-controls set-day-restrictions <device-id> MONDAY \
+switch-parental-controls set-day-restrictions [DEVICE] MONDAY \
   --playtime-enabled --max-playtime-minutes 90 \
   --bedtime-enabled \
   --bedtime-alarm-hour 21 --bedtime-alarm-minute 0 \
   --bedtime-end-hour 7 --bedtime-end-minute 0
 
 # Disable all restrictions on Saturday
-switch-parental-controls set-day-restrictions <device-id> SATURDAY \
+switch-parental-controls set-day-restrictions [DEVICE] SATURDAY \
   --playtime-disabled --bedtime-disabled
 ```
 
 **Restriction and content controls:**
 
 ```bash
-switch-parental-controls set-restriction-mode <device-id> FORCED_TERMINATION
-switch-parental-controls set-restriction-mode <device-id> ALARM
-switch-parental-controls set-content-restriction <device-id> CHILDREN
-switch-parental-controls set-bedtime-alarm <device-id> 21 0    # 21:00
-switch-parental-controls set-bedtime-alarm <device-id> 0 0     # disable
-switch-parental-controls set-bedtime-end <device-id> 7 0       # 07:00
+switch-parental-controls set-restriction-mode [DEVICE] FORCED_TERMINATION
+switch-parental-controls set-restriction-mode [DEVICE] ALARM
+switch-parental-controls set-content-restriction [DEVICE] CHILDREN
+switch-parental-controls set-bedtime-alarm [DEVICE] 21 0    # 21:00
+switch-parental-controls set-bedtime-alarm [DEVICE] 0 0     # disable
+switch-parental-controls set-bedtime-end [DEVICE] 7 0       # 07:00
 ```
 
 **Players and applications:**
 
 ```bash
-switch-parental-controls list-players <device-id> [--format json]
-switch-parental-controls get-player <device-id> <player-id>
-switch-parental-controls list-applications <device-id>
-switch-parental-controls set-app-allow-list <device-id> <app-id> --allow
-switch-parental-controls set-app-allow-list <device-id> <app-id> --no-allow
+switch-parental-controls list-players [DEVICE] [--format json]
+switch-parental-controls get-player [DEVICE] <player-id>
+switch-parental-controls list-applications [DEVICE]
+switch-parental-controls set-app-allow-list [DEVICE] <app-id> --allow
+switch-parental-controls set-app-allow-list [DEVICE] <app-id> --no-allow
 ```
 
 **Start the MCP server:**
