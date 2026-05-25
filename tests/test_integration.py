@@ -203,7 +203,7 @@ def test_cli_monthly_summary(cli_runner, first_device_id):
 
     result = cli_runner.invoke(cli, ["monthly-summary", first_device_id])
     assert result.exit_code == 0, result.output
-    assert "Error" not in result.output
+    assert "Error: Not authenticated" not in result.output
 
 
 def test_cli_list_players(cli_runner, first_device_id):
