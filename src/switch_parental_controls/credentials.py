@@ -20,7 +20,7 @@ def load_token() -> str | None:
     try:
         token = path.read_text().strip()
         return token or None
-    except FileNotFoundError:
+    except OSError:
         return None
 
 

@@ -23,8 +23,11 @@ def _cache_path() -> Path:
 def load_cache() -> dict[str, str]:
     """Return {device_id: device_name} from the cache file, or {} if absent/corrupt."""
     try:
-        return json.loads(_cache_path().read_text())
-    except (FileNotFoundError, json.JSONDecodeError):
+        data = json.loads(_cache_path().read_text())
+        if isinstance(data, dict):
+            return data
+        return {}
+    except (OSError, json.JSONDecodeError):
         return {}
 
 
