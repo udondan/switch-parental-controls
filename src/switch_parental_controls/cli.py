@@ -148,7 +148,11 @@ def logout_cmd() -> None:
     """Remove the saved session token from the credentials file."""
     from switch_parental_controls.credentials import delete_token
 
-    if delete_token():
+    try:
+        found = delete_token()
+    except OSError as exc:
+        raise click.ClickException(f"Could not remove credentials file: {exc}") from exc
+    if found:
         click.echo("✓ Logged out — credentials file removed.")
     else:
         click.echo("Nothing to do — no credentials file found.")

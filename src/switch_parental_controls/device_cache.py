@@ -32,10 +32,13 @@ def load_cache() -> dict[str, str]:
 
 
 def save_cache(devices: dict[str, str]) -> None:
-    """Write {device_id: device_name} to the cache file."""
-    path = _cache_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(devices, indent=2) + "\n")
+    """Write {device_id: device_name} to the cache file (best-effort; silently ignored on failure)."""
+    try:
+        path = _cache_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(devices, indent=2) + "\n")
+    except OSError:
+        pass
 
 
 def devices_from_client(client) -> dict[str, str]:

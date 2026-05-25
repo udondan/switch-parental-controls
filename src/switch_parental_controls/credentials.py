@@ -37,12 +37,13 @@ def save_token(token: str) -> Path:
 
 
 def delete_token() -> bool:
-    """Delete the credentials file. Returns True if it existed."""
+    """Delete the credentials file. Returns True if it existed, False if it was not found.
+
+    Raises OSError for any other failure (e.g. PermissionError, path is a directory).
+    """
     path = _credentials_path()
     try:
         path.unlink()
         return True
     except FileNotFoundError:
-        return False
-    except OSError:
         return False
