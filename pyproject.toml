@@ -22,7 +22,6 @@ dev = ["pytest>=8.0.0", "pytest-asyncio>=0.23.0", "ruff>=0.4.0", "python-dotenv>
 
 [project.scripts]
 switch-parental-controls = "switch_parental_controls.cli:cli"
-mcp = "switch_parental_controls.server:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
