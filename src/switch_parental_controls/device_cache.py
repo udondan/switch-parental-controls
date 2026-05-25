@@ -25,7 +25,7 @@ def load_cache() -> dict[str, str]:
     try:
         data = json.loads(_cache_path().read_text())
         if isinstance(data, dict):
-            return data
+            return {k: v for k, v in data.items() if isinstance(k, str) and isinstance(v, str)}
         return {}
     except (OSError, UnicodeDecodeError, json.JSONDecodeError):
         return {}
