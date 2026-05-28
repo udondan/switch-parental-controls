@@ -19,11 +19,12 @@
     {
       "id": 2,
       "prompt": "I want to check what games my kids played last month (April 2025) and how long each game was played. I have two Switches linked to my account - 'Switch #1' is for my older kid and 'Switch #2' is for the younger one. I want to see the monthly summary for Switch #2 first, then the list of games played on it.",
-      "expected_output": "monthly-summary for Switch #2 with --year 2025 --month 4. list-applications is not appropriate here since it only shows today's data, not historical monthly game data.",
+      "expected_output": "monthly-summary for Switch #2 with --year 2025 --month 4 and --format json. list-applications is not appropriate here since it only shows today's data. The markdown monthly-summary only shows totals and per-player totals — per-game data requires --format json to get the raw API payload.",
       "files": [],
       "expectations": [
         "Uses monthly-summary with --year 2025 --month 4 targeting Switch #2",
-        "Device name 'Switch #2' is passed correctly (quoted if needed)"
+        "Device name 'Switch #2' is passed correctly (quoted if needed)",
+        "Uses --format json because the prompt asks for per-game data, which the markdown output does not expose"
       ]
     },
     {
