@@ -133,6 +133,7 @@ switch-parental-controls list-devices [--format markdown|json]
 switch-parental-controls get-device [DEVICE] [--format markdown|json]
 switch-parental-controls today-summary [DEVICE] [--format markdown|json]
 switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [--format markdown|json]
+switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--format markdown|json]
 
 # DEVICE may be a name or an ID
 switch-parental-controls today-summary "Switch #1"
@@ -242,12 +243,13 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
 
 #### Devices
 
-| Tool                          | Description                                                 |
-| ----------------------------- | ----------------------------------------------------------- |
-| `switch_list_devices`         | List all Nintendo Switch devices on the account             |
-| `switch_get_device`           | Get detailed status for a specific device                   |
-| `switch_get_today_summary`    | Get today's usage summary for a device                      |
-| `switch_get_monthly_summary`  | Get monthly usage summary (optionally for a specific month) |
+| Tool                          | Description                                                              |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| `switch_list_devices`         | List all Nintendo Switch devices on the account                          |
+| `switch_get_device`           | Get detailed status for a specific device                                |
+| `switch_get_today_summary`    | Get today's usage summary for a device                                   |
+| `switch_get_monthly_summary`  | Get monthly usage summary (optionally for a specific month)              |
+| `switch_get_daily_breakdown`  | Get per-day playtime breakdown for a month (current month or historical) |
 
 #### Playtime Controls
 
