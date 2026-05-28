@@ -48,8 +48,7 @@ def _require_token() -> str:
     token = os.environ.get("SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN") or load_token()
     if not token:
         click.echo(
-            "Error: Not authenticated.\n"
-            "Run 'switch-parental-controls login' to authenticate.",
+            "Error: Not authenticated.\nRun 'switch-parental-controls login' to authenticate.",
             err=True,
         )
         sys.exit(1)
@@ -94,8 +93,7 @@ def _execute(coro_factory) -> None:
         exc_type = type(exc).__name__
         if "InvalidSessionToken" in exc_type or "invalid_grant" in str(exc):
             click.echo(
-                "Error: Saved token is invalid or expired.\n"
-                "Run 'switch-parental-controls login' to re-authenticate.",
+                "Error: Saved token is invalid or expired.\nRun 'switch-parental-controls login' to re-authenticate.",
                 err=True,
             )
             sys.exit(1)
@@ -306,9 +304,7 @@ def today_summary(obj: dict, device: str | None, fmt: str) -> None:
         async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
-            return await switch_get_today_summary(
-                DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None
-            )
+            return await switch_get_today_summary(DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None)
 
     _execute(run)
 
@@ -466,9 +462,13 @@ def set_timer_mode(obj: dict, args: tuple) -> None:
 @cli.command("set-day-restrictions")
 @click.argument("args", nargs=-1, metavar="[DEVICE] DAY")
 @click.option("--playtime-enabled/--playtime-disabled", required=True, help="Enable/disable playtime limit.")
-@click.option("--max-playtime-minutes", type=int, default=None, help="Limit in minutes (0-360). Required with --playtime-enabled.")  # noqa: E501
+@click.option(
+    "--max-playtime-minutes", type=int, default=None, help="Limit in minutes (0-360). Required with --playtime-enabled."
+)  # noqa: E501
 @click.option("--bedtime-enabled/--bedtime-disabled", required=True, help="Enable/disable bedtime restrictions.")
-@click.option("--bedtime-alarm-hour", type=int, default=None, help="Alarm hour (16-23). Required with --bedtime-enabled.")  # noqa: E501
+@click.option(
+    "--bedtime-alarm-hour", type=int, default=None, help="Alarm hour (16-23). Required with --bedtime-enabled."
+)  # noqa: E501
 @click.option("--bedtime-alarm-minute", type=int, default=0, show_default=True, help="Alarm minute (0-59).")
 @click.option("--bedtime-end-hour", type=int, default=None, help="End hour (5-9). Required with --bedtime-enabled.")
 @click.option("--bedtime-end-minute", type=int, default=0, show_default=True, help="End minute (0-59).")
@@ -734,9 +734,7 @@ def list_applications(obj: dict, device: str | None, fmt: str) -> None:
         async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
-            return await switch_list_applications(
-                DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None
-            )
+            return await switch_list_applications(DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None)
 
     _execute(run)
 

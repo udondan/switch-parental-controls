@@ -508,8 +508,12 @@ def test_set_day_restrictions_playtime_only(runner, monkeypatch, mock_client_wit
         result = runner.invoke(
             cli,
             [
-                "set-day-restrictions", "device-001", "MONDAY",
-                "--playtime-enabled", "--max-playtime-minutes", "90",
+                "set-day-restrictions",
+                "device-001",
+                "MONDAY",
+                "--playtime-enabled",
+                "--max-playtime-minutes",
+                "90",
                 "--bedtime-disabled",
             ],
         )
@@ -536,11 +540,21 @@ def test_set_day_restrictions_with_bedtime(runner, monkeypatch, mock_client_with
         result = runner.invoke(
             cli,
             [
-                "set-day-restrictions", "device-001", "FRIDAY",
-                "--playtime-enabled", "--max-playtime-minutes", "60",
+                "set-day-restrictions",
+                "device-001",
+                "FRIDAY",
+                "--playtime-enabled",
+                "--max-playtime-minutes",
+                "60",
                 "--bedtime-enabled",
-                "--bedtime-alarm-hour", "21", "--bedtime-alarm-minute", "30",
-                "--bedtime-end-hour", "7", "--bedtime-end-minute", "0",
+                "--bedtime-alarm-hour",
+                "21",
+                "--bedtime-alarm-minute",
+                "30",
+                "--bedtime-end-hour",
+                "7",
+                "--bedtime-end-minute",
+                "0",
             ],
         )
 

@@ -72,10 +72,7 @@ async def switch_list_players(params: DeviceInput, ctx: Context) -> str:
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         await device.update()
         players = list(device.players.values())
@@ -143,10 +140,7 @@ async def switch_get_player(params: PlayerInput, ctx: Context) -> str:
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         await device.update()
         try:

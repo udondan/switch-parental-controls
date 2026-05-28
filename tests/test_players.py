@@ -55,9 +55,7 @@ async def test_list_players_json(mock_player):
     from switch_parental_controls.players import switch_list_players
 
     ctx = MagicMock()
-    result = await switch_list_players(
-        DeviceInput(device_id="device-001", response_format=ResponseFormat.JSON), ctx
-    )
+    result = await switch_list_players(DeviceInput(device_id="device-001", response_format=ResponseFormat.JSON), ctx)
     data = json.loads(result)
 
     assert data["count"] == 1
@@ -111,9 +109,7 @@ async def test_get_player_markdown(mock_player, mock_device):
     from switch_parental_controls.players import switch_get_player
 
     ctx = MagicMock()
-    result = await switch_get_player(
-        PlayerInput(device_id="device-001", player_id="player-001"), ctx
-    )
+    result = await switch_get_player(PlayerInput(device_id="device-001", player_id="player-001"), ctx)
 
     assert "TestKid" in result
     assert "player-001" in result
@@ -127,9 +123,7 @@ async def test_get_player_not_found():
     from switch_parental_controls.players import switch_get_player
 
     ctx = MagicMock()
-    result = await switch_get_player(
-        PlayerInput(device_id="device-001", player_id="nonexistent"), ctx
-    )
+    result = await switch_get_player(PlayerInput(device_id="device-001", player_id="nonexistent"), ctx)
     assert "Error" in result
     assert "not found" in result
 
@@ -142,9 +136,7 @@ async def test_get_player_json(mock_player):
 
     ctx = MagicMock()
     result = await switch_get_player(
-        PlayerInput(
-            device_id="device-001", player_id="player-001", response_format=ResponseFormat.JSON
-        ),
+        PlayerInput(device_id="device-001", player_id="player-001", response_format=ResponseFormat.JSON),
         ctx,
     )
     data = json.loads(result)

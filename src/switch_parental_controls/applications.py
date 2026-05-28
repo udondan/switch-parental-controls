@@ -77,10 +77,7 @@ async def switch_list_applications(params: DeviceInput, ctx: Context) -> str:
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         await device.update()
         apps = list(device.applications.values())
@@ -150,10 +147,7 @@ async def switch_set_app_allow_list(params: SetAppAllowListInput, ctx: Context) 
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         await device.update()
         try:
@@ -168,10 +162,7 @@ async def switch_set_app_allow_list(params: SetAppAllowListInput, ctx: Context) 
         await app.set_safe_launch_setting(setting)
 
         if params.allow:
-            return (
-                f"✓ '{app.name}' added to the allow-list on '{device.name}'. "
-                "It can now bypass content restrictions."
-            )
+            return f"✓ '{app.name}' added to the allow-list on '{device.name}'. It can now bypass content restrictions."
         return (
             f"✓ '{app.name}' removed from the allow-list on '{device.name}'. "
             "It is now subject to normal content restrictions."
