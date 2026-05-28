@@ -72,7 +72,7 @@ Setting the env vars avoids having to repeat the flags on every command.
 
 **Player** — a Nintendo Account profile linked to a device (a person, e.g. "Emma" or "Max"). Players are not devices. Never pass a person's name as the `[DEVICE]` argument.
 
-If the user says "how long did Emma play today", that is a question about a **player**, not a device. Run `today-summary` on the correct device (or without a device argument if there is only one) and read the per-player breakdown from the output. Only use `list-players` / `get-player` when you need raw player metadata (player ID, account details), not for general playtime questions.
+If the user says "how long did Emma play today", that is a question about a **player**, not a device. Run `list-players` to get each player's today's playtime by nickname. Use `get-player` if you also need the apps they played. Do not use `today-summary` for per-player questions — it only returns device-level totals (total playing time, disabled time, exceeded time).
 
 ## Device Resolution
 
@@ -302,11 +302,13 @@ switch-parental-controls today-summary
 
 ### Check how long a specific person played today
 
-Person names ("Emma", "Max") are **players**, not devices. Run `today-summary` and read that player's entry from the output — do not pass the name as `[DEVICE]`:
+Person names ("Emma", "Max") are **players**, not devices. Use `list-players` — it shows each player's today's playtime by nickname. Do not pass the name as `[DEVICE]`:
 
 ```
-switch-parental-controls today-summary
+switch-parental-controls list-players
 ```
+
+For the apps a specific player ran today, use `get-player` with their player ID (visible in `list-players --format json`).
 
 > **Note:** If any command returns "Error: Not authenticated", the user needs to run `switch-parental-controls login` manually — this is an interactive step that cannot be automated.
 
