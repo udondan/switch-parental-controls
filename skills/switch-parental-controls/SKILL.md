@@ -33,7 +33,7 @@ uvx switch-parental-controls <command>
 
 **Assume the user is already authenticated.** Every command requires a saved session token, and that token is obtained through a one-time interactive login that a human must complete manually — it cannot be automated. Do not attempt to run `login` yourself.
 
-The token is stored at `~/.config/switch-parental-controls/credentials` (or set via the `SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN` environment variable). If any command fails with "Error: Not authenticated", tell the user to run the following command manually in their own terminal and follow the prompts:
+The token is stored at `~/.config/switch-parental-controls/credentials` by default (or `$XDG_CONFIG_HOME/switch-parental-controls/credentials` if `XDG_CONFIG_HOME` is set), or override with the `SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN` environment variable. If any command fails with "Error: Not authenticated", tell the user to run the following command manually in their own terminal and follow the prompts:
 
 ```
 switch-parental-controls login
@@ -78,7 +78,7 @@ If the user says "how long did Emma play today", that is a question about a **pl
 
 Most commands accept an optional `[DEVICE]` positional argument. `DEVICE` is the console name or ID — never a person's name. If omitted and the account has exactly one device, it is selected automatically.
 
-`DEVICE` accepts either a **device name** (e.g. `"Switch #1"`) or a **device ID** (e.g. `abc123def456`). Names are resolved via a persistent cache at `~/.config/switch-parental-controls/devices`.
+`DEVICE` accepts either a **device name** (e.g. `"Switch #1"`) or a **device ID** (e.g. `abc123def456`). Names are resolved via a persistent cache at `~/.config/switch-parental-controls/devices` by default (or `$XDG_CONFIG_HOME/switch-parental-controls/devices` if `XDG_CONFIG_HOME` is set).
 
 Every command populates the cache automatically on first use (from the already-initialized API client — no extra network call). The cache persists across sessions, so you do not need to run `list-devices` before every command. Run it explicitly only when you need to confirm current device names or after adding, removing, or renaming a device:
 
@@ -283,7 +283,7 @@ switch-parental-controls list-applications [DEVICE] [--format markdown|json]
 ```
 
 #### `set-app-allow-list`
-Add or remove an application from the content restriction allow list. When a content restriction level is set, only allow-listed apps can be launched.
+Add or remove an application from the content restriction allow list. Allow-listed apps can bypass the age-based content restriction and launch regardless of the device's restriction level. Apps not on the allow list remain subject to normal restrictions — they can still launch if their rating is permitted by the active restriction level.
 
 ```
 switch-parental-controls set-app-allow-list [DEVICE] APP_ID --allow
@@ -387,6 +387,6 @@ switch-parental-controls set-playtime-limit "Switch #2" --minutes 60
 - With `--playtime-enabled`, `--max-playtime-minutes` is required; it must not be set with `--playtime-disabled`.
 - With `--bedtime-enabled`, both `--bedtime-alarm-hour` and `--bedtime-end-hour` are required; with `--bedtime-disabled`, none of the bedtime value flags may be set (including non-zero minute values).
 - **`monthly-summary`** `--year` and `--month` must be provided together.
-- **Device name cache** persists across sessions at `~/.config/switch-parental-controls/devices`. Any command populates it automatically on first use if it is missing — no need to run `list-devices` upfront.
+- **Device name cache** persists across sessions at `~/.config/switch-parental-controls/devices` (or `$XDG_CONFIG_HOME/switch-parental-controls/devices` if `XDG_CONFIG_HOME` is set). Any command populates it automatically on first use if it is missing — no need to run `list-devices` upfront.
 - **Auto-select** only works when the account has exactly one device. With multiple devices, always pass `[DEVICE]` explicitly.
 - **Content restriction allow list** only matters when a restriction level other than `NONE` is active.

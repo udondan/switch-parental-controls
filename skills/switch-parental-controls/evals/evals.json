@@ -19,10 +19,9 @@
     {
       "id": 2,
       "prompt": "I want to check what games my kids played last month (April 2025) and how long each game was played. I have two Switches linked to my account - 'Switch #1' is for my older kid and 'Switch #2' is for the younger one. I want to see the monthly summary for Switch #2 first, then the list of games played on it.",
-      "expected_output": "Commands to run list-devices first to populate the cache, then monthly-summary for Switch #2 with --year 2025 --month 4, then list-applications for Switch #2.",
+      "expected_output": "Commands to run monthly-summary for Switch #2 with --year 2025 --month 4, then list-applications for Switch #2. list-devices is not required first since the cache is populated lazily.",
       "files": [],
       "expectations": [
-        "Runs list-devices first to populate the device name cache",
         "Uses monthly-summary with --year 2025 --month 4 targeting Switch #2",
         "Uses list-applications targeting Switch #2",
         "Device name 'Switch #2' is passed correctly (quoted if needed)"
