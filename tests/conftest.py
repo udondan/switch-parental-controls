@@ -38,11 +38,23 @@ def make_mock_device(
     device.timer_mode = DeviceTimerMode(timer_mode_str)
     device.daily_summaries = [
         {
+            "date": "2026-05-01",
+            "playingTime": 60,
+            "disabledTime": 0,
+            "exceededTime": 0,
+        },
+        {
+            "date": "2026-05-02",
+            "playingTime": 90,
+            "disabledTime": 5,
+            "exceededTime": 10,
+        },
+        {
             "date": "2026-04-07",
             "playingTime": 45,
             "disabledTime": 0,
             "exceededTime": 0,
-        }
+        },
     ]
     device.players = {}
     device.applications = {}

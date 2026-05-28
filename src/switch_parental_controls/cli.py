@@ -48,8 +48,7 @@ def _require_token() -> str:
     token = os.environ.get("SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN") or load_token()
     if not token:
         click.echo(
-            "Error: Not authenticated.\n"
-            "Run 'switch-parental-controls login' to authenticate.",
+            "Error: Not authenticated.\nRun 'switch-parental-controls login' to authenticate.",
             err=True,
         )
         sys.exit(1)
@@ -94,8 +93,7 @@ def _execute(coro_factory) -> None:
         exc_type = type(exc).__name__
         if "InvalidSessionToken" in exc_type or "invalid_grant" in str(exc):
             click.echo(
-                "Error: Saved token is invalid or expired.\n"
-                "Run 'switch-parental-controls login' to re-authenticate.",
+                "Error: Saved token is invalid or expired.\nRun 'switch-parental-controls login' to re-authenticate.",
                 err=True,
             )
             sys.exit(1)
@@ -306,9 +304,7 @@ def today_summary(obj: dict, device: str | None, fmt: str) -> None:
         async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
-            return await switch_get_today_summary(
-                DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None
-            )
+            return await switch_get_today_summary(DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None)
 
     _execute(run)
 
@@ -333,6 +329,30 @@ def monthly_summary(obj: dict, device: str | None, year: int | None, month: int 
             except Exception as exc:
                 return f"Error: {exc}"
             return await switch_get_monthly_summary(params, None)
+
+    _execute(run)
+
+
+@cli.command("daily-breakdown")
+@_DEVICE_ARG
+@click.option("--year", type=int, default=None, help="Year (e.g. 2024). Omit for current month.")
+@click.option("--month", type=int, default=None, help="Month 1-12. Required if --year is set.")
+@_FORMAT_OPTION
+@click.pass_obj
+def daily_breakdown(obj: dict, device: str | None, year: int | None, month: int | None, fmt: str) -> None:
+    """Get per-day playtime breakdown for a month."""
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+
+    async def run() -> str:
+        token = _require_token()
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+            _populate_state(client, http_session, obj)
+            did = _resolve(client, device)
+            try:
+                params = MonthlySummaryInput(device_id=did, year=year, month=month, response_format=ResponseFormat(fmt))
+            except Exception as exc:
+                return f"Error: {exc}"
+            return await switch_get_daily_breakdown(params, None)
 
     _execute(run)
 
@@ -442,9 +462,13 @@ def set_timer_mode(obj: dict, args: tuple) -> None:
 @cli.command("set-day-restrictions")
 @click.argument("args", nargs=-1, metavar="[DEVICE] DAY")
 @click.option("--playtime-enabled/--playtime-disabled", required=True, help="Enable/disable playtime limit.")
-@click.option("--max-playtime-minutes", type=int, default=None, help="Limit in minutes (0-360). Required with --playtime-enabled.")  # noqa: E501
+@click.option(
+    "--max-playtime-minutes", type=int, default=None, help="Limit in minutes (0-360). Required with --playtime-enabled."
+)  # noqa: E501
 @click.option("--bedtime-enabled/--bedtime-disabled", required=True, help="Enable/disable bedtime restrictions.")
-@click.option("--bedtime-alarm-hour", type=int, default=None, help="Alarm hour (16-23). Required with --bedtime-enabled.")  # noqa: E501
+@click.option(
+    "--bedtime-alarm-hour", type=int, default=None, help="Alarm hour (16-23). Required with --bedtime-enabled."
+)  # noqa: E501
 @click.option("--bedtime-alarm-minute", type=int, default=0, show_default=True, help="Alarm minute (0-59).")
 @click.option("--bedtime-end-hour", type=int, default=None, help="End hour (5-9). Required with --bedtime-enabled.")
 @click.option("--bedtime-end-minute", type=int, default=0, show_default=True, help="End minute (0-59).")
@@ -710,9 +734,7 @@ def list_applications(obj: dict, device: str | None, fmt: str) -> None:
         async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
-            return await switch_list_applications(
-                DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None
-            )
+            return await switch_list_applications(DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None)
 
     _execute(run)
 

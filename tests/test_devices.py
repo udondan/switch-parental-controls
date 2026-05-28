@@ -118,9 +118,7 @@ async def test_get_device_json(mock_device):
     from switch_parental_controls.models import DeviceInput, ResponseFormat
 
     ctx = MagicMock()
-    result = await switch_get_device(
-        DeviceInput(device_id="device-001", response_format=ResponseFormat.JSON), ctx
-    )
+    result = await switch_get_device(DeviceInput(device_id="device-001", response_format=ResponseFormat.JSON), ctx)
     data = json.loads(result)
 
     assert data["device_id"] == "device-001"
@@ -159,9 +157,7 @@ async def test_set_daily_playtime_limit(mock_device):
     from switch_parental_controls.models import SetPlaytimeLimitInput
 
     ctx = MagicMock()
-    result = await switch_set_daily_playtime_limit(
-        SetPlaytimeLimitInput(device_id="device-001", minutes=180), ctx
-    )
+    result = await switch_set_daily_playtime_limit(SetPlaytimeLimitInput(device_id="device-001", minutes=180), ctx)
 
     mock_device.update_max_daily_playtime.assert_called_once_with(180)
     assert "3h" in result
@@ -175,9 +171,7 @@ async def test_set_daily_playtime_limit_remove(mock_device):
     from switch_parental_controls.models import SetPlaytimeLimitInput
 
     ctx = MagicMock()
-    result = await switch_set_daily_playtime_limit(
-        SetPlaytimeLimitInput(device_id="device-001", minutes=-1), ctx
-    )
+    result = await switch_set_daily_playtime_limit(SetPlaytimeLimitInput(device_id="device-001", minutes=-1), ctx)
 
     mock_device.update_max_daily_playtime.assert_called_once_with(-1)
     assert "removed" in result
@@ -193,9 +187,7 @@ async def test_add_extra_time(mock_device):
     from switch_parental_controls.models import AddExtraTimeInput
 
     ctx = MagicMock()
-    result = await switch_add_extra_time(
-        AddExtraTimeInput(device_id="device-001", minutes=30), ctx
-    )
+    result = await switch_add_extra_time(AddExtraTimeInput(device_id="device-001", minutes=30), ctx)
 
     mock_device.add_extra_time.assert_called_once_with(30)
     assert "30m" in result
@@ -231,9 +223,7 @@ async def test_set_restriction_mode_alarm(mock_device):
     from switch_parental_controls.models import SetRestrictionModeInput
 
     ctx = MagicMock()
-    result = await switch_set_restriction_mode(
-        SetRestrictionModeInput(device_id="device-001", mode="ALARM"), ctx
-    )
+    result = await switch_set_restriction_mode(SetRestrictionModeInput(device_id="device-001", mode="ALARM"), ctx)
 
     mock_device.set_restriction_mode.assert_called_once_with(RestrictionMode.ALARM)
     assert "ALARM" in result
@@ -249,9 +239,7 @@ async def test_set_bedtime_alarm(mock_device):
     from switch_parental_controls.models import SetBedtimeAlarmInput
 
     ctx = MagicMock()
-    result = await switch_set_bedtime_alarm(
-        SetBedtimeAlarmInput(device_id="device-001", hour=21, minute=30), ctx
-    )
+    result = await switch_set_bedtime_alarm(SetBedtimeAlarmInput(device_id="device-001", hour=21, minute=30), ctx)
 
     mock_device.set_bedtime_alarm.assert_called_once_with(time(21, 30))
     assert "21:30" in result
@@ -264,9 +252,7 @@ async def test_set_bedtime_alarm_disable(mock_device):
     from switch_parental_controls.models import SetBedtimeAlarmInput
 
     ctx = MagicMock()
-    result = await switch_set_bedtime_alarm(
-        SetBedtimeAlarmInput(device_id="device-001", hour=0, minute=0), ctx
-    )
+    result = await switch_set_bedtime_alarm(SetBedtimeAlarmInput(device_id="device-001", hour=0, minute=0), ctx)
 
     mock_device.set_bedtime_alarm.assert_called_once_with(time(0, 0))
     assert "disabled" in result
@@ -298,9 +284,7 @@ async def test_get_monthly_summary_specific_month(mock_device):
     from switch_parental_controls.models import MonthlySummaryInput
 
     ctx = MagicMock()
-    await switch_get_monthly_summary(
-        MonthlySummaryInput(device_id="device-001", year=2025, month=3), ctx
-    )
+    await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001", year=2025, month=3), ctx)
 
     mock_device.get_monthly_summary.assert_called_once_with(search_date=datetime(2025, 3, 1))
 
@@ -359,9 +343,7 @@ async def test_set_timer_mode_daily(mock_device):
     from switch_parental_controls.models import SetTimerModeInput
 
     ctx = MagicMock()
-    result = await switch_set_timer_mode(
-        SetTimerModeInput(device_id="device-001", mode="DAILY"), ctx
-    )
+    result = await switch_set_timer_mode(SetTimerModeInput(device_id="device-001", mode="DAILY"), ctx)
 
     mock_device.set_timer_mode.assert_called_once_with(DeviceTimerMode.DAILY)
     assert "DAILY" in result
@@ -377,9 +359,7 @@ async def test_set_timer_mode_each_day(mock_device):
     from switch_parental_controls.models import SetTimerModeInput
 
     ctx = MagicMock()
-    result = await switch_set_timer_mode(
-        SetTimerModeInput(device_id="device-001", mode="EACH_DAY_OF_THE_WEEK"), ctx
-    )
+    result = await switch_set_timer_mode(SetTimerModeInput(device_id="device-001", mode="EACH_DAY_OF_THE_WEEK"), ctx)
 
     mock_device.set_timer_mode.assert_called_once_with(DeviceTimerMode.EACH_DAY_OF_THE_WEEK)
     assert "EACH_DAY_OF_THE_WEEK" in result
@@ -542,9 +522,7 @@ async def test_set_bedtime_end_time(mock_device):
     from switch_parental_controls.models import SetBedtimeEndInput
 
     ctx = MagicMock()
-    result = await switch_set_bedtime_end_time(
-        SetBedtimeEndInput(device_id="device-001", hour=7, minute=30), ctx
-    )
+    result = await switch_set_bedtime_end_time(SetBedtimeEndInput(device_id="device-001", hour=7, minute=30), ctx)
 
     mock_device.set_bedtime_end_time.assert_called_once_with(time(7, 30))
     assert "07:30" in result
@@ -558,9 +536,7 @@ async def test_set_bedtime_end_time_disable(mock_device):
     from switch_parental_controls.models import SetBedtimeEndInput
 
     ctx = MagicMock()
-    result = await switch_set_bedtime_end_time(
-        SetBedtimeEndInput(device_id="device-001", hour=0, minute=0), ctx
-    )
+    result = await switch_set_bedtime_end_time(SetBedtimeEndInput(device_id="device-001", hour=0, minute=0), ctx)
 
     mock_device.set_bedtime_end_time.assert_called_once_with(time(0, 0))
     assert "disabled" in result
@@ -582,7 +558,167 @@ async def test_set_content_restriction_level(mock_device):
         SetContentRestrictionInput(device_id="device-001", level="CHILDREN"), ctx
     )
 
-    mock_device.set_functional_restriction_level.assert_called_once_with(
-        FunctionalRestrictionLevel.YOUNG_CHILD
-    )
+    mock_device.set_functional_restriction_level.assert_called_once_with(FunctionalRestrictionLevel.YOUNG_CHILD)
     assert "CHILDREN" in result
+
+
+# --- switch_get_daily_breakdown ---
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_no_client():
+    """Should return auth error when client is not set."""
+    server._state["client"] = None
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001"), ctx)
+    assert "Error" in result
+    assert "SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN" in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_current_month_markdown(mock_device):
+    """Should return per-day markdown for the current month using daily_summaries."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001"), ctx)
+
+    assert "May 2026" in result
+    assert "(current)" in result
+    assert "2026-05-01" in result
+    assert "2026-05-02" in result
+    assert "exceeded" in result
+    assert "disabled" in result
+    assert "2026-04-07" not in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_current_month_total(mock_device):
+    """Should compute correct total for current month."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001"), ctx)
+
+    # 60 + 90 = 150 minutes = 2h 30m
+    assert "2h 30m" in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_current_month_json(mock_device):
+    """Should return JSON with days array for current month."""
+    import datetime
+    import json
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        result = await switch_get_daily_breakdown(
+            MonthlySummaryInput(device_id="device-001", response_format=ResponseFormat.JSON), ctx
+        )
+
+    data = json.loads(result)
+    assert data["current"] is True
+    assert data["year"] == 2026
+    assert data["month"] == 5
+    assert len(data["days"]) == 2
+    assert data["days"][0]["date"] == "2026-05-01"
+    assert data["days"][0]["playingTime"] == 60
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_historical_month_markdown(mock_device):
+    """Should return per-day markdown for a historical month using get_monthly_summary."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001", year=2026, month=4), ctx)
+
+    assert "April 2026" in result
+    assert "(current)" not in result
+    assert "2026-04-01" in result
+    assert "2026-04-02" in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_historical_month_json(mock_device):
+    """Should return JSON with days array for a historical month."""
+    import datetime
+    import json
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(
+            MonthlySummaryInput(device_id="device-001", year=2026, month=4, response_format=ResponseFormat.JSON), ctx
+        )
+
+    data = json.loads(result)
+    assert data["current"] is False
+    assert data["year"] == 2026
+    assert data["month"] == 4
+    assert len(data["days"]) == 2
+    assert data["days"][0]["date"] == "2026-04-01"
+    assert data["days"][0]["totalTime"] == 600
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_no_data(mock_device):
+    """Should return 'no data' message when daily_summaries has no entries for the month."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    mock_device.daily_summaries = []
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001"), ctx)
+
+    assert "No daily data" in result
+    assert "2026-05" in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_unknown_device(mock_client):
+    """Should return error for unknown device ID."""
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="no-such-device"), ctx)
+    assert "Error" in result
+    assert "no-such-device" in result

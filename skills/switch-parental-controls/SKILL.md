@@ -7,8 +7,9 @@ description: >
   listing devices, setting playtime limits, adding extra time, configuring
   bedtime alarms, managing content restrictions, or reviewing player and app
   data. Trigger for any task involving the switch-parental-controls CLI, even
-  if the user just says "how much did the kids play today" or "add 30 minutes
-  for Emma's Switch" — those map directly to CLI commands covered here.
+  if the user just says "how much did the kids play today", "show me each
+  day this month", or "add 30 minutes for Emma's Switch" — those map
+  directly to CLI commands covered here.
 ---
 
 ## Overview
@@ -140,13 +141,24 @@ switch-parental-controls today-summary [DEVICE] [--format markdown|json]
 ```
 
 #### `monthly-summary`
-Show a monthly playtime summary. Defaults to the most recent available month (not necessarily the current one).
+Show a monthly playtime summary with per-player totals. Defaults to the most recent **completed** month — it does not return data for the current in-progress month. Use `daily-breakdown` for current-month data.
 
 ```
 switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [--format markdown|json]
 ```
 
 - `--year` and `--month` must be provided together; neither alone is valid.
+
+#### `daily-breakdown`
+Show per-day playtime for a month. For the **current month**, reads live data from the device's daily summaries feed (includes playing time, disabled time, and exceeded time per day). For **past months**, reads from the monthly summary API (total playtime per day only).
+
+```
+switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--format markdown|json]
+```
+
+- Omit `--year`/`--month` to get the current month's day-by-day breakdown.
+- `--year` and `--month` must be provided together; neither alone is valid.
+- Use this instead of `monthly-summary` when you need to see which specific days had the most playtime, or to answer "how much did they play on Tuesday the 13th?"
 
 ---
 
@@ -320,7 +332,19 @@ For the apps a specific player ran today, use `get-player` with their player ID 
 
 > **Note:** If any command returns "Error: Not authenticated", the user needs to run `switch-parental-controls login` manually — this is an interactive step that cannot be automated.
 
-### Check how much was played in April 2025
+### Check how much was played each day this month
+
+```
+switch-parental-controls daily-breakdown
+```
+
+### Check per-day playtime for a past month
+
+```
+switch-parental-controls daily-breakdown --year 2025 --month 4
+```
+
+### Check how much was played in April 2025 (totals only)
 
 ```
 switch-parental-controls monthly-summary --year 2025 --month 4
@@ -396,7 +420,8 @@ switch-parental-controls set-playtime-limit "Switch #2" --minutes 60
 - **`set-day-restrictions`** always requires both `--playtime-enabled/--playtime-disabled` AND `--bedtime-enabled/--bedtime-disabled` — both flags are required on every call.
 - With `--playtime-enabled`, `--max-playtime-minutes` is required; it must not be set with `--playtime-disabled`.
 - With `--bedtime-enabled`, both `--bedtime-alarm-hour` and `--bedtime-end-hour` are required; with `--bedtime-disabled`, none of the bedtime value flags may be set (including non-zero minute values).
-- **`monthly-summary`** `--year` and `--month` must be provided together.
+- **`monthly-summary`** `--year` and `--month` must be provided together. Does not cover the current in-progress month — use `daily-breakdown` for that.
+- **`daily-breakdown`** `--year` and `--month` must be provided together. Omit both for the current month.
 - **Device name cache** persists across sessions at `~/.config/switch-parental-controls/devices` (or `$XDG_CONFIG_HOME/switch-parental-controls/devices` if `XDG_CONFIG_HOME` is set). Any command populates it automatically on first use if it is missing — no need to run `list-devices` upfront.
 - **Auto-select** only works when the account has exactly one device. With multiple devices, always pass `[DEVICE]` explicitly.
 - **Content restriction allow list** only matters when a restriction level other than `NONE` is active.

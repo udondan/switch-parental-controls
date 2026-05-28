@@ -171,10 +171,7 @@ async def switch_get_device(params: DeviceInput, ctx: Context) -> str:
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         await device.update()
 
@@ -245,10 +242,7 @@ async def switch_get_today_summary(params: DeviceInput, ctx: Context) -> str:
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         await device.update()
         from zoneinfo import ZoneInfo
@@ -274,6 +268,135 @@ async def switch_get_today_summary(params: DeviceInput, ctx: Context) -> str:
             f"- **Exceeded time**: {format_minutes(summary.get('exceededTime', 0))}",
         ]
         return "\n".join(lines)
+
+    except Exception as e:
+        return handle_error(e)
+
+
+@mcp.tool(
+    name="switch_get_daily_breakdown",
+    annotations={
+        "title": "Get Daily Playtime Breakdown",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) -> str:
+    """Get per-day playtime breakdown for a month.
+
+    For the current month, returns data from the live daily summaries feed,
+    including playing time, disabled time, and exceeded time per day.
+    For past months, returns total playing time per day from the monthly summary.
+
+    Args:
+        params (MonthlySummaryInput): Validated input containing:
+            - device_id (str): The unique device ID (from switch_list_devices).
+            - year (Optional[int]): Year (e.g. 2024). Omit for current month.
+            - month (Optional[int]): Month (1-12). Required if year is provided.
+            - response_format (str): 'markdown' or 'json' (default: 'markdown').
+
+    Returns:
+        str: Per-day playtime breakdown, or an error message.
+    """
+    err = require_client(_state.get("client"))
+    if err:
+        return err
+
+    try:
+        from zoneinfo import ZoneInfo
+
+        client = _state["client"]
+        device = client.devices.get(params.device_id)
+        if device is None:
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
+
+        tz = ZoneInfo(_state.get("timezone") or "Europe/London")
+        now = datetime.now(tz)
+        year = params.year or now.year
+        month = params.month or now.month
+        is_current = year == now.year and month == now.month
+
+        if is_current:
+            await device.update()
+            prefix = f"{year}-{month:02d}"
+            entries = sorted(
+                [s for s in (device.daily_summaries or []) if s.get("date", "").startswith(prefix)],
+                key=lambda s: s["date"],
+            )
+            if not entries:
+                return f"No daily data available for {prefix} on device '{device.name}'."
+
+            if params.response_format == ResponseFormat.JSON:
+                return to_json(
+                    {
+                        "device_name": device.name,
+                        "year": year,
+                        "month": month,
+                        "current": True,
+                        "days": entries,
+                    }
+                )
+
+            from datetime import date as dt_date
+
+            month_label = dt_date(year, month, 1).strftime("%B %Y")
+            total = sum(e.get("playingTime", 0) for e in entries)
+            lines = [
+                f"# Daily Breakdown — {device.name}",
+                f"**Period**: {month_label} (current)",
+                "",
+            ]
+            for e in entries:
+                line = f"- **{e['date']}**: {format_minutes(e.get('playingTime', 0))}"
+                extras = []
+                if e.get("disabledTime", 0) > 0:
+                    extras.append(f"disabled: {format_minutes(e['disabledTime'])}")
+                if e.get("exceededTime", 0) > 0:
+                    extras.append(f"exceeded: {format_minutes(e['exceededTime'])}")
+                if extras:
+                    line += f" ({', '.join(extras)})"
+                lines.append(line)
+            lines += ["", f"**Total**: {format_minutes(total)}"]
+            return "\n".join(lines)
+
+        else:
+            summary = await device.get_monthly_summary(search_date=datetime(year, month, 1))
+            if summary is None:
+                return f"No monthly summary available for {year}-{month:02d} on device '{device.name}'."
+
+            daily_stats = sorted(
+                summary.get("overall", {}).get("dailyStats", []),
+                key=lambda s: s["date"],
+            )
+            if not daily_stats:
+                return f"No daily data in monthly summary for {year}-{month:02d} on device '{device.name}'."
+
+            if params.response_format == ResponseFormat.JSON:
+                return to_json(
+                    {
+                        "device_name": device.name,
+                        "year": year,
+                        "month": month,
+                        "current": False,
+                        "days": daily_stats,
+                    }
+                )
+
+            from datetime import date as dt_date
+
+            month_label = dt_date(year, month, 1).strftime("%B %Y")
+            total = sum(d.get("totalTime", 0) for d in daily_stats)
+            lines = [
+                f"# Daily Breakdown — {device.name}",
+                f"**Period**: {month_label}",
+                "",
+            ]
+            for d in daily_stats:
+                lines.append(f"- **{d['date']}**: {format_minutes(d.get('totalTime', 0))}")
+            lines += ["", f"**Total**: {format_minutes(total)}"]
+            return "\n".join(lines)
 
     except Exception as e:
         return handle_error(e)
@@ -318,10 +441,7 @@ async def switch_get_monthly_summary(params: MonthlySummaryInput, ctx: Context) 
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         search_date = None
         if params.year and params.month:
@@ -406,18 +526,13 @@ async def switch_set_daily_playtime_limit(params: SetPlaytimeLimitInput, ctx: Co
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         await device.update_max_daily_playtime(params.minutes)
 
         if params.minutes == -1:
             return f"✓ Daily playtime limit removed for '{device.name}'."
-        return (
-            f"✓ Daily playtime limit set to {format_minutes(params.minutes)} for '{device.name}'."
-        )
+        return f"✓ Daily playtime limit set to {format_minutes(params.minutes)} for '{device.name}'."
 
     except Exception as e:
         return handle_error(e)
@@ -459,15 +574,10 @@ async def switch_add_extra_time(params: AddExtraTimeInput, ctx: Context) -> str:
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         await device.add_extra_time(params.minutes)
-        return (
-            f"✓ Added {format_minutes(params.minutes)} of extra playtime for '{device.name}' today."
-        )
+        return f"✓ Added {format_minutes(params.minutes)} of extra playtime for '{device.name}' today."
 
     except Exception as e:
         return handle_error(e)
@@ -509,10 +619,7 @@ async def switch_set_timer_mode(params: SetTimerModeInput, ctx: Context) -> str:
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         mode = DeviceTimerMode(params.mode)
         await device.set_timer_mode(mode)
@@ -564,10 +671,7 @@ async def switch_set_day_restrictions(params: SetDayRestrictionsInput, ctx: Cont
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         bedtime_start = None
         bedtime_end = None
@@ -639,10 +743,7 @@ async def switch_set_restriction_mode(params: SetRestrictionModeInput, ctx: Cont
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         mode = RestrictionMode[params.mode]
         await device.set_restriction_mode(mode)
@@ -668,9 +769,7 @@ async def switch_set_restriction_mode(params: SetRestrictionModeInput, ctx: Cont
         "openWorldHint": True,
     },
 )
-async def switch_set_content_restriction_level(
-    params: SetContentRestrictionInput, ctx: Context
-) -> str:
+async def switch_set_content_restriction_level(params: SetContentRestrictionInput, ctx: Context) -> str:
     """Set the content restriction level for a Nintendo Switch device.
 
     Controls which games and applications can be launched based on their age rating.
@@ -695,10 +794,7 @@ async def switch_set_content_restriction_level(
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         level = FunctionalRestrictionLevel(params.level)
         await device.set_functional_restriction_level(level)
@@ -745,10 +841,7 @@ async def switch_set_bedtime_alarm(params: SetBedtimeAlarmInput, ctx: Context) -
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         alarm_time = time(params.hour, params.minute)
         await device.set_bedtime_alarm(alarm_time)
@@ -798,19 +891,14 @@ async def switch_set_bedtime_end_time(params: SetBedtimeEndInput, ctx: Context) 
         client = _state["client"]
         device = client.devices.get(params.device_id)
         if device is None:
-            return (
-                f"Error: Device '{params.device_id}' not found. "
-                "Use switch_list_devices to see available device IDs."
-            )
+            return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         end_time = time(params.hour, params.minute)
         await device.set_bedtime_end_time(end_time)
 
         if params.hour == 0 and params.minute == 0:
             return f"✓ Bedtime end time disabled for '{device.name}'."
-        return (
-            f"✓ Bedtime end time set to {params.hour:02d}:{params.minute:02d} for '{device.name}'."
-        )
+        return f"✓ Bedtime end time set to {params.hour:02d}:{params.minute:02d} for '{device.name}'."
 
     except Exception as e:
         return handle_error(e)
