@@ -114,6 +114,16 @@ async def test_get_monthly_summary(first_device_id):
     assert "Error: Not authenticated" not in result
 
 
+async def test_get_daily_breakdown(first_device_id):
+    """Daily breakdown for the current month should be returned without an auth error."""
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id=first_device_id), MagicMock())
+    assert isinstance(result, str)
+    assert "Error: Not authenticated" not in result
+
+
 async def test_list_players(first_device_id):
     """Player list should be returned without an auth error."""
     from switch_parental_controls.models import DeviceInput
@@ -207,6 +217,15 @@ def test_cli_monthly_summary(cli_runner, first_device_id):
     from switch_parental_controls.cli import cli
 
     result = cli_runner.invoke(cli, ["monthly-summary", first_device_id])
+    assert "Error: Not authenticated" not in result.output
+
+
+def test_cli_daily_breakdown(cli_runner, first_device_id):
+    """CLI daily-breakdown should exit 0 and return current-month data without an auth error."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["daily-breakdown", first_device_id])
+    assert result.exit_code == 0, result.output
     assert "Error: Not authenticated" not in result.output
 
 
