@@ -133,7 +133,7 @@ switch-parental-controls get-device [DEVICE] [--format markdown|json]
 ```
 
 #### `today-summary`
-Show today's playtime summary for a device.
+Show today's device-level playtime summary (total playing time, disabled time, exceeded time). Does not break down playtime by player — use `list-players` for per-player data.
 
 ```
 switch-parental-controls today-summary [DEVICE] [--format markdown|json]
@@ -294,10 +294,18 @@ switch-parental-controls set-app-allow-list [DEVICE] APP_ID --no-allow
 
 ## Common Workflows
 
-### Check today's playtime (all players)
+### Check today's device-level playtime
+
+Returns total playing time, disabled time, and exceeded time for the device (not per player):
 
 ```
 switch-parental-controls today-summary
+```
+
+### Check today's playtime by player
+
+```
+switch-parental-controls list-players
 ```
 
 ### Check how long a specific person played today
