@@ -80,6 +80,14 @@ class MonthlySummaryInput(BaseModel):
         default=ResponseFormat.MARKDOWN,
         description="Output format: 'markdown' for human-readable or 'json' for machine-readable.",
     )
+    skip_cache: bool = Field(
+        default=False,
+        description=(
+            "Skip reading from and writing to the local cache. "
+            "Always fetches fresh data from the Nintendo API. "
+            "Useful when data looks stale or unexpected."
+        ),
+    )
 
     @model_validator(mode="after")
     def validate_year_month(self) -> "MonthlySummaryInput":
@@ -307,6 +315,35 @@ class SetAppAllowListInput(BaseModel):
             "False to remove it from the allow list."
         ),
     )
+
+
+class ClearCacheInput(BaseModel):
+    """Input model for clearing the historic data cache."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
+
+    device_id: str | None = Field(
+        default=None,
+        description="Limit clearing to this device ID. Omit to clear cache for all devices.",
+    )
+    year: int | None = Field(
+        default=None,
+        description="Limit clearing to this year. Omit to clear all years.",
+        ge=2017,
+        le=2100,
+    )
+    month: int | None = Field(
+        default=None,
+        description="Limit clearing to this month (1-12). Requires year to be set.",
+        ge=1,
+        le=12,
+    )
+
+    @model_validator(mode="after")
+    def validate_year_month(self) -> "ClearCacheInput":
+        if self.month is not None and self.year is None:
+            raise ValueError("year is required when month is provided")
+        return self
 
 
 class CompleteLoginInput(BaseModel):

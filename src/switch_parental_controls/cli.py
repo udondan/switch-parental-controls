@@ -313,9 +313,10 @@ def today_summary(obj: dict, device: str | None, fmt: str) -> None:
 @_DEVICE_ARG
 @click.option("--year", type=int, default=None, help="Year (e.g. 2024). Omit for most recent.")
 @click.option("--month", type=int, default=None, help="Month 1-12. Required if --year is set.")
+@click.option("--no-cache", "skip_cache", is_flag=True, default=False, help="Skip cache; always fetch fresh data.")
 @_FORMAT_OPTION
 @click.pass_obj
-def monthly_summary(obj: dict, device: str | None, year: int | None, month: int | None, fmt: str) -> None:
+def monthly_summary(obj: dict, device: str | None, year: int | None, month: int | None, skip_cache: bool, fmt: str) -> None:
     """Get the monthly usage summary for a device."""
     from switch_parental_controls.devices import switch_get_monthly_summary
 
@@ -325,7 +326,9 @@ def monthly_summary(obj: dict, device: str | None, year: int | None, month: int 
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
             try:
-                params = MonthlySummaryInput(device_id=did, year=year, month=month, response_format=ResponseFormat(fmt))
+                params = MonthlySummaryInput(
+                    device_id=did, year=year, month=month, response_format=ResponseFormat(fmt), skip_cache=skip_cache
+                )
             except Exception as exc:
                 return f"Error: {exc}"
             return await switch_get_monthly_summary(params, None)
@@ -337,9 +340,10 @@ def monthly_summary(obj: dict, device: str | None, year: int | None, month: int 
 @_DEVICE_ARG
 @click.option("--year", type=int, default=None, help="Year (e.g. 2024). Omit for current month.")
 @click.option("--month", type=int, default=None, help="Month 1-12. Required if --year is set.")
+@click.option("--no-cache", "skip_cache", is_flag=True, default=False, help="Skip cache; always fetch fresh data.")
 @_FORMAT_OPTION
 @click.pass_obj
-def daily_breakdown(obj: dict, device: str | None, year: int | None, month: int | None, fmt: str) -> None:
+def daily_breakdown(obj: dict, device: str | None, year: int | None, month: int | None, skip_cache: bool, fmt: str) -> None:
     """Get per-day playtime breakdown for a month."""
     from switch_parental_controls.devices import switch_get_daily_breakdown
 
@@ -349,12 +353,53 @@ def daily_breakdown(obj: dict, device: str | None, year: int | None, month: int 
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
             try:
-                params = MonthlySummaryInput(device_id=did, year=year, month=month, response_format=ResponseFormat(fmt))
+                params = MonthlySummaryInput(
+                    device_id=did, year=year, month=month, response_format=ResponseFormat(fmt), skip_cache=skip_cache
+                )
             except Exception as exc:
                 return f"Error: {exc}"
             return await switch_get_daily_breakdown(params, None)
 
     _execute(run)
+
+
+@cli.command("clear-cache")
+@click.option("--device", default=None, metavar="DEVICE", help="Limit to a specific device (name or ID).")
+@click.option("--year", type=int, default=None, help="Limit to a specific year.")
+@click.option("--month", type=int, default=None, help="Limit to a specific month (1-12). Requires --year.")
+@click.pass_obj
+def clear_cache_cmd(obj: dict, device: str | None, year: int | None, month: int | None) -> None:
+    """Clear locally cached historic play data.
+
+    Removes cached API responses so the next monthly-summary or daily-breakdown
+    request fetches fresh data. Without options, clears the entire cache.
+    """
+    from switch_parental_controls.data_cache import clear_data_cache
+
+    if month is not None and year is None:
+        raise click.UsageError("--year is required when --month is given.")
+
+    device_id: str | None = None
+    if device is not None:
+        from switch_parental_controls.device_cache import load_cache
+
+        cache = load_cache()
+        if device in cache:
+            device_id = device
+        else:
+            lower = device.lower()
+            for did, dname in cache.items():
+                if dname.lower() == lower:
+                    device_id = did
+                    break
+            if device_id is None:
+                device_id = device
+
+    n = clear_data_cache(device_id=device_id, year=year, month=month)
+    if n == 0:
+        click.echo("No cached files found matching the given filters.")
+    else:
+        click.echo(f"✓ Cleared {n} cached file{'s' if n != 1 else ''}.")
 
 
 # ---------------------------------------------------------------------------

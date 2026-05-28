@@ -2,12 +2,17 @@
 
 import json
 from datetime import time
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from switch_parental_controls import server
 from tests.conftest import make_mock_client, make_mock_device
+
+
+@pytest.fixture(autouse=True)
+def isolate_cache(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
 
 @pytest.fixture
@@ -722,3 +727,233 @@ async def test_daily_breakdown_unknown_device(mock_client):
     result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="no-such-device"), ctx)
     assert "Error" in result
     assert "no-such-device" in result
+
+
+# --- cache behaviour for switch_get_monthly_summary ---
+
+
+@pytest.mark.asyncio
+async def test_monthly_summary_cache_miss_saves(mock_device):
+    """Cache miss → API called → result saved to cache."""
+    import datetime
+
+    from switch_parental_controls.data_cache import load_data_cache
+    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001", year=2026, month=4), ctx)
+
+    mock_device.get_monthly_summary.assert_called_once()
+    assert load_data_cache("device-001", 2026, 4) is not None
+
+
+@pytest.mark.asyncio
+async def test_monthly_summary_cache_hit_skips_api(mock_device):
+    """Cache hit → API not called → same data returned."""
+    import datetime
+
+    from switch_parental_controls.data_cache import save_data_cache
+    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    cached_summary = {
+        "overall": {
+            "dailyStats": [{"date": "2026-04-01", "totalTime": 300}],
+        },
+        "players": [],
+    }
+    save_data_cache("device-001", 2026, 4, cached_summary)
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001", year=2026, month=4), ctx)
+
+    mock_device.get_monthly_summary.assert_not_called()
+    assert "April 2026" in result
+    assert "5h" in result  # 300 minutes
+
+
+@pytest.mark.asyncio
+async def test_monthly_summary_skip_cache_bypasses_hit(mock_device):
+    """skip_cache=True → API called even when cache has data; cache not updated."""
+    import datetime
+
+    from switch_parental_controls.data_cache import load_data_cache, save_data_cache
+    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    old_data = {"overall": {"dailyStats": [{"date": "2026-04-01", "totalTime": 1}]}, "players": []}
+    save_data_cache("device-001", 2026, 4, old_data)
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        await switch_get_monthly_summary(
+            MonthlySummaryInput(device_id="device-001", year=2026, month=4, skip_cache=True), ctx
+        )
+
+    mock_device.get_monthly_summary.assert_called_once()
+    # Cache should still hold the old data (not overwritten)
+    assert load_data_cache("device-001", 2026, 4) == old_data
+
+
+@pytest.mark.asyncio
+async def test_monthly_summary_current_month_not_cached(mock_device):
+    """Current month → no cache read or write."""
+    import datetime
+
+    from switch_parental_controls.data_cache import load_data_cache
+    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001", year=2026, month=5), ctx)
+
+    mock_device.get_monthly_summary.assert_called_once()
+    assert load_data_cache("device-001", 2026, 5) is None
+
+
+@pytest.mark.asyncio
+async def test_monthly_summary_no_year_not_cached(mock_device):
+    """No year/month → API always called, no cache interaction."""
+    import datetime
+
+    from switch_parental_controls.data_cache import load_data_cache
+    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001"), ctx)
+
+    mock_device.get_monthly_summary.assert_called_once()
+    # No cache files written (year/month unknown)
+    from switch_parental_controls.data_cache import _cache_dir
+
+    cache_root = _cache_dir()
+    assert not cache_root.exists() or not any(cache_root.rglob("*.json"))
+
+
+# --- cache behaviour for switch_get_daily_breakdown ---
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_past_month_cache_miss_saves(mock_device):
+    """Cache miss for a past month → API called → result saved to cache."""
+    import datetime
+
+    from switch_parental_controls.data_cache import load_data_cache
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001", year=2026, month=4), ctx)
+
+    mock_device.get_monthly_summary.assert_called_once()
+    assert load_data_cache("device-001", 2026, 4) is not None
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_past_month_cache_hit_skips_api(mock_device):
+    """Cache hit for a past month → API not called."""
+    import datetime
+
+    from switch_parental_controls.data_cache import save_data_cache
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    save_data_cache(
+        "device-001",
+        2026,
+        4,
+        {"overall": {"dailyStats": [{"date": "2026-04-01", "totalTime": 120}]}, "players": []},
+    )
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001", year=2026, month=4), ctx)
+
+    mock_device.get_monthly_summary.assert_not_called()
+    assert "2026-04-01" in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_current_month_not_cached(mock_device):
+    """Current month path uses daily_summaries; no cache file written."""
+    import datetime
+
+    from switch_parental_controls.data_cache import load_data_cache
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001"), ctx)
+
+    assert load_data_cache("device-001", 2026, 5) is None
+    mock_device.get_monthly_summary.assert_not_called()
+
+
+# --- switch_clear_cache ---
+
+
+@pytest.mark.asyncio
+async def test_clear_cache_tool_all(tmp_path, monkeypatch):
+    """switch_clear_cache with no filters should clear all cache files."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    from switch_parental_controls.data_cache import save_data_cache
+    from switch_parental_controls.devices import switch_clear_cache
+    from switch_parental_controls.models import ClearCacheInput
+
+    save_data_cache("device-001", 2026, 3, {"dummy": True})
+    save_data_cache("device-001", 2026, 4, {"dummy": True})
+
+    ctx = MagicMock()
+    result = await switch_clear_cache(ClearCacheInput(), ctx)
+    assert "2" in result
+
+
+@pytest.mark.asyncio
+async def test_clear_cache_tool_no_files():
+    """switch_clear_cache with empty cache returns 'no files found' message."""
+    from switch_parental_controls.devices import switch_clear_cache
+    from switch_parental_controls.models import ClearCacheInput
+
+    ctx = MagicMock()
+    result = await switch_clear_cache(ClearCacheInput(), ctx)
+    assert "No cached files found" in result
+
+
+@pytest.mark.asyncio
+async def test_clear_cache_tool_specific_month(tmp_path, monkeypatch):
+    """switch_clear_cache with year+month should delete only matching files."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    from switch_parental_controls.data_cache import load_data_cache, save_data_cache
+    from switch_parental_controls.devices import switch_clear_cache
+    from switch_parental_controls.models import ClearCacheInput
+
+    save_data_cache("device-001", 2026, 3, {"dummy": True})
+    save_data_cache("device-001", 2026, 4, {"dummy": True})
+
+    ctx = MagicMock()
+    await switch_clear_cache(ClearCacheInput(device_id="device-001", year=2026, month=3), ctx)
+
+    assert load_data_cache("device-001", 2026, 3) is None
+    assert load_data_cache("device-001", 2026, 4) is not None
