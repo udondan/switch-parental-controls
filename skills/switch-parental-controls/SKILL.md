@@ -276,7 +276,7 @@ switch-parental-controls get-player [DEVICE] PLAYER_ID [--format markdown|json]
 ### Application Management
 
 #### `list-applications`
-List all applications (games) with their recorded playtime on a device.
+List all applications (games) on a device with **today's** playtime and each app's allow-list status. This is not a historical report — it shows only today's usage. For monthly game data, use `monthly-summary --format json` (the raw JSON payload contains per-player data; per-application totals are not separately exposed via CLI).
 
 ```
 switch-parental-controls list-applications [DEVICE] [--format markdown|json]
