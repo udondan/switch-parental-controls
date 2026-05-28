@@ -23,9 +23,10 @@ env/
 .env.*
 !.env.example
 
-# Local opencode config (contains local paths and potentially secrets)
+# Local AI config (contains local paths and potentially secrets)
 opencode.jsonc
 .claude
+skills/*-workspace
 
 # pytest
 .pytest_cache/
