@@ -292,17 +292,6 @@ switch-parental-controls set-app-allow-list [DEVICE] APP_ID --no-allow
 
 ---
 
-### MCP Server
-
-#### `mcp`
-Start the MCP (Model Context Protocol) server, which exposes all parental-controls operations as AI-accessible tools. Used when wiring the CLI up to an AI assistant as a server process rather than invoking individual commands.
-
-```
-switch-parental-controls mcp
-```
-
----
-
 ## Common Workflows
 
 ### Check today's device-level playtime
