@@ -745,7 +745,9 @@ async def test_monthly_summary_cache_miss_saves(mock_device):
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
-        await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001", year=2026, month=4), ctx)
+        with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
+            mock_dc_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+            await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001", year=2026, month=4), ctx)
 
     mock_device.get_monthly_summary.assert_called_once()
     assert load_data_cache("device-001", 2026, 4) is not None
@@ -772,7 +774,10 @@ async def test_monthly_summary_cache_hit_skips_api(mock_device):
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
-        result = await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001", year=2026, month=4), ctx)
+        with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
+            mock_dc_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+            params = MonthlySummaryInput(device_id="device-001", year=2026, month=4)
+            result = await switch_get_monthly_summary(params, ctx)
 
     mock_device.get_monthly_summary.assert_not_called()
     assert "April 2026" in result
@@ -795,9 +800,11 @@ async def test_monthly_summary_skip_cache_bypasses_hit(mock_device):
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
-        await switch_get_monthly_summary(
-            MonthlySummaryInput(device_id="device-001", year=2026, month=4, skip_cache=True), ctx
-        )
+        with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
+            mock_dc_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+            await switch_get_monthly_summary(
+                MonthlySummaryInput(device_id="device-001", year=2026, month=4, skip_cache=True), ctx
+            )
 
     mock_device.get_monthly_summary.assert_called_once()
     # Cache should still hold the old data (not overwritten)
@@ -817,7 +824,9 @@ async def test_monthly_summary_current_month_not_cached(mock_device):
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
-        await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001", year=2026, month=5), ctx)
+        with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
+            mock_dc_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+            await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001", year=2026, month=5), ctx)
 
     mock_device.get_monthly_summary.assert_called_once()
     assert load_data_cache("device-001", 2026, 5) is None
@@ -860,7 +869,9 @@ async def test_daily_breakdown_past_month_cache_miss_saves(mock_device):
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
-        await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001", year=2026, month=4), ctx)
+        with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
+            mock_dc_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+            await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001", year=2026, month=4), ctx)
 
     mock_device.get_monthly_summary.assert_called_once()
     assert load_data_cache("device-001", 2026, 4) is not None
@@ -886,7 +897,10 @@ async def test_daily_breakdown_past_month_cache_hit_skips_api(mock_device):
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
-        result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001", year=2026, month=4), ctx)
+        with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
+            mock_dc_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+            params = MonthlySummaryInput(device_id="device-001", year=2026, month=4)
+            result = await switch_get_daily_breakdown(params, ctx)
 
     mock_device.get_monthly_summary.assert_not_called()
     assert "2026-04-01" in result

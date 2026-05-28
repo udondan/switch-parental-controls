@@ -397,6 +397,9 @@ def clear_cache_cmd(obj: dict, device: str | None, year: int | None, month: int 
                     device_id = did
                     break
             if device_id is None:
+                if cache:
+                    candidates = ", ".join(f"'{name}' ({did})" for did, name in cache.items())
+                    raise click.UsageError(f"Device '{device}' not found. Known devices: {candidates}")
                 device_id = device
 
     n = clear_data_cache(device_id=device_id, year=year, month=month)
