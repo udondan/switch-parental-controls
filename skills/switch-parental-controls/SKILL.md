@@ -261,14 +261,14 @@ switch-parental-controls set-bedtime-end [DEVICE] HOUR MINUTE
 List all players (Nintendo Account profiles) registered on a device.
 
 ```
-switch-parental-controls list-players [DEVICE] [--format json]
+switch-parental-controls list-players [DEVICE] [--format markdown|json]
 ```
 
 #### `get-player`
 Get details for a specific player.
 
 ```
-switch-parental-controls get-player [DEVICE] PLAYER_ID [--format json]
+switch-parental-controls get-player [DEVICE] PLAYER_ID [--format markdown|json]
 ```
 
 ---
