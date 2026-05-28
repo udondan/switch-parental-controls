@@ -280,6 +280,129 @@ async def switch_get_today_summary(params: DeviceInput, ctx: Context) -> str:
 
 
 @mcp.tool(
+    name="switch_get_daily_breakdown",
+    annotations={
+        "title": "Get Daily Playtime Breakdown",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) -> str:
+    """Get per-day playtime breakdown for a month.
+
+    For the current month, returns data from the live daily summaries feed,
+    including playing time, disabled time, and exceeded time per day.
+    For past months, returns total playing time per day from the monthly summary.
+
+    Args:
+        params (MonthlySummaryInput): Validated input containing:
+            - device_id (str): The unique device ID (from switch_list_devices).
+            - year (Optional[int]): Year (e.g. 2024). Omit for current month.
+            - month (Optional[int]): Month (1-12). Required if year is provided.
+            - response_format (str): 'markdown' or 'json' (default: 'markdown').
+
+    Returns:
+        str: Per-day playtime breakdown, or an error message.
+    """
+    err = require_client(_state.get("client"))
+    if err:
+        return err
+
+    try:
+        from zoneinfo import ZoneInfo
+
+        client = _state["client"]
+        device = client.devices.get(params.device_id)
+        if device is None:
+            return (
+                f"Error: Device '{params.device_id}' not found. "
+                "Use switch_list_devices to see available device IDs."
+            )
+
+        tz = ZoneInfo(_state.get("timezone") or "Europe/London")
+        now = datetime.now(tz)
+        year = params.year or now.year
+        month = params.month or now.month
+        is_current = year == now.year and month == now.month
+
+        if is_current:
+            await device.update()
+            prefix = f"{year}-{month:02d}"
+            entries = sorted(
+                [s for s in (device.daily_summaries or []) if s.get("date", "").startswith(prefix)],
+                key=lambda s: s["date"],
+            )
+            if not entries:
+                return f"No daily data available for {prefix} on device '{device.name}'."
+
+            if params.response_format == ResponseFormat.JSON:
+                return to_json({
+                    "device_name": device.name,
+                    "year": year,
+                    "month": month,
+                    "current": True,
+                    "days": entries,
+                })
+
+            from datetime import date as dt_date
+
+            month_label = dt_date(year, month, 1).strftime("%B %Y")
+            total = sum(e.get("playingTime", 0) for e in entries)
+            lines = [
+                f"# Daily Breakdown — {device.name}",
+                f"**Period**: {month_label} (current)",
+                "",
+            ]
+            for e in entries:
+                line = f"- **{e['date']}**: {format_minutes(e.get('playingTime', 0))}"
+                if e.get("exceededTime", 0) > 0:
+                    line += f" (exceeded: {format_minutes(e['exceededTime'])})"
+                lines.append(line)
+            lines += ["", f"**Total**: {format_minutes(total)}"]
+            return "\n".join(lines)
+
+        else:
+            summary = await device.get_monthly_summary(datetime(year, month, 1))
+            if summary is None:
+                return f"No monthly summary available for {year}-{month:02d} on device '{device.name}'."
+
+            daily_stats = sorted(
+                summary.get("overall", {}).get("dailyStats", []),
+                key=lambda s: s["date"],
+            )
+            if not daily_stats:
+                return f"No daily data in monthly summary for {year}-{month:02d} on device '{device.name}'."
+
+            if params.response_format == ResponseFormat.JSON:
+                return to_json({
+                    "device_name": device.name,
+                    "year": year,
+                    "month": month,
+                    "current": False,
+                    "days": daily_stats,
+                })
+
+            from datetime import date as dt_date
+
+            month_label = dt_date(year, month, 1).strftime("%B %Y")
+            total = sum(d.get("totalTime", 0) for d in daily_stats)
+            lines = [
+                f"# Daily Breakdown — {device.name}",
+                f"**Period**: {month_label}",
+                "",
+            ]
+            for d in daily_stats:
+                lines.append(f"- **{d['date']}**: {format_minutes(d.get('totalTime', 0))}")
+            lines += ["", f"**Total**: {format_minutes(total)}"]
+            return "\n".join(lines)
+
+    except Exception as e:
+        return handle_error(e)
+
+
+@mcp.tool(
     name="switch_get_monthly_summary",
     annotations={
         "title": "Get Monthly Usage Summary",

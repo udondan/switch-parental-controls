@@ -337,6 +337,30 @@ def monthly_summary(obj: dict, device: str | None, year: int | None, month: int 
     _execute(run)
 
 
+@cli.command("daily-breakdown")
+@_DEVICE_ARG
+@click.option("--year", type=int, default=None, help="Year (e.g. 2024). Omit for current month.")
+@click.option("--month", type=int, default=None, help="Month 1-12. Required if --year is set.")
+@_FORMAT_OPTION
+@click.pass_obj
+def daily_breakdown(obj: dict, device: str | None, year: int | None, month: int | None, fmt: str) -> None:
+    """Get per-day playtime breakdown for a month."""
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+
+    async def run() -> str:
+        token = _require_token()
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+            _populate_state(client, http_session, obj)
+            did = _resolve(client, device)
+            try:
+                params = MonthlySummaryInput(device_id=did, year=year, month=month, response_format=ResponseFormat(fmt))
+            except Exception as exc:
+                return f"Error: {exc}"
+            return await switch_get_daily_breakdown(params, None)
+
+    _execute(run)
+
+
 # ---------------------------------------------------------------------------
 # Devices — playtime controls
 # ---------------------------------------------------------------------------
