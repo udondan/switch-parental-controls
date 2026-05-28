@@ -828,7 +828,7 @@ async def test_monthly_summary_no_year_not_cached(mock_device):
     """No year/month → API always called, no cache interaction."""
     import datetime
 
-    from switch_parental_controls.data_cache import load_data_cache
+    from switch_parental_controls.data_cache import _cache_dir
     from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
 
@@ -839,7 +839,6 @@ async def test_monthly_summary_no_year_not_cached(mock_device):
 
     mock_device.get_monthly_summary.assert_called_once()
     # No cache files written (year/month unknown)
-    from switch_parental_controls.data_cache import _cache_dir
 
     cache_root = _cache_dir()
     assert not cache_root.exists() or not any(cache_root.rglob("*.json"))

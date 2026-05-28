@@ -316,7 +316,9 @@ def today_summary(obj: dict, device: str | None, fmt: str) -> None:
 @click.option("--no-cache", "skip_cache", is_flag=True, default=False, help="Skip cache; always fetch fresh data.")
 @_FORMAT_OPTION
 @click.pass_obj
-def monthly_summary(obj: dict, device: str | None, year: int | None, month: int | None, skip_cache: bool, fmt: str) -> None:
+def monthly_summary(
+    obj: dict, device: str | None, year: int | None, month: int | None, skip_cache: bool, fmt: str
+) -> None:
     """Get the monthly usage summary for a device."""
     from switch_parental_controls.devices import switch_get_monthly_summary
 
@@ -343,7 +345,9 @@ def monthly_summary(obj: dict, device: str | None, year: int | None, month: int 
 @click.option("--no-cache", "skip_cache", is_flag=True, default=False, help="Skip cache; always fetch fresh data.")
 @_FORMAT_OPTION
 @click.pass_obj
-def daily_breakdown(obj: dict, device: str | None, year: int | None, month: int | None, skip_cache: bool, fmt: str) -> None:
+def daily_breakdown(
+    obj: dict, device: str | None, year: int | None, month: int | None, skip_cache: bool, fmt: str
+) -> None:
     """Get per-day playtime breakdown for a month."""
     from switch_parental_controls.devices import switch_get_daily_breakdown
 
