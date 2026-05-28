@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0](https://github.com/udondan/switch-parental-controls/compare/v0.5.0...v1.0.0) (2026-05-28)
+
+
+### Features
+
+* add switch-parental-controls agent skill ([#18](https://github.com/udondan/switch-parental-controls/issues/18)) ([4088dcd](https://github.com/udondan/switch-parental-controls/commit/4088dcd431a80d930b0f01fd59d4af88a4081deb))
+
+
+### Miscellaneous Chores
+
+* force release 1.0.0 ([#21](https://github.com/udondan/switch-parental-controls/issues/21)) ([109b659](https://github.com/udondan/switch-parental-controls/commit/109b659eadb572b41023fc3f5932dbca1d0f2871))
+
 ## [0.5.0](https://github.com/udondan/switch-parental-controls/compare/v0.4.0...v0.5.0) (2026-05-25)
 
 
