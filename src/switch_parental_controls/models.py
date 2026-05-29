@@ -102,6 +102,35 @@ class MonthlySummaryInput(BaseModel):
         return self
 
 
+class DailyBreakdownInput(MonthlySummaryInput):
+    """Input model for daily breakdown queries, extending monthly summary with a day filter."""
+
+    year: int | None = Field(
+        default=None,
+        description="Year for the breakdown (e.g. 2024). If omitted, returns the current month's live data.",
+        ge=2017,
+        le=2100,
+    )
+    month: int | None = Field(
+        default=None,
+        description="Month for the breakdown (1-12). Required if year is provided; must be omitted if year is omitted.",
+        ge=1,
+        le=12,
+    )
+    day: int | None = Field(
+        default=None,
+        description="Filter results to a specific day (1-31). Requires year and month to be set.",
+        ge=1,
+        le=31,
+    )
+
+    @model_validator(mode="after")
+    def validate_day(self) -> "DailyBreakdownInput":
+        if self.day is not None and (self.year is None or self.month is None):
+            raise ValueError("year and month are required when day is provided")
+        return self
+
+
 class SetPlaytimeLimitInput(BaseModel):
     """Input model for setting the daily playtime limit."""
 

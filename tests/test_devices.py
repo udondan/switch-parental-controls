@@ -575,10 +575,10 @@ async def test_daily_breakdown_no_client():
     """Should return auth error when client is not set."""
     server._state["client"] = None
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     ctx = MagicMock()
-    result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001"), ctx)
+    result = await switch_get_daily_breakdown(DailyBreakdownInput(device_id="device-001"), ctx)
     assert "Error" in result
     assert "SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN" in result
 
@@ -590,12 +590,12 @@ async def test_daily_breakdown_current_month_markdown(mock_device):
     from unittest.mock import patch
 
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
-        result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001"), ctx)
+        result = await switch_get_daily_breakdown(DailyBreakdownInput(device_id="device-001"), ctx)
 
     assert "May 2026" in result
     assert "(current)" in result
@@ -613,12 +613,12 @@ async def test_daily_breakdown_current_month_total(mock_device):
     from unittest.mock import patch
 
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
-        result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001"), ctx)
+        result = await switch_get_daily_breakdown(DailyBreakdownInput(device_id="device-001"), ctx)
 
     # 60 + 90 = 150 minutes = 2h 30m
     assert "2h 30m" in result
@@ -632,13 +632,13 @@ async def test_daily_breakdown_current_month_json(mock_device):
     from unittest.mock import patch
 
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
+    from switch_parental_controls.models import DailyBreakdownInput, ResponseFormat
 
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_daily_breakdown(
-            MonthlySummaryInput(device_id="device-001", response_format=ResponseFormat.JSON), ctx
+            DailyBreakdownInput(device_id="device-001", response_format=ResponseFormat.JSON), ctx
         )
 
     data = json.loads(result)
@@ -657,13 +657,13 @@ async def test_daily_breakdown_historical_month_markdown(mock_device):
     from unittest.mock import patch
 
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
-        result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001", year=2026, month=4), ctx)
+        result = await switch_get_daily_breakdown(DailyBreakdownInput(device_id="device-001", year=2026, month=4), ctx)
 
     assert "April 2026" in result
     assert "(current)" not in result
@@ -679,14 +679,14 @@ async def test_daily_breakdown_historical_month_json(mock_device):
     from unittest.mock import patch
 
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
+    from switch_parental_controls.models import DailyBreakdownInput, ResponseFormat
 
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_daily_breakdown(
-            MonthlySummaryInput(device_id="device-001", year=2026, month=4, response_format=ResponseFormat.JSON), ctx
+            DailyBreakdownInput(device_id="device-001", year=2026, month=4, response_format=ResponseFormat.JSON), ctx
         )
 
     data = json.loads(result)
@@ -705,13 +705,13 @@ async def test_daily_breakdown_no_data(mock_device):
     from unittest.mock import patch
 
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     mock_device.daily_summaries = []
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
-        result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001"), ctx)
+        result = await switch_get_daily_breakdown(DailyBreakdownInput(device_id="device-001"), ctx)
 
     assert "No daily data" in result
     assert "2026-05" in result
@@ -721,10 +721,10 @@ async def test_daily_breakdown_no_data(mock_device):
 async def test_daily_breakdown_unknown_device(mock_client):
     """Should return error for unknown device ID."""
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     ctx = MagicMock()
-    result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id="no-such-device"), ctx)
+    result = await switch_get_daily_breakdown(DailyBreakdownInput(device_id="no-such-device"), ctx)
     assert "Error" in result
     assert "no-such-device" in result
 
@@ -863,7 +863,7 @@ async def test_daily_breakdown_past_month_cache_miss_saves(mock_device):
 
     from switch_parental_controls.data_cache import load_data_cache
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
@@ -871,7 +871,7 @@ async def test_daily_breakdown_past_month_cache_miss_saves(mock_device):
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
             mock_dc_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
-            await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001", year=2026, month=4), ctx)
+            await switch_get_daily_breakdown(DailyBreakdownInput(device_id="device-001", year=2026, month=4), ctx)
 
     mock_device.get_monthly_summary.assert_called_once()
     assert load_data_cache("device-001", 2026, 4) is not None
@@ -884,7 +884,7 @@ async def test_daily_breakdown_past_month_cache_hit_skips_api(mock_device):
 
     from switch_parental_controls.data_cache import save_data_cache
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     save_data_cache(
         "device-001",
@@ -899,7 +899,7 @@ async def test_daily_breakdown_past_month_cache_hit_skips_api(mock_device):
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
             mock_dc_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
-            params = MonthlySummaryInput(device_id="device-001", year=2026, month=4)
+            params = DailyBreakdownInput(device_id="device-001", year=2026, month=4)
             result = await switch_get_daily_breakdown(params, ctx)
 
     mock_device.get_monthly_summary.assert_not_called()
@@ -913,15 +913,191 @@ async def test_daily_breakdown_current_month_not_cached(mock_device):
 
     from switch_parental_controls.data_cache import load_data_cache
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
-        await switch_get_daily_breakdown(MonthlySummaryInput(device_id="device-001"), ctx)
+        await switch_get_daily_breakdown(DailyBreakdownInput(device_id="device-001"), ctx)
 
     assert load_data_cache("device-001", 2026, 5) is None
     mock_device.get_monthly_summary.assert_not_called()
+
+
+# --- switch_get_daily_breakdown day filter ---
+
+
+def test_daily_breakdown_day_requires_year_month():
+    """day without year/month should raise a validation error."""
+    from switch_parental_controls.models import DailyBreakdownInput
+
+    with pytest.raises(Exception, match="year and month are required"):
+        DailyBreakdownInput(device_id="device-001", day=1)
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_current_month(mock_device):
+    """day filter on current month returns a single-day summary."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import DailyBreakdownInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        result = await switch_get_daily_breakdown(
+            DailyBreakdownInput(device_id="device-001", year=2026, month=5, day=1), ctx
+        )
+
+    assert "Day Summary" in result
+    assert "2026-05-01" in result
+    assert "2026-05-02" not in result
+    assert "Total" not in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_historical_month(mock_device):
+    """day filter on a historical month returns a single-day summary."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import DailyBreakdownInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(
+            DailyBreakdownInput(device_id="device-001", year=2026, month=4, day=1), ctx
+        )
+
+    assert "Day Summary" in result
+    assert "2026-04-01" in result
+    assert "2026-04-02" not in result
+    assert "Total" not in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_invalid_day(mock_device):
+    """day filter with an impossible calendar date returns a clear error."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import DailyBreakdownInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(
+            DailyBreakdownInput(device_id="device-001", year=2026, month=4, day=31), ctx
+        )
+
+    assert "Error" in result
+    assert "31" in result
+    assert "2026-04" in result
+    assert "max: 30" in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_no_data(mock_device):
+    """day filter with no matching date returns a 'No data' message."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import DailyBreakdownInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(
+            DailyBreakdownInput(device_id="device-001", year=2026, month=4, day=15), ctx
+        )
+
+    assert "No data available for 2026-04-15" in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_with_player(mock_device):
+    """day filter combined with player_id returns a single-day summary for that player."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import DailyBreakdownInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        result = await switch_get_daily_breakdown(
+            DailyBreakdownInput(device_id="device-001", year=2026, month=5, day=1, player_id="player-001"), ctx
+        )
+
+    assert "Day Summary" in result
+    assert "TestKid" in result
+    assert "2026-05-01" in result
+    assert "2026-05-02" not in result
+    assert "Total" not in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_current_month_json(mock_device):
+    """day filter on current month returns correct JSON with a single days entry."""
+    import datetime
+    import json
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import DailyBreakdownInput, ResponseFormat
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        result = await switch_get_daily_breakdown(
+            DailyBreakdownInput(device_id="device-001", year=2026, month=5, day=1, response_format=ResponseFormat.JSON),
+            ctx,
+        )
+
+    data = json.loads(result)
+    assert data["current"] is True
+    assert len(data["days"]) == 1
+    assert data["days"][0]["date"] == "2026-05-01"
+    assert data["days"][0]["playingTime"] == 60
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_historical_month_player(mock_device):
+    """day filter on historical month with player_id returns a single-day summary using totalTime."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import DailyBreakdownInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(
+            DailyBreakdownInput(
+                device_id="device-001", year=2026, month=4, day=1, player_id="player-001"
+            ),
+            ctx,
+        )
+
+    assert "Day Summary" in result
+    assert "TestKid" in result
+    assert "2026-04-01" in result
+    assert "2026-04-02" not in result
+    assert "Total" not in result
+    # totalTime=600 minutes = 10h
+    assert "10h" in result
 
 
 # --- switch_clear_cache ---
@@ -982,13 +1158,13 @@ async def test_daily_breakdown_current_month_player_filter_markdown(mock_device)
     from unittest.mock import patch
 
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_daily_breakdown(
-            MonthlySummaryInput(device_id="device-001", player_id="player-001"), ctx
+            DailyBreakdownInput(device_id="device-001", player_id="player-001"), ctx
         )
 
     assert "TestKid" in result
@@ -1008,13 +1184,13 @@ async def test_daily_breakdown_current_month_player_filter_json(mock_device):
     from unittest.mock import patch
 
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
+    from switch_parental_controls.models import DailyBreakdownInput, ResponseFormat
 
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_daily_breakdown(
-            MonthlySummaryInput(device_id="device-001", player_id="player-001", response_format=ResponseFormat.JSON),
+            DailyBreakdownInput(device_id="device-001", player_id="player-001", response_format=ResponseFormat.JSON),
             ctx,
         )
 
@@ -1034,13 +1210,13 @@ async def test_daily_breakdown_current_month_player_not_found(mock_device):
     from unittest.mock import patch
 
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_daily_breakdown(
-            MonthlySummaryInput(device_id="device-001", player_id="unknown-player"), ctx
+            DailyBreakdownInput(device_id="device-001", player_id="unknown-player"), ctx
         )
 
     assert "Error" in result
@@ -1054,14 +1230,14 @@ async def test_daily_breakdown_past_month_player_filter_markdown(mock_device):
     from unittest.mock import patch
 
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_daily_breakdown(
-            MonthlySummaryInput(device_id="device-001", year=2026, month=4, player_id="player-001"), ctx
+            DailyBreakdownInput(device_id="device-001", year=2026, month=4, player_id="player-001"), ctx
         )
 
     assert "TestKid" in result
@@ -1081,14 +1257,14 @@ async def test_daily_breakdown_past_month_player_filter_json(mock_device):
     from unittest.mock import patch
 
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
+    from switch_parental_controls.models import DailyBreakdownInput, ResponseFormat
 
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_daily_breakdown(
-            MonthlySummaryInput(
+            DailyBreakdownInput(
                 device_id="device-001", year=2026, month=4, player_id="player-001",
                 response_format=ResponseFormat.JSON
             ),
@@ -1111,14 +1287,14 @@ async def test_daily_breakdown_past_month_player_not_found(mock_device):
     from unittest.mock import patch
 
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_daily_breakdown(
-            MonthlySummaryInput(device_id="device-001", year=2026, month=4, player_id="unknown-player"), ctx
+            DailyBreakdownInput(device_id="device-001", year=2026, month=4, player_id="unknown-player"), ctx
         )
 
     assert "Error" in result

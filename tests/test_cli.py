@@ -880,3 +880,25 @@ def test_daily_breakdown_player_flag(runner, monkeypatch, mock_client_with_devic
     assert params.player_id == "player-001"
     assert params.year == 2026
     assert params.month == 4
+
+
+def test_daily_breakdown_day_flag(runner, monkeypatch, mock_client_with_device, mock_session):
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN", "fake-token")
+    ctx = _make_client_ctx(mock_client_with_device, mock_session)
+
+    with (
+        patch("switch_parental_controls.cli.switch_client", return_value=ctx),
+        patch(
+            "switch_parental_controls.devices.switch_get_daily_breakdown",
+            new=AsyncMock(return_value="# Day Summary"),
+        ) as mock_tool,
+    ):
+        result = runner.invoke(
+            cli, ["daily-breakdown", "device-001", "--year", "2026", "--month", "4", "--day", "1"]
+        )
+
+    assert result.exit_code == 0
+    params = mock_tool.call_args[0][0]
+    assert params.day == 1
+    assert params.year == 2026
+    assert params.month == 4

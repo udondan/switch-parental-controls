@@ -117,9 +117,9 @@ async def test_get_monthly_summary(first_device_id):
 async def test_get_daily_breakdown(first_device_id):
     """Daily breakdown for the current month should be returned without an auth error."""
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
-    result = await switch_get_daily_breakdown(MonthlySummaryInput(device_id=first_device_id), MagicMock())
+    result = await switch_get_daily_breakdown(DailyBreakdownInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
     assert "Error: Not authenticated" not in result
 
@@ -335,12 +335,12 @@ async def test_get_daily_breakdown_past_month_creates_cache(
 
     from switch_parental_controls.data_cache import _cache_path
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     device = real_client.devices[first_device_id]
     device.get_monthly_summary = AsyncMock(return_value=device.last_month_summary)
 
-    params = MonthlySummaryInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
+    params = DailyBreakdownInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
     result = await switch_get_daily_breakdown(params, MagicMock())
     assert "Error: Not authenticated" not in result
     assert _cache_path(first_device_id, _PAST_YEAR, _PAST_MONTH).exists()
@@ -354,12 +354,12 @@ async def test_get_daily_breakdown_past_month_cache_hit(
 
     from switch_parental_controls.data_cache import save_data_cache
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
     minimal = {"overall": {"dailyStats": [{"date": f"{_PAST_YEAR}-{_PAST_MONTH:02d}-01", "totalTime": 60}]}, "players": []}  # noqa: E501
     save_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH, minimal)
 
-    params = MonthlySummaryInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
+    params = DailyBreakdownInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
     device = real_client.devices[first_device_id]
     device.get_monthly_summary = AsyncMock(side_effect=AssertionError("API called on cache hit"))
 
@@ -492,9 +492,9 @@ async def first_player_id(real_client, first_device_id):
 async def test_daily_breakdown_player_filter_current_month(first_device_id, first_player_id):
     """Daily breakdown filtered by player should return that player's data without error."""
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
-    params = MonthlySummaryInput(device_id=first_device_id, player_id=first_player_id)
+    params = DailyBreakdownInput(device_id=first_device_id, player_id=first_player_id)
     result = await switch_get_daily_breakdown(params, MagicMock())
     assert isinstance(result, str)
     assert "Error: Not authenticated" not in result
@@ -504,9 +504,9 @@ async def test_daily_breakdown_player_filter_current_month(first_device_id, firs
 async def test_daily_breakdown_player_filter_past_month(first_device_id, first_player_id):
     """Daily breakdown for a past month filtered by player should return per-player daily stats."""
     from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.models import DailyBreakdownInput
 
-    params = MonthlySummaryInput(
+    params = DailyBreakdownInput(
         device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH, player_id=first_player_id
     )
     result = await switch_get_daily_breakdown(params, MagicMock())
