@@ -285,7 +285,9 @@ async def past_month(first_device_id, real_client):
     return first_date.year, first_date.month
 
 
-async def test_get_monthly_summary_past_month_creates_cache(first_device_id, past_month, tmp_path, monkeypatch):
+async def test_get_monthly_summary_past_month_creates_cache(
+    first_device_id, past_month, tmp_path, monkeypatch, real_client
+):
     """Fetching a past month writes a cache file."""
     year, month = past_month
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
@@ -293,6 +295,11 @@ async def test_get_monthly_summary_past_month_creates_cache(first_device_id, pas
     from switch_parental_controls.data_cache import _cache_path
     from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+
+    # Avoid a second API call (Nintendo throttles). Use last_month_summary already
+    # loaded during client.update() as the mock return value.
+    device = real_client.devices[first_device_id]
+    device.get_monthly_summary = AsyncMock(return_value=device.last_month_summary)
 
     params = MonthlySummaryInput(device_id=first_device_id, year=year, month=month)
     result = await switch_get_monthly_summary(params, MagicMock())
@@ -339,7 +346,9 @@ async def test_get_monthly_summary_skip_cache(first_device_id, past_month, tmp_p
     assert "sentinel" not in result
 
 
-async def test_get_daily_breakdown_past_month_creates_cache(first_device_id, past_month, tmp_path, monkeypatch):
+async def test_get_daily_breakdown_past_month_creates_cache(
+    first_device_id, past_month, tmp_path, monkeypatch, real_client
+):
     """daily-breakdown for a past month writes a cache file."""
     year, month = past_month
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
@@ -347,6 +356,9 @@ async def test_get_daily_breakdown_past_month_creates_cache(first_device_id, pas
     from switch_parental_controls.data_cache import _cache_path
     from switch_parental_controls.devices import switch_get_daily_breakdown
     from switch_parental_controls.models import MonthlySummaryInput
+
+    device = real_client.devices[first_device_id]
+    device.get_monthly_summary = AsyncMock(return_value=device.last_month_summary)
 
     params = MonthlySummaryInput(device_id=first_device_id, year=year, month=month)
     result = await switch_get_daily_breakdown(params, MagicMock())
@@ -400,11 +412,14 @@ async def test_switch_clear_cache(first_device_id, past_month, tmp_path, monkeyp
 # ---------------------------------------------------------------------------
 
 
-def test_cli_monthly_summary_past_month_creates_cache(cli_runner, first_device_id, past_month):
+def test_cli_monthly_summary_past_month_creates_cache(cli_runner, first_device_id, past_month, real_client):
     """CLI monthly-summary with --year/--month creates a cache file when the API returns data."""
     year, month = past_month
     from switch_parental_controls.cli import cli
     from switch_parental_controls.data_cache import _cache_path
+
+    device = real_client.devices[first_device_id]
+    device.get_monthly_summary = AsyncMock(return_value=device.last_month_summary)
 
     result = cli_runner.invoke(cli, ["monthly-summary", first_device_id, "--year", str(year), "--month", str(month)])
     assert "Error: Not authenticated" not in result.output
@@ -422,11 +437,14 @@ def test_cli_monthly_summary_no_cache(cli_runner, first_device_id, past_month):
     assert "Error: Not authenticated" not in result.output
 
 
-def test_cli_daily_breakdown_past_month_creates_cache(cli_runner, first_device_id, past_month):
+def test_cli_daily_breakdown_past_month_creates_cache(cli_runner, first_device_id, past_month, real_client):
     """CLI daily-breakdown with --year/--month creates a cache file when the API returns data."""
     year, month = past_month
     from switch_parental_controls.cli import cli
     from switch_parental_controls.data_cache import _cache_path
+
+    device = real_client.devices[first_device_id]
+    device.get_monthly_summary = AsyncMock(return_value=device.last_month_summary)
 
     result = cli_runner.invoke(
         cli, ["daily-breakdown", first_device_id, "--year", str(year), "--month", str(month)]
