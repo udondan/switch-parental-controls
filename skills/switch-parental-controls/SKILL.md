@@ -75,7 +75,7 @@ Setting the env vars avoids having to repeat the flags on every command.
 
 If the user says "how long did Emma play today", that is a question about a **player**, not a device. Run `list-players` to get each player's today's playtime by nickname. Use `get-player` if you also need the apps they played. Do not use `today-summary` for per-player questions — it only returns device-level totals (total playing time, disabled time, exceeded time).
 
-For per-player historical data ("how much did Emma play in April?", "show me Emma's daily breakdown"), use `--player <player-id>` on `monthly-summary` or `daily-breakdown`. Player IDs can be found via `list-players --format json`.
+For per-player historical data ("how much did Emma play in April?", "show me Emma's daily breakdown"), use `--player <player-id>` on `monthly-summary` or `playtime`. Player IDs can be found via `list-players --format json`.
 
 ## Device Resolution
 
@@ -143,7 +143,7 @@ switch-parental-controls today-summary [DEVICE] [--format markdown|json]
 ```
 
 #### `monthly-summary`
-Show a monthly playtime summary with per-player totals. Defaults to the most recent **completed** month — it does not return data for the current in-progress month. Use `daily-breakdown` for current-month data.
+Show a monthly playtime summary with per-player totals. Defaults to the most recent **completed** month — it does not return data for the current in-progress month. Use `playtime` for current-month data.
 
 Past-month responses are cached locally and served from cache on subsequent calls. Pass `--no-cache` to skip cache and always fetch live data.
 
@@ -155,13 +155,13 @@ switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [-
 - `--player PLAYER_ID`: filter to a specific player — shows only that player's total and a per-day breakdown. Use `list-players --format json` to find player IDs.
 - `--no-cache`: bypass the local cache (read and write); always hits the Nintendo API.
 
-#### `daily-breakdown`
+#### `playtime`
 Show per-day playtime for a month. For the **current month**, reads live data from the device's daily summaries feed (includes playing time, disabled time, and exceeded time per day). For **past months**, reads from the monthly summary API (total playtime per day only).
 
 Past-month responses are cached locally. Pass `--no-cache` to skip cache and always fetch live data.
 
 ```
-switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--day DAY] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
+switch-parental-controls playtime [DEVICE] [--year YEAR --month MONTH] [--day DAY] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
 ```
 
 - Omit `--year`/`--month` to get the current month's day-by-day breakdown.
@@ -350,27 +350,27 @@ Person names ("Emma", "Max") are **players**, not devices. Use `list-players` �
 switch-parental-controls list-players
 ```
 
-For the apps a specific player ran today, use `get-player` with their player ID (visible in `list-players --format json`). For per-day playtime over a full month, use `daily-breakdown --player <player-id>`.
+For the apps a specific player ran today, use `get-player` with their player ID (visible in `list-players --format json`). For per-day playtime over a full month, use `playtime --player <player-id>`.
 
 > **Note:** If any command returns "Error: Not authenticated", the user needs to run `switch-parental-controls login` manually — this is an interactive step that cannot be automated.
 
 ### Check how much was played each day this month
 
 ```
-switch-parental-controls daily-breakdown
+switch-parental-controls playtime
 ```
 
 ### Check per-day playtime for a past month
 
 ```
-switch-parental-controls daily-breakdown --year 2025 --month 4
+switch-parental-controls playtime --year 2025 --month 4
 ```
 
 ### Check playtime for a specific day
 
 ```
-switch-parental-controls daily-breakdown --year 2025 --month 4 --day 15
-switch-parental-controls daily-breakdown --year 2025 --month 4 --day 15 --player <player-id>
+switch-parental-controls playtime --year 2025 --month 4 --day 15
+switch-parental-controls playtime --year 2025 --month 4 --day 15 --player <player-id>
 ```
 
 ### Check how much a specific player played each day this month
@@ -379,13 +379,13 @@ First get the player ID, then filter the daily breakdown:
 
 ```
 switch-parental-controls list-players --format json
-switch-parental-controls daily-breakdown --player <player-id>
+switch-parental-controls playtime --player <player-id>
 ```
 
 ### Check how much a specific player played each day in a past month
 
 ```
-switch-parental-controls daily-breakdown --year 2025 --month 4 --player <player-id>
+switch-parental-controls playtime --year 2025 --month 4 --player <player-id>
 ```
 
 ### Check how much a specific player played in April 2025 (monthly total + daily breakdown)
@@ -470,9 +470,9 @@ switch-parental-controls set-playtime-limit "Switch #2" --minutes 60
 - **`set-day-restrictions`** always requires both `--playtime-enabled/--playtime-disabled` AND `--bedtime-enabled/--bedtime-disabled` — both flags are required on every call.
 - With `--playtime-enabled`, `--max-playtime-minutes` is required; it must not be set with `--playtime-disabled`.
 - With `--bedtime-enabled`, both `--bedtime-alarm-hour` and `--bedtime-end-hour` are required; with `--bedtime-disabled`, none of the bedtime value flags may be set (including non-zero minute values).
-- **`monthly-summary`** `--year` and `--month` must be provided together. Does not cover the current in-progress month — use `daily-breakdown` for that.
-- **`daily-breakdown`** `--year` and `--month` must be provided together. Omit both for the current month. `--day` requires `--year` and `--month`.
+- **`monthly-summary`** `--year` and `--month` must be provided together. Does not cover the current in-progress month — use `playtime` for that.
+- **`playtime`** `--year` and `--month` must be provided together. Omit both for the current month. `--day` requires `--year` and `--month`.
 - **Device name cache** persists across sessions at `~/.config/switch-parental-controls/devices` (or `$XDG_CONFIG_HOME/switch-parental-controls/devices` if `XDG_CONFIG_HOME` is set). Any command populates it automatically on first use if it is missing — no need to run `list-devices` upfront.
 - **Auto-select** only works when the account has exactly one device. With multiple devices, always pass `[DEVICE]` explicitly.
 - **Content restriction allow list** only matters when a restriction level other than `NONE` is active.
-- **Historic data cache** stores raw API responses for past months at `~/.config/switch-parental-controls/cache/{device-id}/{YYYY}-{MM}.json`. The cache is only consulted when `--year` and `--month` are provided explicitly and the month is not the current calendar month. Use `--no-cache` on `monthly-summary`/`daily-breakdown` if data looks unexpectedly stale, or run `clear-cache` to remove cached files. The `switch_clear_cache` MCP tool does the same from the MCP side.
+- **Historic data cache** stores raw API responses for past months at `~/.config/switch-parental-controls/cache/{device-id}/{YYYY}-{MM}.json`. The cache is only consulted when `--year` and `--month` are provided explicitly and the month is not the current calendar month. Use `--no-cache` on `monthly-summary`/`playtime` if data looks unexpectedly stale, or run `clear-cache` to remove cached files. The `switch_clear_cache` MCP tool does the same from the MCP side.
