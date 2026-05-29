@@ -41,7 +41,7 @@ This is a dual-mode project: the same logic is exposed as both a **Click CLI** a
 | --- | --- |
 | `server.py` | FastMCP server setup, lifespan, and tool imports (tools must be imported *after* `mcp` is initialized) |
 | `cli.py` | Click CLI; each subcommand delegates to the same functions used by MCP tools |
-| `client.py` | `switch_client()` async context manager; holds shared `_state` dict |
+| `client.py` | `switch_client()` async context manager for creating and tearing down the aiohttp session and Nintendo client |
 | `models.py` | Pydantic input models with strict validation (`extra="forbid"`) |
 | `device_cache.py` | Resolves device names→IDs; caches locally to avoid repeated API calls |
 | `data_cache.py` | Caches monthly summary responses; always re-fetches current month |
