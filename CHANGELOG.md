@@ -5,11 +5,10 @@
 
 ### Features
 
-* add --day filter to daily-breakdown ([#28](https://github.com/udondan/switch-parental-controls/issues/28)) ([77e6be1](https://github.com/udondan/switch-parental-controls/commit/77e6be1f5f75cf9fac2af58c902bbf4742d72e46))
-* add --player filter to daily-breakdown and monthly-summary ([#27](https://github.com/udondan/switch-parental-controls/issues/27)) ([164ae63](https://github.com/udondan/switch-parental-controls/commit/164ae63f2519d72fa135c6968f4d9bf874b3a38d))
-* add daily-breakdown command for per-day playtime ([#22](https://github.com/udondan/switch-parental-controls/issues/22)) ([f0e5156](https://github.com/udondan/switch-parental-controls/commit/f0e5156e2e742f98e0ac3dd8edcad43eefc6c2cc))
+* add `--day` filter to `playtime` ([#28](https://github.com/udondan/switch-parental-controls/issues/28)) ([77e6be1](https://github.com/udondan/switch-parental-controls/commit/77e6be1f5f75cf9fac2af58c902bbf4742d72e46))
+* add `--player` filter to `playtime` and `monthly-summary` ([#27](https://github.com/udondan/switch-parental-controls/issues/27)) ([164ae63](https://github.com/udondan/switch-parental-controls/commit/164ae63f2519d72fa135c6968f4d9bf874b3a38d))
+* add `playtime` command for per-day playtime history ([#22](https://github.com/udondan/switch-parental-controls/issues/22)) ([f0e5156](https://github.com/udondan/switch-parental-controls/commit/f0e5156e2e742f98e0ac3dd8edcad43eefc6c2cc))
 * cache historic monthly play data ([#25](https://github.com/udondan/switch-parental-controls/issues/25)) ([cae61be](https://github.com/udondan/switch-parental-controls/commit/cae61be4048a32781ffaf112c2d0dfdebf120ac9))
-* rename daily-breakdown command to playtime ([#29](https://github.com/udondan/switch-parental-controls/issues/29)) ([16a8242](https://github.com/udondan/switch-parental-controls/commit/16a82422cc77fdcdb14b5c2b432bd2ae54eb0b2f))
 
 
 ### Documentation
