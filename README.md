@@ -133,8 +133,8 @@ All device commands accept an optional `[DEVICE]` argument — a device name or 
 switch-parental-controls list-devices [--format markdown|json]
 switch-parental-controls get-device [DEVICE] [--format markdown|json]
 switch-parental-controls today-summary [DEVICE] [--format markdown|json]
-switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [--no-cache] [--format markdown|json]
-switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--no-cache] [--format markdown|json]
+switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
+switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
 
 # DEVICE may be a name or an ID
 switch-parental-controls today-summary "Switch #1"
@@ -185,6 +185,11 @@ switch-parental-controls get-player [DEVICE] <player-id>
 switch-parental-controls list-applications [DEVICE]
 switch-parental-controls set-app-allow-list [DEVICE] <app-id> --allow
 switch-parental-controls set-app-allow-list [DEVICE] <app-id> --no-allow
+
+# Per-player usage data — use --player to filter monthly-summary and daily-breakdown
+switch-parental-controls monthly-summary [DEVICE] --year 2026 --month 4 --player <player-id>
+switch-parental-controls daily-breakdown [DEVICE] --year 2026 --month 4 --player <player-id>
+switch-parental-controls daily-breakdown [DEVICE] --player <player-id>   # current month
 ```
 
 **Cache management:**

@@ -313,11 +313,13 @@ def today_summary(obj: dict, device: str | None, fmt: str) -> None:
 @_DEVICE_ARG
 @click.option("--year", type=int, default=None, help="Year (e.g. 2024). Omit for most recent.")
 @click.option("--month", type=int, default=None, help="Month 1-12. Required if --year is set.")
+@click.option("--player", "player_id", default=None, help="Filter to a specific player ID.")
 @click.option("--no-cache", "skip_cache", is_flag=True, default=False, help="Skip cache; always fetch fresh data.")
 @_FORMAT_OPTION
 @click.pass_obj
 def monthly_summary(
-    obj: dict, device: str | None, year: int | None, month: int | None, skip_cache: bool, fmt: str
+    obj: dict, device: str | None, year: int | None, month: int | None,
+    player_id: str | None, skip_cache: bool, fmt: str
 ) -> None:
     """Get the monthly usage summary for a device."""
     from switch_parental_controls.devices import switch_get_monthly_summary
@@ -329,7 +331,8 @@ def monthly_summary(
             did = _resolve(client, device)
             try:
                 params = MonthlySummaryInput(
-                    device_id=did, year=year, month=month, response_format=ResponseFormat(fmt), skip_cache=skip_cache
+                    device_id=did, year=year, month=month, player_id=player_id,
+                    response_format=ResponseFormat(fmt), skip_cache=skip_cache
                 )
             except Exception as exc:
                 return f"Error: {exc}"
@@ -342,11 +345,13 @@ def monthly_summary(
 @_DEVICE_ARG
 @click.option("--year", type=int, default=None, help="Year (e.g. 2024). Omit for current month.")
 @click.option("--month", type=int, default=None, help="Month 1-12. Required if --year is set.")
+@click.option("--player", "player_id", default=None, help="Filter to a specific player ID.")
 @click.option("--no-cache", "skip_cache", is_flag=True, default=False, help="Skip cache; always fetch fresh data.")
 @_FORMAT_OPTION
 @click.pass_obj
 def daily_breakdown(
-    obj: dict, device: str | None, year: int | None, month: int | None, skip_cache: bool, fmt: str
+    obj: dict, device: str | None, year: int | None, month: int | None,
+    player_id: str | None, skip_cache: bool, fmt: str
 ) -> None:
     """Get per-day playtime breakdown for a month."""
     from switch_parental_controls.devices import switch_get_daily_breakdown
@@ -358,7 +363,8 @@ def daily_breakdown(
             did = _resolve(client, device)
             try:
                 params = MonthlySummaryInput(
-                    device_id=did, year=year, month=month, response_format=ResponseFormat(fmt), skip_cache=skip_cache
+                    device_id=did, year=year, month=month, player_id=player_id,
+                    response_format=ResponseFormat(fmt), skip_cache=skip_cache
                 )
             except Exception as exc:
                 return f"Error: {exc}"

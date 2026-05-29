@@ -472,3 +472,82 @@ def test_cli_clear_cache_no_files(cli_runner):
     result = cli_runner.invoke(cli, ["clear-cache", "--year", "2000", "--month", "1"])
     assert result.exit_code == 0, result.output
     assert "No cached files" in result.output
+
+
+# ---------------------------------------------------------------------------
+# Player filter integration tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="module")
+async def first_player_id(real_client, first_device_id):
+    """Return the ID of the first player on the first device, or skip if none."""
+    device = real_client.devices[first_device_id]
+    await device.update()
+    if not device.players:
+        pytest.skip("No players found on this device")
+    return next(iter(device.players))
+
+
+async def test_daily_breakdown_player_filter_current_month(first_device_id, first_player_id):
+    """Daily breakdown filtered by player should return that player's data without error."""
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    params = MonthlySummaryInput(device_id=first_device_id, player_id=first_player_id)
+    result = await switch_get_daily_breakdown(params, MagicMock())
+    assert isinstance(result, str)
+    assert "Error: Not authenticated" not in result
+    assert "Error: Player" not in result
+
+
+async def test_daily_breakdown_player_filter_past_month(first_device_id, first_player_id):
+    """Daily breakdown for a past month filtered by player should return per-player daily stats."""
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    params = MonthlySummaryInput(
+        device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH, player_id=first_player_id
+    )
+    result = await switch_get_daily_breakdown(params, MagicMock())
+    assert isinstance(result, str)
+    assert "Error: Not authenticated" not in result
+
+
+async def test_monthly_summary_player_filter(first_device_id, first_player_id):
+    """Monthly summary filtered by player should return that player's total and breakdown."""
+    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    params = MonthlySummaryInput(
+        device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH, player_id=first_player_id
+    )
+    result = await switch_get_monthly_summary(params, MagicMock())
+    assert isinstance(result, str)
+    assert "Error: Not authenticated" not in result
+    assert "Error: Player" not in result
+
+
+def test_cli_daily_breakdown_player_flag(cli_runner, first_device_id, first_player_id):
+    """CLI daily-breakdown --player exits 0 with player-filtered data for the current month."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(cli, ["daily-breakdown", first_device_id, "--player", first_player_id])
+    assert result.exit_code == 0, result.output
+    assert "Error" not in result.output
+
+
+def test_cli_monthly_summary_player_flag(cli_runner, first_device_id, first_player_id):
+    """CLI monthly-summary --player exits 0 with player-filtered data for a past month."""
+    from switch_parental_controls.cli import cli
+
+    result = cli_runner.invoke(
+        cli,
+        [
+            "monthly-summary", first_device_id,
+            "--year", str(_PAST_YEAR), "--month", str(_PAST_MONTH),
+            "--player", first_player_id,
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "Error" not in result.output

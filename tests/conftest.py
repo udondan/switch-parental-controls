@@ -42,18 +42,39 @@ def make_mock_device(
             "playingTime": 60,
             "disabledTime": 0,
             "exceededTime": 0,
+            "players": [
+                {
+                    "profile": {"playerId": "player-001", "nickname": "TestKid", "imageUri": "https://example.com/avatar.png"},
+                    "playingTime": 45,
+                    "playedGames": [],
+                }
+            ],
         },
         {
             "date": "2026-05-02",
             "playingTime": 90,
             "disabledTime": 5,
             "exceededTime": 10,
+            "players": [
+                {
+                    "profile": {"playerId": "player-001", "nickname": "TestKid", "imageUri": "https://example.com/avatar.png"},
+                    "playingTime": 75,
+                    "playedGames": [],
+                }
+            ],
         },
         {
             "date": "2026-04-07",
             "playingTime": 45,
             "disabledTime": 0,
             "exceededTime": 0,
+            "players": [
+                {
+                    "profile": {"playerId": "player-001", "nickname": "TestKid", "imageUri": "https://example.com/avatar.png"},
+                    "playingTime": 30,
+                    "playedGames": [],
+                }
+            ],
         },
     ]
     device.players = {}
