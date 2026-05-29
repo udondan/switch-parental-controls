@@ -1046,6 +1046,60 @@ async def test_daily_breakdown_day_filter_with_player(mock_device):
     assert "Total" not in result
 
 
+@pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_current_month_json(mock_device):
+    """day filter on current month returns correct JSON with a single days entry."""
+    import datetime
+    import json
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import DailyBreakdownInput, ResponseFormat
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        result = await switch_get_daily_breakdown(
+            DailyBreakdownInput(device_id="device-001", year=2026, month=5, day=1, response_format=ResponseFormat.JSON),
+            ctx,
+        )
+
+    data = json.loads(result)
+    assert data["current"] is True
+    assert len(data["days"]) == 1
+    assert data["days"][0]["date"] == "2026-05-01"
+    assert data["days"][0]["playingTime"] == 60
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_historical_month_player(mock_device):
+    """day filter on historical month with player_id returns a single-day summary using totalTime."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import DailyBreakdownInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(
+            DailyBreakdownInput(
+                device_id="device-001", year=2026, month=4, day=1, player_id="player-001"
+            ),
+            ctx,
+        )
+
+    assert "Day Summary" in result
+    assert "TestKid" in result
+    assert "2026-04-01" in result
+    assert "2026-04-02" not in result
+    assert "Total" not in result
+    # totalTime=600 minutes = 10h
+    assert "10h" in result
+
+
 # --- switch_clear_cache ---
 
 
