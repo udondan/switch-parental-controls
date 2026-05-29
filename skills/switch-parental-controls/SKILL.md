@@ -143,22 +143,39 @@ switch-parental-controls today-summary [DEVICE] [--format markdown|json]
 #### `monthly-summary`
 Show a monthly playtime summary with per-player totals. Defaults to the most recent **completed** month — it does not return data for the current in-progress month. Use `daily-breakdown` for current-month data.
 
+Past-month responses are cached locally and served from cache on subsequent calls. Pass `--no-cache` to skip cache and always fetch live data.
+
 ```
-switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [--format markdown|json]
+switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [--no-cache] [--format markdown|json]
 ```
 
 - `--year` and `--month` must be provided together; neither alone is valid.
+- `--no-cache`: bypass the local cache (read and write); always hits the Nintendo API.
 
 #### `daily-breakdown`
 Show per-day playtime for a month. For the **current month**, reads live data from the device's daily summaries feed (includes playing time, disabled time, and exceeded time per day). For **past months**, reads from the monthly summary API (total playtime per day only).
 
+Past-month responses are cached locally. Pass `--no-cache` to skip cache and always fetch live data.
+
 ```
-switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--format markdown|json]
+switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--no-cache] [--format markdown|json]
 ```
 
 - Omit `--year`/`--month` to get the current month's day-by-day breakdown.
 - `--year` and `--month` must be provided together; neither alone is valid.
+- `--no-cache`: bypass the local cache (read and write); always hits the Nintendo API.
 - Use this instead of `monthly-summary` when you need to see which specific days had the most playtime, or to answer "how much did they play on Tuesday the 13th?"
+
+#### `clear-cache`
+Delete locally cached historic play data. Without options, clears the entire cache.
+
+```
+switch-parental-controls clear-cache [--device DEVICE] [--year YEAR] [--month MONTH]
+```
+
+- `--device`: limit to a specific device (name or ID).
+- `--year`: limit to a specific year.
+- `--month MONTH`: limit to a specific month (requires `--year`).
 
 ---
 
@@ -425,3 +442,4 @@ switch-parental-controls set-playtime-limit "Switch #2" --minutes 60
 - **Device name cache** persists across sessions at `~/.config/switch-parental-controls/devices` (or `$XDG_CONFIG_HOME/switch-parental-controls/devices` if `XDG_CONFIG_HOME` is set). Any command populates it automatically on first use if it is missing — no need to run `list-devices` upfront.
 - **Auto-select** only works when the account has exactly one device. With multiple devices, always pass `[DEVICE]` explicitly.
 - **Content restriction allow list** only matters when a restriction level other than `NONE` is active.
+- **Historic data cache** stores raw API responses for past months at `~/.config/switch-parental-controls/cache/{device-id}/{YYYY}-{MM}.json`. The cache is only consulted when `--year` and `--month` are provided explicitly and the month is not the current calendar month. Use `--no-cache` on `monthly-summary`/`daily-breakdown` if data looks unexpectedly stale, or run `clear-cache` to remove cached files. The `switch_clear_cache` MCP tool does the same from the MCP side.

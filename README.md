@@ -13,6 +13,7 @@ A [CLI](#cli-usage) and [MCP (Model Context Protocol)](https://modelcontextproto
     - [Storing your token](#storing-your-token)
   - [Global Options](#global-options)
   - [Commands](#commands)
+- [Caching](#caching)
 - [MCP Server](#mcp-server)
   - [Running the Server](#running-the-server)
   - [Environment Variables](#environment-variables)
@@ -132,8 +133,8 @@ All device commands accept an optional `[DEVICE]` argument — a device name or 
 switch-parental-controls list-devices [--format markdown|json]
 switch-parental-controls get-device [DEVICE] [--format markdown|json]
 switch-parental-controls today-summary [DEVICE] [--format markdown|json]
-switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [--format markdown|json]
-switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--format markdown|json]
+switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [--no-cache] [--format markdown|json]
+switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--no-cache] [--format markdown|json]
 
 # DEVICE may be a name or an ID
 switch-parental-controls today-summary "Switch #1"
@@ -186,11 +187,32 @@ switch-parental-controls set-app-allow-list [DEVICE] <app-id> --allow
 switch-parental-controls set-app-allow-list [DEVICE] <app-id> --no-allow
 ```
 
+**Cache management:**
+
+```bash
+switch-parental-controls clear-cache                          # clear entire cache
+switch-parental-controls clear-cache --device "Switch #1"    # clear for one device
+switch-parental-controls clear-cache --year 2026             # clear all months of a year
+switch-parental-controls clear-cache --year 2026 --month 4   # clear a specific month
+```
+
 **Start the MCP server:**
 
 ```bash
 switch-parental-controls mcp
 ```
+
+## Caching
+
+`monthly-summary` and `daily-breakdown` cache their API responses locally so past months don't require a network round-trip on subsequent calls.
+
+**What is cached:** Raw API responses for months where both `--year` and `--month` are provided explicitly and the month is not the current calendar month. Data for the current month — and requests without an explicit year/month — always fetch live from the Nintendo API.
+
+**Cache location:** `~/.config/switch-parental-controls/cache/` (respects `XDG_CONFIG_HOME`), organised as `{device-id}/{YYYY}-{MM}.json`.
+
+**Bypassing the cache:** Pass `--no-cache` to `monthly-summary` or `daily-breakdown` to skip both reading from and writing to the cache. Useful when data looks unexpectedly stale.
+
+**Clearing the cache:** Use the `clear-cache` command (CLI) or `switch_clear_cache` tool (MCP) — see the command examples above.
 
 ## MCP Server
 
@@ -250,6 +272,7 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
 | `switch_get_today_summary`    | Get today's usage summary for a device                                   |
 | `switch_get_monthly_summary`  | Get monthly usage summary (optionally for a specific month)              |
 | `switch_get_daily_breakdown`  | Get per-day playtime breakdown for a month (current month or historical) |
+| `switch_clear_cache`          | Clear locally cached historic play data (all, by device, year, or month) |
 
 #### Playtime Controls
 

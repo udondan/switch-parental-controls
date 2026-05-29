@@ -9,8 +9,15 @@ from datetime import datetime, time
 from mcp.server.fastmcp import Context
 from pynintendoparental.enum import DeviceTimerMode, FunctionalRestrictionLevel, RestrictionMode
 
+from switch_parental_controls.data_cache import (
+    clear_data_cache,
+    is_current_month,
+    load_data_cache,
+    save_data_cache,
+)
 from switch_parental_controls.models import (
     AddExtraTimeInput,
+    ClearCacheInput,
     DeviceInput,
     ListDevicesInput,
     MonthlySummaryInput,
@@ -362,7 +369,17 @@ async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) 
             return "\n".join(lines)
 
         else:
-            summary = await device.get_monthly_summary(search_date=datetime(year, month, 1))
+            cacheable = params.year is not None and not is_current_month(year, month, tz)
+
+            summary = None
+            if cacheable and not params.skip_cache:
+                summary = load_data_cache(params.device_id, year, month)
+
+            if summary is None:
+                summary = await device.get_monthly_summary(search_date=datetime(year, month, 1))
+                if cacheable and not params.skip_cache and summary is not None:
+                    save_data_cache(params.device_id, year, month, summary)
+
             if summary is None:
                 return f"No monthly summary available for {year}-{month:02d} on device '{device.name}'."
 
@@ -444,10 +461,22 @@ async def switch_get_monthly_summary(params: MonthlySummaryInput, ctx: Context) 
             return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         search_date = None
+        cacheable = False
         if params.year and params.month:
             search_date = datetime(params.year, params.month, 1)
+            from zoneinfo import ZoneInfo
 
-        summary = await device.get_monthly_summary(search_date=search_date)
+            tz = ZoneInfo(_state.get("timezone") or "Europe/London")
+            cacheable = not is_current_month(params.year, params.month, tz)
+
+        summary = None
+        if cacheable and not params.skip_cache:
+            summary = load_data_cache(params.device_id, params.year, params.month)
+
+        if summary is None:
+            summary = await device.get_monthly_summary(search_date=search_date)
+            if cacheable and not params.skip_cache and summary is not None:
+                save_data_cache(params.device_id, params.year, params.month, summary)
 
         if summary is None:
             return f"No monthly summary available for device '{device.name}'."
@@ -900,5 +929,46 @@ async def switch_set_bedtime_end_time(params: SetBedtimeEndInput, ctx: Context) 
             return f"✓ Bedtime end time disabled for '{device.name}'."
         return f"✓ Bedtime end time set to {params.hour:02d}:{params.minute:02d} for '{device.name}'."
 
+    except Exception as e:
+        return handle_error(e)
+
+
+@mcp.tool(
+    name="switch_clear_cache",
+    annotations={
+        "title": "Clear Historic Data Cache",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+)
+async def switch_clear_cache(params: ClearCacheInput, ctx: Context) -> str:
+    """Clear cached historic monthly play data.
+
+    Removes locally cached API responses so the next request fetches fresh data
+    from the Nintendo API. Useful when cached data looks stale or unexpected.
+
+    Filters can be combined: clear a specific month, all months for a device,
+    or all cached data at once.
+
+    Args:
+        params (ClearCacheInput): Validated input containing:
+            - device_id (Optional[str]): Limit to this device. Omit for all devices.
+            - year (Optional[int]): Limit to this year. Omit for all years.
+            - month (Optional[int]): Limit to this month (1-12). Requires year.
+
+    Returns:
+        str: Confirmation message with count of files deleted.
+    """
+    try:
+        n = clear_data_cache(
+            device_id=params.device_id,
+            year=params.year,
+            month=params.month,
+        )
+        if n == 0:
+            return "No cached files found matching the given filters."
+        return f"✓ Cleared {n} cached file{'s' if n != 1 else ''}."
     except Exception as e:
         return handle_error(e)
