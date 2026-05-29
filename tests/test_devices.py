@@ -981,6 +981,29 @@ async def test_daily_breakdown_day_filter_historical_month(mock_device):
 
 
 @pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_invalid_day(mock_device):
+    """day filter with an impossible calendar date returns a clear error."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import DailyBreakdownInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(
+            DailyBreakdownInput(device_id="device-001", year=2026, month=4, day=31), ctx
+        )
+
+    assert "Error" in result
+    assert "31" in result
+    assert "2026-04" in result
+    assert "max: 30" in result
+
+
+@pytest.mark.asyncio
 async def test_daily_breakdown_day_filter_no_data(mock_device):
     """day filter with no matching date returns a 'No data' message."""
     import datetime

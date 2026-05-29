@@ -330,7 +330,14 @@ async def switch_get_daily_breakdown(params: DailyBreakdownInput, ctx: Context) 
         month = params.month or now.month
         is_current = year == now.year and month == now.month
 
-        target_date = f"{year}-{month:02d}-{params.day:02d}" if params.day is not None else None
+        if params.day is not None:
+            import calendar as _cal
+            max_days = _cal.monthrange(year, month)[1]
+            if params.day > max_days:
+                return f"Error: day {params.day} is out of range for {year}-{month:02d} (max: {max_days})."
+            target_date = f"{year}-{month:02d}-{params.day:02d}"
+        else:
+            target_date = None
 
         if is_current:
             await device.update()
