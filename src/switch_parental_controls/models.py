@@ -105,6 +105,18 @@ class MonthlySummaryInput(BaseModel):
 class DailyBreakdownInput(MonthlySummaryInput):
     """Input model for daily breakdown queries, extending monthly summary with a day filter."""
 
+    year: int | None = Field(
+        default=None,
+        description="Year for the breakdown (e.g. 2024). If omitted, returns the current month's live data.",
+        ge=2017,
+        le=2100,
+    )
+    month: int | None = Field(
+        default=None,
+        description="Month for the breakdown (1-12). Required if year is provided; must be omitted if year is omitted.",
+        ge=1,
+        le=12,
+    )
     day: int | None = Field(
         default=None,
         description="Filter results to a specific day (1-31). Requires year and month to be set.",
