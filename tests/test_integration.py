@@ -264,48 +264,57 @@ def test_cli_auto_select_single_device(cli_runner):
 # Cache integration tests — MCP
 # ---------------------------------------------------------------------------
 
-# Use a fixed past month so caching is exercised. April 2026 is guaranteed to
-# be a completed month for any run after 2026-05-01.
-_PAST_YEAR = 2026
-_PAST_MONTH = 4
+@pytest.fixture(scope="module")
+async def past_month(first_device_id, real_client):
+    """Return (year, month) of the most recent completed month this account has data for.
 
-# Minimal valid monthly summary structure accepted by the formatters.
-_MINIMAL_SUMMARY = {
-    "overall": {"dailyStats": [{"date": f"{_PAST_YEAR}-{_PAST_MONTH:02d}-01", "totalTime": 60}]},
-    "players": [],
-}
+    Uses device.last_month_summary which is populated by the initial client.update()
+    call in the real_client fixture — no extra API call needed.
+    """
+    from datetime import date
+
+    device = real_client.devices[first_device_id]
+    summary = device.last_month_summary
+    # last_month_summary starts as {} (empty dict) when no data was loaded.
+    if not summary:
+        pytest.skip("No monthly summary data available for this account")
+    daily_stats = summary.get("overall", {}).get("dailyStats", [])
+    if not daily_stats or not daily_stats[0].get("date"):
+        pytest.skip("Monthly summary has no daily stats to derive month from")
+    first_date = date.fromisoformat(daily_stats[0]["date"])
+    return first_date.year, first_date.month
 
 
-async def test_get_monthly_summary_past_month_creates_cache(first_device_id, tmp_path, monkeypatch):
-    """Fetching a past month writes a cache file when the API returns data."""
+async def test_get_monthly_summary_past_month_creates_cache(first_device_id, past_month, tmp_path, monkeypatch):
+    """Fetching a past month writes a cache file."""
+    year, month = past_month
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
-    from switch_parental_controls.data_cache import _cache_path, load_data_cache
+    from switch_parental_controls.data_cache import _cache_path
     from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
 
-    params = MonthlySummaryInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
+    params = MonthlySummaryInput(device_id=first_device_id, year=year, month=month)
     result = await switch_get_monthly_summary(params, MagicMock())
     assert "Error: Not authenticated" not in result
-
-    # Cache is only written when the API returns data; skip if this account has none.
-    if load_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH) is None:
-        pytest.skip(f"Nintendo API returned no data for {_PAST_YEAR}-{_PAST_MONTH:02d}")
-    assert _cache_path(first_device_id, _PAST_YEAR, _PAST_MONTH).exists()
+    assert _cache_path(first_device_id, year, month).exists()
 
 
-async def test_get_monthly_summary_past_month_cache_hit(first_device_id, tmp_path, monkeypatch, real_client):
+async def test_get_monthly_summary_past_month_cache_hit(
+    first_device_id, past_month, tmp_path, monkeypatch, real_client
+):
     """Second call for the same past month is served from cache — API not called."""
+    year, month = past_month
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     from switch_parental_controls.data_cache import save_data_cache
     from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
 
-    # Pre-seed the cache so the test does not depend on the account having API data.
-    save_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH, _MINIMAL_SUMMARY)
+    minimal = {"overall": {"dailyStats": [{"date": f"{year}-{month:02d}-01", "totalTime": 60}]}, "players": []}
+    save_data_cache(first_device_id, year, month, minimal)
 
-    params = MonthlySummaryInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
+    params = MonthlySummaryInput(device_id=first_device_id, year=year, month=month)
     device = real_client.devices[first_device_id]
     device.get_monthly_summary = AsyncMock(side_effect=AssertionError("API called on cache hit"))
 
@@ -313,55 +322,53 @@ async def test_get_monthly_summary_past_month_cache_hit(first_device_id, tmp_pat
     assert "Error" not in result
 
 
-async def test_get_monthly_summary_skip_cache(first_device_id, tmp_path, monkeypatch):
+async def test_get_monthly_summary_skip_cache(first_device_id, past_month, tmp_path, monkeypatch):
     """skip_cache=True always hits the API even when a cache file exists."""
+    year, month = past_month
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     from switch_parental_controls.data_cache import save_data_cache
     from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
 
-    # Pre-populate cache with a sentinel value.
-    save_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH, {"sentinel": True})
+    save_data_cache(first_device_id, year, month, {"sentinel": True})
 
-    params = MonthlySummaryInput(
-        device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH, skip_cache=True
-    )
+    params = MonthlySummaryInput(device_id=first_device_id, year=year, month=month, skip_cache=True)
     result = await switch_get_monthly_summary(params, MagicMock())
     assert "Error: Not authenticated" not in result
-    # Result should not contain "sentinel" (would appear if the stub was returned).
     assert "sentinel" not in result
 
 
-async def test_get_daily_breakdown_past_month_creates_cache(first_device_id, tmp_path, monkeypatch):
-    """daily-breakdown for a past month writes a cache file when the API returns data."""
+async def test_get_daily_breakdown_past_month_creates_cache(first_device_id, past_month, tmp_path, monkeypatch):
+    """daily-breakdown for a past month writes a cache file."""
+    year, month = past_month
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
-    from switch_parental_controls.data_cache import _cache_path, load_data_cache
+    from switch_parental_controls.data_cache import _cache_path
     from switch_parental_controls.devices import switch_get_daily_breakdown
     from switch_parental_controls.models import MonthlySummaryInput
 
-    params = MonthlySummaryInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
+    params = MonthlySummaryInput(device_id=first_device_id, year=year, month=month)
     result = await switch_get_daily_breakdown(params, MagicMock())
     assert "Error: Not authenticated" not in result
-
-    if load_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH) is None:
-        pytest.skip(f"Nintendo API returned no data for {_PAST_YEAR}-{_PAST_MONTH:02d}")
-    assert _cache_path(first_device_id, _PAST_YEAR, _PAST_MONTH).exists()
+    assert _cache_path(first_device_id, year, month).exists()
 
 
-async def test_get_daily_breakdown_past_month_cache_hit(first_device_id, tmp_path, monkeypatch, real_client):
+async def test_get_daily_breakdown_past_month_cache_hit(
+    first_device_id, past_month, tmp_path, monkeypatch, real_client
+):
     """Second daily-breakdown call for a past month uses the cache."""
+    year, month = past_month
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     from switch_parental_controls.data_cache import save_data_cache
     from switch_parental_controls.devices import switch_get_daily_breakdown
     from switch_parental_controls.models import MonthlySummaryInput
 
-    # Pre-seed the cache so the test does not depend on the account having API data.
-    save_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH, _MINIMAL_SUMMARY)
+    minimal = {"overall": {"dailyStats": [{"date": f"{year}-{month:02d}-01", "totalTime": 60}]}, "players": []}
+    save_data_cache(first_device_id, year, month, minimal)
 
-    params = MonthlySummaryInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
+    params = MonthlySummaryInput(device_id=first_device_id, year=year, month=month)
     device = real_client.devices[first_device_id]
     device.get_monthly_summary = AsyncMock(side_effect=AssertionError("API called on cache hit"))
 
@@ -369,22 +376,23 @@ async def test_get_daily_breakdown_past_month_cache_hit(first_device_id, tmp_pat
     assert "Error" not in result
 
 
-async def test_switch_clear_cache(first_device_id, tmp_path, monkeypatch):
+async def test_switch_clear_cache(first_device_id, past_month, tmp_path, monkeypatch):
     """switch_clear_cache removes the cache files it is asked to delete."""
+    year, month = past_month
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     from switch_parental_controls.data_cache import _cache_path, save_data_cache
     from switch_parental_controls.devices import switch_clear_cache
     from switch_parental_controls.models import ClearCacheInput
 
-    save_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH, {"x": 1})
-    assert _cache_path(first_device_id, _PAST_YEAR, _PAST_MONTH).exists()
+    save_data_cache(first_device_id, year, month, {"x": 1})
+    assert _cache_path(first_device_id, year, month).exists()
 
     result = await switch_clear_cache(
-        ClearCacheInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH), MagicMock()
+        ClearCacheInput(device_id=first_device_id, year=year, month=month), MagicMock()
     )
     assert "1" in result
-    assert not _cache_path(first_device_id, _PAST_YEAR, _PAST_MONTH).exists()
+    assert not _cache_path(first_device_id, year, month).exists()
 
 
 # ---------------------------------------------------------------------------
@@ -392,70 +400,67 @@ async def test_switch_clear_cache(first_device_id, tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_cli_monthly_summary_past_month_creates_cache(cli_runner, first_device_id, tmp_path):
+def test_cli_monthly_summary_past_month_creates_cache(cli_runner, first_device_id, past_month):
     """CLI monthly-summary with --year/--month creates a cache file when the API returns data."""
+    year, month = past_month
     from switch_parental_controls.cli import cli
-    from switch_parental_controls.data_cache import _cache_path, load_data_cache
+    from switch_parental_controls.data_cache import _cache_path
 
-    result = cli_runner.invoke(
-        cli, ["monthly-summary", first_device_id, "--year", str(_PAST_YEAR), "--month", str(_PAST_MONTH)]
-    )
+    result = cli_runner.invoke(cli, ["monthly-summary", first_device_id, "--year", str(year), "--month", str(month)])
     assert "Error: Not authenticated" not in result.output
-
-    if load_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH) is None:
-        pytest.skip(f"Nintendo API returned no data for {_PAST_YEAR}-{_PAST_MONTH:02d}")
-    assert _cache_path(first_device_id, _PAST_YEAR, _PAST_MONTH).exists()
+    assert _cache_path(first_device_id, year, month).exists()
 
 
-def test_cli_monthly_summary_no_cache(cli_runner, first_device_id):
+def test_cli_monthly_summary_no_cache(cli_runner, first_device_id, past_month):
     """CLI monthly-summary --no-cache completes without auth error."""
+    year, month = past_month
     from switch_parental_controls.cli import cli
 
     result = cli_runner.invoke(
-        cli, ["monthly-summary", first_device_id, "--year", str(_PAST_YEAR), "--month", str(_PAST_MONTH), "--no-cache"]
+        cli, ["monthly-summary", first_device_id, "--year", str(year), "--month", str(month), "--no-cache"]
     )
     assert "Error: Not authenticated" not in result.output
 
 
-def test_cli_daily_breakdown_past_month_creates_cache(cli_runner, first_device_id):
+def test_cli_daily_breakdown_past_month_creates_cache(cli_runner, first_device_id, past_month):
     """CLI daily-breakdown with --year/--month creates a cache file when the API returns data."""
+    year, month = past_month
     from switch_parental_controls.cli import cli
-    from switch_parental_controls.data_cache import _cache_path, load_data_cache
+    from switch_parental_controls.data_cache import _cache_path
 
     result = cli_runner.invoke(
-        cli, ["daily-breakdown", first_device_id, "--year", str(_PAST_YEAR), "--month", str(_PAST_MONTH)]
+        cli, ["daily-breakdown", first_device_id, "--year", str(year), "--month", str(month)]
     )
     assert "Error: Not authenticated" not in result.output
-
-    if load_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH) is None:
-        pytest.skip(f"Nintendo API returned no data for {_PAST_YEAR}-{_PAST_MONTH:02d}")
-    assert _cache_path(first_device_id, _PAST_YEAR, _PAST_MONTH).exists()
+    assert _cache_path(first_device_id, year, month).exists()
 
 
-def test_cli_daily_breakdown_no_cache(cli_runner, first_device_id):
+def test_cli_daily_breakdown_no_cache(cli_runner, first_device_id, past_month):
     """CLI daily-breakdown --no-cache completes without auth error."""
+    year, month = past_month
     from switch_parental_controls.cli import cli
 
     result = cli_runner.invoke(
-        cli, ["daily-breakdown", first_device_id, "--year", str(_PAST_YEAR), "--month", str(_PAST_MONTH), "--no-cache"]
+        cli, ["daily-breakdown", first_device_id, "--year", str(year), "--month", str(month), "--no-cache"]
     )
     assert "Error: Not authenticated" not in result.output
 
 
-def test_cli_clear_cache(cli_runner, first_device_id, tmp_path):
+def test_cli_clear_cache(cli_runner, first_device_id, past_month, tmp_path):
     """CLI clear-cache removes a specific cached month and reports the count."""
+    year, month = past_month
     from switch_parental_controls.cli import cli
     from switch_parental_controls.data_cache import _cache_path, save_data_cache
 
-    save_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH, {"x": 1})
-    assert _cache_path(first_device_id, _PAST_YEAR, _PAST_MONTH).exists()
+    save_data_cache(first_device_id, year, month, {"x": 1})
+    assert _cache_path(first_device_id, year, month).exists()
 
     result = cli_runner.invoke(
-        cli, ["clear-cache", "--device", first_device_id, "--year", str(_PAST_YEAR), "--month", str(_PAST_MONTH)]
+        cli, ["clear-cache", "--device", first_device_id, "--year", str(year), "--month", str(month)]
     )
     assert result.exit_code == 0, result.output
     assert "1" in result.output
-    assert not _cache_path(first_device_id, _PAST_YEAR, _PAST_MONTH).exists()
+    assert not _cache_path(first_device_id, year, month).exists()
 
 
 def test_cli_clear_cache_no_files(cli_runner):
