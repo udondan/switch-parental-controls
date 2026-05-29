@@ -80,6 +80,14 @@ When adding or changing any feature:
 
 1. **README.md** — Update it to reflect the new or changed behavior. This is the user-facing reference.
 
+   Every heading added to README.md that belongs in the Table of Contents must include an explicit `<a name="...">` anchor, using the kebab-case slug of the heading text:
+
+   ```markdown
+   ## <a name="my-section"></a>My Section
+   ```
+
+   PyPI strips `id` attributes from headings during HTML sanitization, so without these anchors the ToC links silently do nothing on the PyPI project page. GitHub is unaffected — it ignores the `<a name>` and generates its own heading IDs.
+
 2. **CLI skill** — If the feature is exposed through the CLI, update the skill file at `skills/switch-parental-controls/SKILL.md` (inside this repository). Add a description, usage instructions, and concrete examples for the new command or flag.
 
    > **Important:** Always edit `skills/switch-parental-controls/SKILL.md` inside this project. Never edit the globally installed skill in `~/.claude/skills/` — that file is a copy and will be overwritten. The project-local skill is the source of truth.

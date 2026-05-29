@@ -24,7 +24,7 @@ A [CLI](#cli-usage) and [MCP (Model Context Protocol)](https://modelcontextproto
 - [Legal](#legal)
 - [License](#license)
 
-## Features
+## <a name="features"></a>Features
 
 - **Authentication**: Interactive Nintendo OAuth login flow, or pre-configured session token
 - **Device monitoring**: List devices, view playtime, remaining time, sync status
@@ -34,7 +34,7 @@ A [CLI](#cli-usage) and [MCP (Model Context Protocol)](https://modelcontextproto
 - **Player tracking**: View player profiles and today's app usage
 - **Application management**: List apps, manage the allow-list (bypass content restrictions)
 
-## Prerequisites
+## <a name="prerequisites"></a>Prerequisites
 
 - [uv](https://docs.astral.sh/uv/) — install once, no Python or clone needed:
 
@@ -42,11 +42,11 @@ A [CLI](#cli-usage) and [MCP (Model Context Protocol)](https://modelcontextproto
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-## CLI Usage
+## <a name="cli-usage"></a>CLI Usage
 
 The `switch-parental-controls` CLI gives you direct terminal access to all parental control features.
 
-### Installation
+### <a name="installation"></a>Installation
 
 No clone required — run directly with `uvx`:
 
@@ -61,9 +61,9 @@ pip install switch-parental-controls
 switch-parental-controls --help
 ```
 
-### Authentication
+### <a name="authentication"></a>Authentication
 
-#### Interactive login
+#### <a name="interactive-login"></a>Interactive login
 
 ```bash
 switch-parental-controls login
@@ -80,7 +80,7 @@ On success, the token is saved to `~/.config/switch-parental-controls/credential
 
 The CLI also prints an `export SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN=...` snippet after login, so you can copy the token value for use in other tools or scripts.
 
-#### Storing your token
+#### <a name="storing-your-token"></a>Storing your token
 
 The token lookup order is: **environment variable → credentials file**.
 
@@ -113,7 +113,7 @@ SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN="your-token-here" switch-parental-control
 
 > **Note**: Session tokens can expire. If you get authentication errors, repeat the login flow.
 
-### Global Options
+### <a name="global-options"></a>Global Options
 
 ```text
 switch-parental-controls [OPTIONS] COMMAND [ARGS]...
@@ -123,7 +123,7 @@ Options:
   -l, --lang TEXT       Language code  [env: SWITCH_PARENTAL_CONTROLS_LANG; default: en-GB]
 ```
 
-### Commands
+### <a name="commands"></a>Commands
 
 All device commands accept an optional `[DEVICE]` argument — a device name or ID. If omitted and the account has exactly one Switch, it is auto-selected. Run `list-devices` once to populate the local cache.
 
@@ -211,7 +211,7 @@ switch-parental-controls clear-cache --year 2026 --month 4   # clear a specific 
 switch-parental-controls mcp
 ```
 
-## Caching
+## <a name="caching"></a>Caching
 
 `monthly-summary` and `playtime` cache their API responses locally so past months don't require a network round-trip on subsequent calls.
 
@@ -223,9 +223,9 @@ switch-parental-controls mcp
 
 **Clearing the cache:** Use the `clear-cache` command (CLI) or `switch_clear_cache` tool (MCP) — see the command examples above.
 
-## MCP Server
+## <a name="mcp-server"></a>MCP Server
 
-### Running the Server
+### <a name="running-the-server"></a>Running the Server
 
 ```bash
 uvx switch-parental-controls mcp
@@ -233,7 +233,7 @@ uvx switch-parental-controls mcp
 
 No clone or install required — `uvx` fetches the package from PyPI and runs it in an isolated environment.
 
-### Environment Variables
+### <a name="environment-variables"></a>Environment Variables
 
 | Variable                                | Required | Default         | Description                             |
 | --------------------------------------- | -------- | --------------- | --------------------------------------- |
@@ -243,7 +243,7 @@ No clone or install required — `uvx` fetches the package from PyPI and runs it
 
 \*The token can also be provided via the credentials file (`~/.config/switch-parental-controls/credentials` by default; respects `XDG_CONFIG_HOME`). Since the CLI `login` command writes to that same file, running `switch-parental-controls login` once is sufficient — the MCP server will pick up the stored token automatically, no environment variable needed. The only exception where no token is needed upfront at all is when using the interactive `switch_get_login_url` / `switch_complete_login` tools to authenticate.
 
-### MCP Client Configuration
+### <a name="mcp-client-configuration"></a>MCP Client Configuration
 
 Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config.json`):
 
@@ -263,7 +263,7 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
 }
 ```
 
-### Available Tools
+### <a name="available-tools"></a>Available Tools
 
 #### Authentication Tools
 
@@ -315,7 +315,7 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
 | `switch_list_applications`     | List all tracked applications on a device                 |
 | `switch_set_app_allow_list`    | Add/remove an app from the content restriction allow-list |
 
-## Development
+## <a name="development"></a>Development
 
 Requires [mise](https://mise.jdx.dev/):
 
@@ -346,16 +346,16 @@ mise run inspect
 
 This opens the inspector connected to the switch_parental_controls server. You can call any tool directly from the UI, which is useful for testing the authentication flow and verifying tool responses.
 
-## CI
+## <a name="ci"></a>CI
 
 Tests run automatically on pull requests via GitHub Actions. See [`.github/workflows/test.yml`](.github/workflows/test.yml).
 
-## Legal
+## <a name="legal"></a>Legal
 
 Nintendo and Nintendo Switch are trademarks or registered trademarks of Nintendo in the U.S. and/or other countries.
 
 This project is not affiliated, funded, or in any way associated with Nintendo.
 
-## License
+## <a name="license"></a>License
 
 MIT
