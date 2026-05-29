@@ -23,6 +23,7 @@ from switch_parental_controls.client import switch_client
 from switch_parental_controls.device_cache import devices_from_client, resolve_device_id, save_cache
 from switch_parental_controls.models import (
     AddExtraTimeInput,
+    DailyBreakdownInput,
     DayOfWeek,
     DeviceInput,
     ListDevicesInput,
@@ -363,7 +364,7 @@ def daily_breakdown(
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
             try:
-                params = MonthlySummaryInput(
+                params = DailyBreakdownInput(
                     device_id=did, year=year, month=month, day=day, player_id=player_id,
                     response_format=ResponseFormat(fmt), skip_cache=skip_cache
                 )

@@ -92,6 +92,19 @@ class MonthlySummaryInput(BaseModel):
             "Useful when data looks stale or unexpected."
         ),
     )
+
+    @model_validator(mode="after")
+    def validate_year_month(self) -> "MonthlySummaryInput":
+        if self.year is not None and self.month is None:
+            raise ValueError("month is required when year is provided")
+        if self.month is not None and self.year is None:
+            raise ValueError("year is required when month is provided")
+        return self
+
+
+class DailyBreakdownInput(MonthlySummaryInput):
+    """Input model for daily breakdown queries, extending monthly summary with a day filter."""
+
     day: int | None = Field(
         default=None,
         description="Filter results to a specific day (1-31). Requires year and month to be set.",
@@ -100,11 +113,7 @@ class MonthlySummaryInput(BaseModel):
     )
 
     @model_validator(mode="after")
-    def validate_year_month(self) -> "MonthlySummaryInput":
-        if self.year is not None and self.month is None:
-            raise ValueError("month is required when year is provided")
-        if self.month is not None and self.year is None:
-            raise ValueError("year is required when month is provided")
+    def validate_day(self) -> "DailyBreakdownInput":
         if self.day is not None and (self.year is None or self.month is None):
             raise ValueError("year and month are required when day is provided")
         return self
