@@ -970,3 +970,234 @@ async def test_clear_cache_tool_specific_month(tmp_path, monkeypatch):
 
     assert load_data_cache("device-001", 2026, 3) is None
     assert load_data_cache("device-001", 2026, 4) is not None
+
+
+# --- player filtering for switch_get_daily_breakdown ---
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_current_month_player_filter_markdown(mock_device):
+    """Player filter on current month extracts per-player daily data from daily_summaries."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        result = await switch_get_daily_breakdown(
+            MonthlySummaryInput(device_id="device-001", player_id="player-001"), ctx
+        )
+
+    assert "TestKid" in result
+    assert "May 2026" in result
+    assert "(current)" in result
+    assert "2026-05-01" in result
+    assert "2026-05-02" in result
+    # 45 + 75 = 120 minutes = 2h
+    assert "2h" in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_current_month_player_filter_json(mock_device):
+    """Player filter on current month returns JSON with player_id and per-player days."""
+    import datetime
+    import json
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        result = await switch_get_daily_breakdown(
+            MonthlySummaryInput(device_id="device-001", player_id="player-001", response_format=ResponseFormat.JSON),
+            ctx,
+        )
+
+    data = json.loads(result)
+    assert data["player_id"] == "player-001"
+    assert data["player_nickname"] == "TestKid"
+    assert data["current"] is True
+    assert len(data["days"]) == 2
+    assert data["days"][0]["date"] == "2026-05-01"
+    assert data["days"][0]["playingTime"] == 45
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_current_month_player_not_found(mock_device):
+    """Player filter on current month returns error when player ID is not in daily_summaries."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        result = await switch_get_daily_breakdown(
+            MonthlySummaryInput(device_id="device-001", player_id="unknown-player"), ctx
+        )
+
+    assert "Error" in result
+    assert "unknown-player" in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_past_month_player_filter_markdown(mock_device):
+    """Player filter on a past month returns that player's dailyStats from monthly summary."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(
+            MonthlySummaryInput(device_id="device-001", year=2026, month=4, player_id="player-001"), ctx
+        )
+
+    assert "TestKid" in result
+    assert "April 2026" in result
+    assert "(current)" not in result
+    assert "2026-04-01" in result
+    assert "2026-04-02" in result
+    # 600 + 600 = 1200 minutes = 20h
+    assert "20h" in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_past_month_player_filter_json(mock_device):
+    """Player filter on a past month returns JSON with player_id and totalTime per day."""
+    import datetime
+    import json
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(
+            MonthlySummaryInput(
+                device_id="device-001", year=2026, month=4, player_id="player-001",
+                response_format=ResponseFormat.JSON
+            ),
+            ctx,
+        )
+
+    data = json.loads(result)
+    assert data["player_id"] == "player-001"
+    assert data["player_nickname"] == "TestKid"
+    assert data["current"] is False
+    assert len(data["days"]) == 2
+    assert data["days"][0]["date"] == "2026-04-01"
+    assert data["days"][0]["totalTime"] == 600
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_past_month_player_not_found(mock_device):
+    """Player filter on a past month returns error when player ID is absent from monthly summary."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(
+            MonthlySummaryInput(device_id="device-001", year=2026, month=4, player_id="unknown-player"), ctx
+        )
+
+    assert "Error" in result
+    assert "unknown-player" in result
+
+
+# --- player filtering for switch_get_monthly_summary ---
+
+
+@pytest.mark.asyncio
+async def test_monthly_summary_player_filter_markdown(mock_device):
+    """Player filter returns that player's total and per-day breakdown."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_monthly_summary(
+            MonthlySummaryInput(device_id="device-001", year=2026, month=4, player_id="player-001"), ctx
+        )
+
+    assert "TestKid" in result
+    assert "April 2026" in result
+    assert "Daily Breakdown" in result
+    assert "2026-04-01" in result
+    assert "2026-04-02" in result
+    # 600 + 600 = 1200 minutes = 20h
+    assert "20h" in result
+
+
+@pytest.mark.asyncio
+async def test_monthly_summary_player_filter_json(mock_device):
+    """Player filter in JSON mode returns only that player's entry."""
+    import datetime
+    import json
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_monthly_summary(
+            MonthlySummaryInput(
+                device_id="device-001", year=2026, month=4, player_id="player-001",
+                response_format=ResponseFormat.JSON
+            ),
+            ctx,
+        )
+
+    data = json.loads(result)
+    assert "player" in data
+    assert data["player"]["profile"]["playerId"] == "player-001"
+    assert data["player"]["profile"]["nickname"] == "TestKid"
+
+
+@pytest.mark.asyncio
+async def test_monthly_summary_player_not_found(mock_device):
+    """Player filter returns error when player ID is not in the monthly summary."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_monthly_summary(
+            MonthlySummaryInput(device_id="device-001", year=2026, month=4, player_id="unknown-player"), ctx
+        )
+
+    assert "Error" in result
+    assert "unknown-player" in result

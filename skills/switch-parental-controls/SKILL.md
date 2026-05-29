@@ -75,6 +75,8 @@ Setting the env vars avoids having to repeat the flags on every command.
 
 If the user says "how long did Emma play today", that is a question about a **player**, not a device. Run `list-players` to get each player's today's playtime by nickname. Use `get-player` if you also need the apps they played. Do not use `today-summary` for per-player questions — it only returns device-level totals (total playing time, disabled time, exceeded time).
 
+For per-player historical data ("how much did Emma play in April?", "show me Emma's daily breakdown"), use `--player <player-id>` on `monthly-summary` or `daily-breakdown`. Player IDs can be found via `list-players --format json`.
+
 ## Device Resolution
 
 Most commands accept an optional `[DEVICE]` positional argument. `DEVICE` is the console name or ID — never a person's name. If omitted and the account has exactly one device, it is selected automatically.
@@ -146,10 +148,11 @@ Show a monthly playtime summary with per-player totals. Defaults to the most rec
 Past-month responses are cached locally and served from cache on subsequent calls. Pass `--no-cache` to skip cache and always fetch live data.
 
 ```
-switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [--no-cache] [--format markdown|json]
+switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
 ```
 
 - `--year` and `--month` must be provided together; neither alone is valid.
+- `--player PLAYER_ID`: filter to a specific player — shows only that player's total and a per-day breakdown. Use `list-players --format json` to find player IDs.
 - `--no-cache`: bypass the local cache (read and write); always hits the Nintendo API.
 
 #### `daily-breakdown`
@@ -158,11 +161,12 @@ Show per-day playtime for a month. For the **current month**, reads live data fr
 Past-month responses are cached locally. Pass `--no-cache` to skip cache and always fetch live data.
 
 ```
-switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--no-cache] [--format markdown|json]
+switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
 ```
 
 - Omit `--year`/`--month` to get the current month's day-by-day breakdown.
 - `--year` and `--month` must be provided together; neither alone is valid.
+- `--player PLAYER_ID`: filter to a specific player — shows only that player's playtime per day (works for both current and past months). Use `list-players --format json` to find player IDs.
 - `--no-cache`: bypass the local cache (read and write); always hits the Nintendo API.
 - Use this instead of `monthly-summary` when you need to see which specific days had the most playtime, or to answer "how much did they play on Tuesday the 13th?"
 
@@ -345,7 +349,7 @@ Person names ("Emma", "Max") are **players**, not devices. Use `list-players` �
 switch-parental-controls list-players
 ```
 
-For the apps a specific player ran today, use `get-player` with their player ID (visible in `list-players --format json`).
+For the apps a specific player ran today, use `get-player` with their player ID (visible in `list-players --format json`). For per-day playtime over a full month, use `daily-breakdown --player <player-id>`.
 
 > **Note:** If any command returns "Error: Not authenticated", the user needs to run `switch-parental-controls login` manually — this is an interactive step that cannot be automated.
 
@@ -361,7 +365,28 @@ switch-parental-controls daily-breakdown
 switch-parental-controls daily-breakdown --year 2025 --month 4
 ```
 
-### Check how much was played in April 2025 (totals only)
+### Check how much a specific player played each day this month
+
+First get the player ID, then filter the daily breakdown:
+
+```
+switch-parental-controls list-players --format json
+switch-parental-controls daily-breakdown --player <player-id>
+```
+
+### Check how much a specific player played each day in a past month
+
+```
+switch-parental-controls daily-breakdown --year 2025 --month 4 --player <player-id>
+```
+
+### Check how much a specific player played in April 2025 (monthly total + daily breakdown)
+
+```
+switch-parental-controls monthly-summary --year 2025 --month 4 --player <player-id>
+```
+
+### Check how much was played in April 2025 (all-player totals)
 
 ```
 switch-parental-controls monthly-summary --year 2025 --month 4

@@ -296,12 +296,14 @@ async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) 
     For the current month, returns data from the live daily summaries feed,
     including playing time, disabled time, and exceeded time per day.
     For past months, returns total playing time per day from the monthly summary.
+    When player_id is provided, filters results to that specific player.
 
     Args:
         params (MonthlySummaryInput): Validated input containing:
             - device_id (str): The unique device ID (from switch_list_devices).
             - year (Optional[int]): Year (e.g. 2024). Omit for current month.
             - month (Optional[int]): Month (1-12). Required if year is provided.
+            - player_id (Optional[str]): Filter to a specific player ID.
             - response_format (str): 'markdown' or 'json' (default: 'markdown').
 
     Returns:
@@ -334,6 +336,50 @@ async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) 
             )
             if not entries:
                 return f"No daily data available for {prefix} on device '{device.name}'."
+
+            if params.player_id:
+                player_nickname = None
+                player_days = []
+                for e in entries:
+                    for p in e.get("players", []):
+                        if p.get("profile", {}).get("playerId") == params.player_id:
+                            if player_nickname is None:
+                                player_nickname = p.get("profile", {}).get("nickname", params.player_id)
+                            player_days.append({"date": e["date"], "playingTime": p.get("playingTime", 0)})
+                            break
+
+                if not player_days:
+                    return (
+                        f"Error: Player '{params.player_id}' not found in daily data for {prefix} "
+                        f"on device '{device.name}'. Use switch_list_players to see available player IDs."
+                    )
+
+                if params.response_format == ResponseFormat.JSON:
+                    return to_json(
+                        {
+                            "device_name": device.name,
+                            "player_id": params.player_id,
+                            "player_nickname": player_nickname,
+                            "year": year,
+                            "month": month,
+                            "current": True,
+                            "days": player_days,
+                        }
+                    )
+
+                from datetime import date as dt_date
+
+                month_label = dt_date(year, month, 1).strftime("%B %Y")
+                total = sum(d["playingTime"] for d in player_days)
+                lines = [
+                    f"# Daily Breakdown — {player_nickname} on {device.name}",
+                    f"**Period**: {month_label} (current)",
+                    "",
+                ]
+                for d in player_days:
+                    lines.append(f"- **{d['date']}**: {format_minutes(d['playingTime'])}")
+                lines += ["", f"**Total**: {format_minutes(total)}"]
+                return "\n".join(lines)
 
             if params.response_format == ResponseFormat.JSON:
                 return to_json(
@@ -382,6 +428,60 @@ async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) 
 
             if summary is None:
                 return f"No monthly summary available for {year}-{month:02d} on device '{device.name}'."
+
+            if params.player_id:
+                player_entry = next(
+                    (
+                        p
+                        for p in summary.get("players", [])
+                        if p.get("profile", {}).get("playerId") == params.player_id
+                    ),
+                    None,
+                )
+                if player_entry is None:
+                    return (
+                        f"Error: Player '{params.player_id}' not found in monthly summary for "
+                        f"{year}-{month:02d} on device '{device.name}'. "
+                        "Use switch_list_players to see available player IDs."
+                    )
+
+                player_nickname = player_entry.get("profile", {}).get("nickname", params.player_id)
+                daily_stats = sorted(
+                    player_entry.get("summary", {}).get("dailyStats", []),
+                    key=lambda s: s["date"],
+                )
+                if not daily_stats:
+                    return (
+                        f"No daily data for player '{player_nickname}' "
+                        f"in {year}-{month:02d} on device '{device.name}'."
+                    )
+
+                if params.response_format == ResponseFormat.JSON:
+                    return to_json(
+                        {
+                            "device_name": device.name,
+                            "player_id": params.player_id,
+                            "player_nickname": player_nickname,
+                            "year": year,
+                            "month": month,
+                            "current": False,
+                            "days": daily_stats,
+                        }
+                    )
+
+                from datetime import date as dt_date
+
+                month_label = dt_date(year, month, 1).strftime("%B %Y")
+                total = sum(d.get("totalTime", 0) for d in daily_stats)
+                lines = [
+                    f"# Daily Breakdown — {player_nickname} on {device.name}",
+                    f"**Period**: {month_label}",
+                    "",
+                ]
+                for d in daily_stats:
+                    lines.append(f"- **{d['date']}**: {format_minutes(d.get('totalTime', 0))}")
+                lines += ["", f"**Total**: {format_minutes(total)}"]
+                return "\n".join(lines)
 
             daily_stats = sorted(
                 summary.get("overall", {}).get("dailyStats", []),
@@ -434,13 +534,15 @@ async def switch_get_monthly_summary(params: MonthlySummaryInput, ctx: Context) 
 
     Returns aggregated usage data for a specific month, including total playtime
     per player and per application. If no month is specified, returns the most
-    recent available summary.
+    recent available summary. When player_id is provided, returns a detailed
+    summary for that specific player including a per-day breakdown.
 
     Args:
         params (MonthlySummaryInput): Validated input containing:
             - device_id (str): The unique device ID (from switch_list_devices).
             - year (Optional[int]): Year (e.g. 2024). Omit for most recent.
             - month (Optional[int]): Month (1-12). Required if year is provided.
+            - player_id (Optional[str]): Filter to a specific player ID.
             - response_format (str): 'markdown' or 'json' (default: 'markdown').
 
     Returns:
@@ -482,6 +584,21 @@ async def switch_get_monthly_summary(params: MonthlySummaryInput, ctx: Context) 
             return f"No monthly summary available for device '{device.name}'."
 
         if params.response_format == ResponseFormat.JSON:
+            if params.player_id:
+                player_entry = next(
+                    (
+                        p
+                        for p in summary.get("players", [])
+                        if p.get("profile", {}).get("playerId") == params.player_id
+                    ),
+                    None,
+                )
+                if player_entry is None:
+                    return (
+                        f"Error: Player '{params.player_id}' not found in monthly summary for "
+                        f"device '{device.name}'. Use switch_list_players to see available player IDs."
+                    )
+                return to_json({"device_name": device.name, "player": player_entry})
             return to_json({"device_name": device.name, "summary": summary})
 
         # Derive month label from the first daily stat date (format: "YYYY-MM-DD")
@@ -493,6 +610,41 @@ async def switch_get_monthly_summary(params: MonthlySummaryInput, ctx: Context) 
             month_label = first_date.strftime("%B %Y")
         else:
             month_label = "Unknown month"
+
+        if params.player_id:
+            player_entry = next(
+                (
+                    p
+                    for p in summary.get("players", [])
+                    if p.get("profile", {}).get("playerId") == params.player_id
+                ),
+                None,
+            )
+            if player_entry is None:
+                return (
+                    f"Error: Player '{params.player_id}' not found in monthly summary for "
+                    f"device '{device.name}'. Use switch_list_players to see available player IDs."
+                )
+
+            nickname = player_entry.get("profile", {}).get("nickname", params.player_id)
+            player_daily = sorted(
+                player_entry.get("summary", {}).get("dailyStats", []),
+                key=lambda d: d["date"],
+            )
+            total_time = sum(d.get("totalTime", 0) for d in player_daily)
+
+            lines = [
+                f"# Monthly Summary — {nickname} on {device.name}",
+                f"**Period**: {month_label}",
+                f"**Total playtime**: {format_minutes(total_time)}",
+                "",
+            ]
+            if player_daily:
+                lines.append("## Daily Breakdown")
+                for d in player_daily:
+                    lines.append(f"- **{d['date']}**: {format_minutes(d.get('totalTime', 0))}")
+                lines.append("")
+            return "\n".join(lines)
 
         total_time = sum(d.get("totalTime", 0) for d in daily_stats)
 

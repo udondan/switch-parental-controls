@@ -80,6 +80,10 @@ class MonthlySummaryInput(BaseModel):
         default=ResponseFormat.MARKDOWN,
         description="Output format: 'markdown' for human-readable or 'json' for machine-readable.",
     )
+    player_id: str | None = Field(
+        default=None,
+        description="Filter results to a specific player ID. Use switch_list_players to find player IDs.",
+    )
     skip_cache: bool = Field(
         default=False,
         description=(
