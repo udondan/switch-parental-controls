@@ -134,7 +134,7 @@ switch-parental-controls list-devices [--format markdown|json]
 switch-parental-controls get-device [DEVICE] [--format markdown|json]
 switch-parental-controls today-summary [DEVICE] [--format markdown|json]
 switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
-switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
+switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--day DAY] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
 
 # DEVICE may be a name or an ID
 switch-parental-controls today-summary "Switch #1"
@@ -190,6 +190,10 @@ switch-parental-controls set-app-allow-list [DEVICE] <app-id> --no-allow
 switch-parental-controls monthly-summary [DEVICE] --year 2026 --month 4 --player <player-id>
 switch-parental-controls daily-breakdown [DEVICE] --year 2026 --month 4 --player <player-id>
 switch-parental-controls daily-breakdown [DEVICE] --player <player-id>   # current month
+
+# Single-day playtime — use --day to get one specific date instead of the whole month
+switch-parental-controls daily-breakdown [DEVICE] --year 2026 --month 5 --day 15
+switch-parental-controls daily-breakdown [DEVICE] --year 2026 --month 5 --day 15 --player <player-id>
 ```
 
 **Cache management:**

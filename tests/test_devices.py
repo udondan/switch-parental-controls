@@ -924,6 +924,105 @@ async def test_daily_breakdown_current_month_not_cached(mock_device):
     mock_device.get_monthly_summary.assert_not_called()
 
 
+# --- switch_get_daily_breakdown day filter ---
+
+
+def test_daily_breakdown_day_requires_year_month():
+    """day without year/month should raise a validation error."""
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    with pytest.raises(Exception, match="year and month are required"):
+        MonthlySummaryInput(device_id="device-001", day=1)
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_current_month(mock_device):
+    """day filter on current month returns a single-day summary."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        result = await switch_get_daily_breakdown(
+            MonthlySummaryInput(device_id="device-001", year=2026, month=5, day=1), ctx
+        )
+
+    assert "Day Summary" in result
+    assert "2026-05-01" in result
+    assert "2026-05-02" not in result
+    assert "Total" not in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_historical_month(mock_device):
+    """day filter on a historical month returns a single-day summary."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(
+            MonthlySummaryInput(device_id="device-001", year=2026, month=4, day=1), ctx
+        )
+
+    assert "Day Summary" in result
+    assert "2026-04-01" in result
+    assert "2026-04-02" not in result
+    assert "Total" not in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_no_data(mock_device):
+    """day filter with no matching date returns a 'No data' message."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_daily_breakdown(
+            MonthlySummaryInput(device_id="device-001", year=2026, month=4, day=15), ctx
+        )
+
+    assert "No data available for 2026-04-15" in result
+
+
+@pytest.mark.asyncio
+async def test_daily_breakdown_day_filter_with_player(mock_device):
+    """day filter combined with player_id returns a single-day summary for that player."""
+    import datetime
+    from unittest.mock import patch
+
+    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    ctx = MagicMock()
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        result = await switch_get_daily_breakdown(
+            MonthlySummaryInput(device_id="device-001", year=2026, month=5, day=1, player_id="player-001"), ctx
+        )
+
+    assert "Day Summary" in result
+    assert "TestKid" in result
+    assert "2026-05-01" in result
+    assert "2026-05-02" not in result
+    assert "Total" not in result
+
+
 # --- switch_clear_cache ---
 
 

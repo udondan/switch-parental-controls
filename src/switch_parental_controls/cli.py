@@ -345,15 +345,16 @@ def monthly_summary(
 @_DEVICE_ARG
 @click.option("--year", type=int, default=None, help="Year (e.g. 2024). Omit for current month.")
 @click.option("--month", type=int, default=None, help="Month 1-12. Required if --year is set.")
+@click.option("--day", type=int, default=None, help="Day 1-31. Requires --year and --month.")
 @click.option("--player", "player_id", default=None, help="Filter to a specific player ID.")
 @click.option("--no-cache", "skip_cache", is_flag=True, default=False, help="Skip cache; always fetch fresh data.")
 @_FORMAT_OPTION
 @click.pass_obj
 def daily_breakdown(
     obj: dict, device: str | None, year: int | None, month: int | None,
-    player_id: str | None, skip_cache: bool, fmt: str
+    day: int | None, player_id: str | None, skip_cache: bool, fmt: str
 ) -> None:
-    """Get per-day playtime breakdown for a month."""
+    """Get per-day playtime breakdown for a month, or a single day."""
     from switch_parental_controls.devices import switch_get_daily_breakdown
 
     async def run() -> str:
@@ -363,7 +364,7 @@ def daily_breakdown(
             did = _resolve(client, device)
             try:
                 params = MonthlySummaryInput(
-                    device_id=did, year=year, month=month, player_id=player_id,
+                    device_id=did, year=year, month=month, day=day, player_id=player_id,
                     response_format=ResponseFormat(fmt), skip_cache=skip_cache
                 )
             except Exception as exc:

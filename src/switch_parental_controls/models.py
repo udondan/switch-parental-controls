@@ -92,6 +92,12 @@ class MonthlySummaryInput(BaseModel):
             "Useful when data looks stale or unexpected."
         ),
     )
+    day: int | None = Field(
+        default=None,
+        description="Filter results to a specific day (1-31). Requires year and month to be set.",
+        ge=1,
+        le=31,
+    )
 
     @model_validator(mode="after")
     def validate_year_month(self) -> "MonthlySummaryInput":
@@ -99,6 +105,8 @@ class MonthlySummaryInput(BaseModel):
             raise ValueError("month is required when year is provided")
         if self.month is not None and self.year is None:
             raise ValueError("year is required when month is provided")
+        if self.day is not None and (self.year is None or self.month is None):
+            raise ValueError("year and month are required when day is provided")
         return self
 
 

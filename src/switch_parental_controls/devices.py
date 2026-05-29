@@ -291,18 +291,20 @@ async def switch_get_today_summary(params: DeviceInput, ctx: Context) -> str:
     },
 )
 async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) -> str:
-    """Get per-day playtime breakdown for a month.
+    """Get per-day playtime breakdown for a month, or a single day when day is specified.
 
     For the current month, returns data from the live daily summaries feed,
     including playing time, disabled time, and exceeded time per day.
     For past months, returns total playing time per day from the monthly summary.
     When player_id is provided, filters results to that specific player.
+    When day is provided, returns data for that single day only.
 
     Args:
         params (MonthlySummaryInput): Validated input containing:
             - device_id (str): The unique device ID (from switch_list_devices).
             - year (Optional[int]): Year (e.g. 2024). Omit for current month.
             - month (Optional[int]): Month (1-12). Required if year is provided.
+            - day (Optional[int]): Day (1-31). Required year and month to be set.
             - player_id (Optional[str]): Filter to a specific player ID.
             - response_format (str): 'markdown' or 'json' (default: 'markdown').
 
@@ -326,6 +328,8 @@ async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) 
         year = params.year or now.year
         month = params.month or now.month
         is_current = year == now.year and month == now.month
+
+        target_date = f"{year}-{month:02d}-{params.day:02d}" if params.day is not None else None
 
         if is_current:
             await device.update()
@@ -354,6 +358,14 @@ async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) 
                         f"on device '{device.name}'. Use switch_list_players to see available player IDs."
                     )
 
+                if target_date is not None:
+                    player_days = [d for d in player_days if d["date"] == target_date]
+                    if not player_days:
+                        return (
+                            f"No data available for {target_date} for player "
+                            f"'{player_nickname}' on device '{device.name}'."
+                        )
+
                 if params.response_format == ResponseFormat.JSON:
                     return to_json(
                         {
@@ -369,6 +381,15 @@ async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) 
 
                 from datetime import date as dt_date
 
+                if target_date is not None:
+                    d = player_days[0]
+                    return "\n".join([
+                        f"# Day Summary — {player_nickname} on {device.name}",
+                        f"**Date**: {target_date}",
+                        "",
+                        f"- **Playing time**: {format_minutes(d['playingTime'])}",
+                    ])
+
                 month_label = dt_date(year, month, 1).strftime("%B %Y")
                 total = sum(d["playingTime"] for d in player_days)
                 lines = [
@@ -380,6 +401,11 @@ async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) 
                     lines.append(f"- **{d['date']}**: {format_minutes(d['playingTime'])}")
                 lines += ["", f"**Total**: {format_minutes(total)}"]
                 return "\n".join(lines)
+
+            if target_date is not None:
+                entries = [e for e in entries if e.get("date") == target_date]
+                if not entries:
+                    return f"No data available for {target_date} on device '{device.name}'."
 
             if params.response_format == ResponseFormat.JSON:
                 return to_json(
@@ -393,6 +419,22 @@ async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) 
                 )
 
             from datetime import date as dt_date
+
+            if target_date is not None:
+                e = entries[0]
+                lines = [
+                    f"# Day Summary — {device.name}",
+                    f"**Date**: {target_date}",
+                    "",
+                    f"- **Playing time**: {format_minutes(e.get('playingTime', 0))}",
+                ]
+                extras = []
+                if e.get("disabledTime", 0) > 0:
+                    extras.append(f"- **Disabled time**: {format_minutes(e['disabledTime'])}")
+                if e.get("exceededTime", 0) > 0:
+                    extras.append(f"- **Exceeded time**: {format_minutes(e['exceededTime'])}")
+                lines += extras
+                return "\n".join(lines)
 
             month_label = dt_date(year, month, 1).strftime("%B %Y")
             total = sum(e.get("playingTime", 0) for e in entries)
@@ -456,6 +498,14 @@ async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) 
                         f"in {year}-{month:02d} on device '{device.name}'."
                     )
 
+                if target_date is not None:
+                    daily_stats = [d for d in daily_stats if d["date"] == target_date]
+                    if not daily_stats:
+                        return (
+                            f"No data available for {target_date} for player "
+                            f"'{player_nickname}' on device '{device.name}'."
+                        )
+
                 if params.response_format == ResponseFormat.JSON:
                     return to_json(
                         {
@@ -470,6 +520,15 @@ async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) 
                     )
 
                 from datetime import date as dt_date
+
+                if target_date is not None:
+                    d = daily_stats[0]
+                    return "\n".join([
+                        f"# Day Summary — {player_nickname} on {device.name}",
+                        f"**Date**: {target_date}",
+                        "",
+                        f"- **Playing time**: {format_minutes(d.get('totalTime', 0))}",
+                    ])
 
                 month_label = dt_date(year, month, 1).strftime("%B %Y")
                 total = sum(d.get("totalTime", 0) for d in daily_stats)
@@ -490,6 +549,11 @@ async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) 
             if not daily_stats:
                 return f"No daily data in monthly summary for {year}-{month:02d} on device '{device.name}'."
 
+            if target_date is not None:
+                daily_stats = [d for d in daily_stats if d["date"] == target_date]
+                if not daily_stats:
+                    return f"No data available for {target_date} on device '{device.name}'."
+
             if params.response_format == ResponseFormat.JSON:
                 return to_json(
                     {
@@ -502,6 +566,15 @@ async def switch_get_daily_breakdown(params: MonthlySummaryInput, ctx: Context) 
                 )
 
             from datetime import date as dt_date
+
+            if target_date is not None:
+                d = daily_stats[0]
+                return "\n".join([
+                    f"# Day Summary — {device.name}",
+                    f"**Date**: {target_date}",
+                    "",
+                    f"- **Playing time**: {format_minutes(d.get('totalTime', 0))}",
+                ])
 
             month_label = dt_date(year, month, 1).strftime("%B %Y")
             total = sum(d.get("totalTime", 0) for d in daily_stats)

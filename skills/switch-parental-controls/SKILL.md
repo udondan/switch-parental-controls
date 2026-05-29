@@ -161,11 +161,12 @@ Show per-day playtime for a month. For the **current month**, reads live data fr
 Past-month responses are cached locally. Pass `--no-cache` to skip cache and always fetch live data.
 
 ```
-switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
+switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--day DAY] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
 ```
 
 - Omit `--year`/`--month` to get the current month's day-by-day breakdown.
 - `--year` and `--month` must be provided together; neither alone is valid.
+- `--day DAY`: filter to a single specific day (1–31). Requires `--year` and `--month`. Returns a compact single-day summary instead of the full month — use this when you only need one date (e.g. "how much did they play on the 15th?") to avoid returning a full month of data.
 - `--player PLAYER_ID`: filter to a specific player — shows only that player's playtime per day (works for both current and past months). Use `list-players --format json` to find player IDs.
 - `--no-cache`: bypass the local cache (read and write); always hits the Nintendo API.
 - Use this instead of `monthly-summary` when you need to see which specific days had the most playtime, or to answer "how much did they play on Tuesday the 13th?"
@@ -365,6 +366,13 @@ switch-parental-controls daily-breakdown
 switch-parental-controls daily-breakdown --year 2025 --month 4
 ```
 
+### Check playtime for a specific day
+
+```
+switch-parental-controls daily-breakdown --year 2025 --month 4 --day 15
+switch-parental-controls daily-breakdown --year 2025 --month 4 --day 15 --player <player-id>
+```
+
 ### Check how much a specific player played each day this month
 
 First get the player ID, then filter the daily breakdown:
@@ -463,7 +471,7 @@ switch-parental-controls set-playtime-limit "Switch #2" --minutes 60
 - With `--playtime-enabled`, `--max-playtime-minutes` is required; it must not be set with `--playtime-disabled`.
 - With `--bedtime-enabled`, both `--bedtime-alarm-hour` and `--bedtime-end-hour` are required; with `--bedtime-disabled`, none of the bedtime value flags may be set (including non-zero minute values).
 - **`monthly-summary`** `--year` and `--month` must be provided together. Does not cover the current in-progress month — use `daily-breakdown` for that.
-- **`daily-breakdown`** `--year` and `--month` must be provided together. Omit both for the current month.
+- **`daily-breakdown`** `--year` and `--month` must be provided together. Omit both for the current month. `--day` requires `--year` and `--month`.
 - **Device name cache** persists across sessions at `~/.config/switch-parental-controls/devices` (or `$XDG_CONFIG_HOME/switch-parental-controls/devices` if `XDG_CONFIG_HOME` is set). Any command populates it automatically on first use if it is missing — no need to run `list-devices` upfront.
 - **Auto-select** only works when the account has exactly one device. With multiple devices, always pass `[DEVICE]` explicitly.
 - **Content restriction allow list** only matters when a restriction level other than `NONE` is active.
