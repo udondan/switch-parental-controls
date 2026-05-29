@@ -834,7 +834,7 @@ def test_global_lang_option(runner, monkeypatch, mock_client_with_device, mock_s
 
 
 # ---------------------------------------------------------------------------
-# --player flag on monthly-summary and daily-breakdown
+# --player flag on monthly-summary and playtime
 # ---------------------------------------------------------------------------
 
 
@@ -860,19 +860,19 @@ def test_monthly_summary_player_flag(runner, monkeypatch, mock_client_with_devic
     assert params.month == 4
 
 
-def test_daily_breakdown_player_flag(runner, monkeypatch, mock_client_with_device, mock_session):
+def test_playtime_player_flag(runner, monkeypatch, mock_client_with_device, mock_session):
     monkeypatch.setenv("SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_get_daily_breakdown",
+            "switch_parental_controls.devices.switch_get_playtime",
             new=AsyncMock(return_value="# Daily Breakdown"),
         ) as mock_tool,
     ):
         result = runner.invoke(
-            cli, ["daily-breakdown", "device-001", "--year", "2026", "--month", "4", "--player", "player-001"]
+            cli, ["playtime", "device-001", "--year", "2026", "--month", "4", "--player", "player-001"]
         )
 
     assert result.exit_code == 0
@@ -882,19 +882,19 @@ def test_daily_breakdown_player_flag(runner, monkeypatch, mock_client_with_devic
     assert params.month == 4
 
 
-def test_daily_breakdown_day_flag(runner, monkeypatch, mock_client_with_device, mock_session):
+def test_playtime_day_flag(runner, monkeypatch, mock_client_with_device, mock_session):
     monkeypatch.setenv("SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN", "fake-token")
     ctx = _make_client_ctx(mock_client_with_device, mock_session)
 
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_get_daily_breakdown",
+            "switch_parental_controls.devices.switch_get_playtime",
             new=AsyncMock(return_value="# Day Summary"),
         ) as mock_tool,
     ):
         result = runner.invoke(
-            cli, ["daily-breakdown", "device-001", "--year", "2026", "--month", "4", "--day", "1"]
+            cli, ["playtime", "device-001", "--year", "2026", "--month", "4", "--day", "1"]
         )
 
     assert result.exit_code == 0

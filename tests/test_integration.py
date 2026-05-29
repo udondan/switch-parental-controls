@@ -114,12 +114,12 @@ async def test_get_monthly_summary(first_device_id):
     assert "Error: Not authenticated" not in result
 
 
-async def test_get_daily_breakdown(first_device_id):
+async def test_get_playtime(first_device_id):
     """Daily breakdown for the current month should be returned without an auth error."""
-    from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import DailyBreakdownInput
+    from switch_parental_controls.devices import switch_get_playtime
+    from switch_parental_controls.models import PlaytimeInput
 
-    result = await switch_get_daily_breakdown(DailyBreakdownInput(device_id=first_device_id), MagicMock())
+    result = await switch_get_playtime(PlaytimeInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
     assert "Error: Not authenticated" not in result
 
@@ -220,11 +220,11 @@ def test_cli_monthly_summary(cli_runner, first_device_id):
     assert "Error: Not authenticated" not in result.output
 
 
-def test_cli_daily_breakdown(cli_runner, first_device_id):
-    """CLI daily-breakdown should exit 0 and return current-month data without an auth error."""
+def test_cli_playtime(cli_runner, first_device_id):
+    """CLI playtime should exit 0 and return current-month data without an auth error."""
     from switch_parental_controls.cli import cli
 
-    result = cli_runner.invoke(cli, ["daily-breakdown", first_device_id])
+    result = cli_runner.invoke(cli, ["playtime", first_device_id])
     assert result.exit_code == 0, result.output
     assert "Error: Not authenticated" not in result.output
 
@@ -327,43 +327,43 @@ async def test_get_monthly_summary_skip_cache(first_device_id, tmp_path, monkeyp
     assert "sentinel" not in result
 
 
-async def test_get_daily_breakdown_past_month_creates_cache(
+async def test_get_playtime_past_month_creates_cache(
     first_device_id, tmp_path, monkeypatch, real_client
 ):
-    """daily-breakdown for a past month writes a cache file."""
+    """playtime for a past month writes a cache file."""
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     from switch_parental_controls.data_cache import _cache_path
-    from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import DailyBreakdownInput
+    from switch_parental_controls.devices import switch_get_playtime
+    from switch_parental_controls.models import PlaytimeInput
 
     device = real_client.devices[first_device_id]
     device.get_monthly_summary = AsyncMock(return_value=device.last_month_summary)
 
-    params = DailyBreakdownInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
-    result = await switch_get_daily_breakdown(params, MagicMock())
+    params = PlaytimeInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
+    result = await switch_get_playtime(params, MagicMock())
     assert "Error: Not authenticated" not in result
     assert _cache_path(first_device_id, _PAST_YEAR, _PAST_MONTH).exists()
 
 
-async def test_get_daily_breakdown_past_month_cache_hit(
+async def test_get_playtime_past_month_cache_hit(
     first_device_id, tmp_path, monkeypatch, real_client
 ):
-    """Second daily-breakdown call for a past month uses the cache."""
+    """Second playtime call for a past month uses the cache."""
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     from switch_parental_controls.data_cache import save_data_cache
-    from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import DailyBreakdownInput
+    from switch_parental_controls.devices import switch_get_playtime
+    from switch_parental_controls.models import PlaytimeInput
 
     minimal = {"overall": {"dailyStats": [{"date": f"{_PAST_YEAR}-{_PAST_MONTH:02d}-01", "totalTime": 60}]}, "players": []}  # noqa: E501
     save_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH, minimal)
 
-    params = DailyBreakdownInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
+    params = PlaytimeInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
     device = real_client.devices[first_device_id]
     device.get_monthly_summary = AsyncMock(side_effect=AssertionError("API called on cache hit"))
 
-    result = await switch_get_daily_breakdown(params, MagicMock())
+    result = await switch_get_playtime(params, MagicMock())
     assert "Error" not in result
 
 
@@ -419,8 +419,8 @@ def test_cli_monthly_summary_no_cache(cli_runner, first_device_id, real_client):
     assert "Error: Not authenticated" not in result.output
 
 
-def test_cli_daily_breakdown_past_month_creates_cache(cli_runner, first_device_id, real_client):
-    """CLI daily-breakdown with --year/--month creates a cache file when the API returns data."""
+def test_cli_playtime_past_month_creates_cache(cli_runner, first_device_id, real_client):
+    """CLI playtime with --year/--month creates a cache file when the API returns data."""
     from switch_parental_controls.cli import cli
     from switch_parental_controls.data_cache import _cache_path
 
@@ -428,14 +428,14 @@ def test_cli_daily_breakdown_past_month_creates_cache(cli_runner, first_device_i
     device.get_monthly_summary = AsyncMock(return_value=device.last_month_summary)
 
     result = cli_runner.invoke(
-        cli, ["daily-breakdown", first_device_id, "--year", str(_PAST_YEAR), "--month", str(_PAST_MONTH)]
+        cli, ["playtime", first_device_id, "--year", str(_PAST_YEAR), "--month", str(_PAST_MONTH)]
     )
     assert "Error: Not authenticated" not in result.output
     assert _cache_path(first_device_id, _PAST_YEAR, _PAST_MONTH).exists()
 
 
-def test_cli_daily_breakdown_no_cache(cli_runner, first_device_id, real_client):
-    """CLI daily-breakdown --no-cache completes without auth error."""
+def test_cli_playtime_no_cache(cli_runner, first_device_id, real_client):
+    """CLI playtime --no-cache completes without auth error."""
     from switch_parental_controls.cli import cli
 
     device = real_client.devices[first_device_id]
@@ -443,7 +443,7 @@ def test_cli_daily_breakdown_no_cache(cli_runner, first_device_id, real_client):
 
     result = cli_runner.invoke(
         cli,
-        ["daily-breakdown", first_device_id, "--year", str(_PAST_YEAR), "--month", str(_PAST_MONTH), "--no-cache"],
+        ["playtime", first_device_id, "--year", str(_PAST_YEAR), "--month", str(_PAST_MONTH), "--no-cache"],
     )
     assert "Error: Not authenticated" not in result.output
 
@@ -489,27 +489,27 @@ async def first_player_id(real_client, first_device_id):
     return next(iter(device.players))
 
 
-async def test_daily_breakdown_player_filter_current_month(first_device_id, first_player_id):
+async def test_playtime_player_filter_current_month(first_device_id, first_player_id):
     """Daily breakdown filtered by player should return that player's data without error."""
-    from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import DailyBreakdownInput
+    from switch_parental_controls.devices import switch_get_playtime
+    from switch_parental_controls.models import PlaytimeInput
 
-    params = DailyBreakdownInput(device_id=first_device_id, player_id=first_player_id)
-    result = await switch_get_daily_breakdown(params, MagicMock())
+    params = PlaytimeInput(device_id=first_device_id, player_id=first_player_id)
+    result = await switch_get_playtime(params, MagicMock())
     assert isinstance(result, str)
     assert "Error: Not authenticated" not in result
     assert "Error: Player" not in result
 
 
-async def test_daily_breakdown_player_filter_past_month(first_device_id, first_player_id):
+async def test_playtime_player_filter_past_month(first_device_id, first_player_id):
     """Daily breakdown for a past month filtered by player should return per-player daily stats."""
-    from switch_parental_controls.devices import switch_get_daily_breakdown
-    from switch_parental_controls.models import DailyBreakdownInput
+    from switch_parental_controls.devices import switch_get_playtime
+    from switch_parental_controls.models import PlaytimeInput
 
-    params = DailyBreakdownInput(
+    params = PlaytimeInput(
         device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH, player_id=first_player_id
     )
-    result = await switch_get_daily_breakdown(params, MagicMock())
+    result = await switch_get_playtime(params, MagicMock())
     assert isinstance(result, str)
     assert "Error: Not authenticated" not in result
 
@@ -528,11 +528,11 @@ async def test_monthly_summary_player_filter(first_device_id, first_player_id):
     assert "Error: Player" not in result
 
 
-def test_cli_daily_breakdown_player_flag(cli_runner, first_device_id, first_player_id):
-    """CLI daily-breakdown --player exits 0 with player-filtered data for the current month."""
+def test_cli_playtime_player_flag(cli_runner, first_device_id, first_player_id):
+    """CLI playtime --player exits 0 with player-filtered data for the current month."""
     from switch_parental_controls.cli import cli
 
-    result = cli_runner.invoke(cli, ["daily-breakdown", first_device_id, "--player", first_player_id])
+    result = cli_runner.invoke(cli, ["playtime", first_device_id, "--player", first_player_id])
     assert result.exit_code == 0, result.output
     assert "Error" not in result.output
 

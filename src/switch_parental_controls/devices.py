@@ -18,10 +18,10 @@ from switch_parental_controls.data_cache import (
 from switch_parental_controls.models import (
     AddExtraTimeInput,
     ClearCacheInput,
-    DailyBreakdownInput,
     DeviceInput,
     ListDevicesInput,
     MonthlySummaryInput,
+    PlaytimeInput,
     ResponseFormat,
     SetBedtimeAlarmInput,
     SetBedtimeEndInput,
@@ -282,16 +282,16 @@ async def switch_get_today_summary(params: DeviceInput, ctx: Context) -> str:
 
 
 @mcp.tool(
-    name="switch_get_daily_breakdown",
+    name="switch_get_playtime",
     annotations={
-        "title": "Get Daily Playtime Breakdown",
+        "title": "Get Playtime",
         "readOnlyHint": True,
         "destructiveHint": False,
         "idempotentHint": True,
         "openWorldHint": True,
     },
 )
-async def switch_get_daily_breakdown(params: DailyBreakdownInput, ctx: Context) -> str:
+async def switch_get_playtime(params: PlaytimeInput, ctx: Context) -> str:
     """Get per-day playtime breakdown for a month, or a single day when day is specified.
 
     For the current month, returns data from the live daily summaries feed,
@@ -301,7 +301,7 @@ async def switch_get_daily_breakdown(params: DailyBreakdownInput, ctx: Context) 
     When day is provided, returns data for that single day only.
 
     Args:
-        params (DailyBreakdownInput): Validated input containing:
+        params (PlaytimeInput): Validated input containing:
             - device_id (str): The unique device ID (from switch_list_devices).
             - year (Optional[int]): Year (e.g. 2024). Omit for current month.
             - month (Optional[int]): Month (1-12). Required if year is provided.

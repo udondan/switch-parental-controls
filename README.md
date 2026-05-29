@@ -134,7 +134,7 @@ switch-parental-controls list-devices [--format markdown|json]
 switch-parental-controls get-device [DEVICE] [--format markdown|json]
 switch-parental-controls today-summary [DEVICE] [--format markdown|json]
 switch-parental-controls monthly-summary [DEVICE] [--year YEAR --month MONTH] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
-switch-parental-controls daily-breakdown [DEVICE] [--year YEAR --month MONTH] [--day DAY] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
+switch-parental-controls playtime [DEVICE] [--year YEAR --month MONTH] [--day DAY] [--player PLAYER_ID] [--no-cache] [--format markdown|json]
 
 # DEVICE may be a name or an ID
 switch-parental-controls today-summary "Switch #1"
@@ -186,14 +186,14 @@ switch-parental-controls list-applications [DEVICE]
 switch-parental-controls set-app-allow-list [DEVICE] <app-id> --allow
 switch-parental-controls set-app-allow-list [DEVICE] <app-id> --no-allow
 
-# Per-player usage data — use --player to filter monthly-summary and daily-breakdown
+# Per-player usage data — use --player to filter monthly-summary and playtime
 switch-parental-controls monthly-summary [DEVICE] --year 2026 --month 4 --player <player-id>
-switch-parental-controls daily-breakdown [DEVICE] --year 2026 --month 4 --player <player-id>
-switch-parental-controls daily-breakdown [DEVICE] --player <player-id>   # current month
+switch-parental-controls playtime [DEVICE] --year 2026 --month 4 --player <player-id>
+switch-parental-controls playtime [DEVICE] --player <player-id>   # current month
 
 # Single-day playtime — use --day to get one specific date instead of the whole month
-switch-parental-controls daily-breakdown [DEVICE] --year 2026 --month 5 --day 15
-switch-parental-controls daily-breakdown [DEVICE] --year 2026 --month 5 --day 15 --player <player-id>
+switch-parental-controls playtime [DEVICE] --year 2026 --month 5 --day 15
+switch-parental-controls playtime [DEVICE] --year 2026 --month 5 --day 15 --player <player-id>
 ```
 
 **Cache management:**
@@ -213,13 +213,13 @@ switch-parental-controls mcp
 
 ## Caching
 
-`monthly-summary` and `daily-breakdown` cache their API responses locally so past months don't require a network round-trip on subsequent calls.
+`monthly-summary` and `playtime` cache their API responses locally so past months don't require a network round-trip on subsequent calls.
 
 **What is cached:** Raw API responses for months where both `--year` and `--month` are provided explicitly and the month is not the current calendar month. Data for the current month — and requests without an explicit year/month — always fetch live from the Nintendo API.
 
 **Cache location:** `~/.config/switch-parental-controls/cache/` (respects `XDG_CONFIG_HOME`), organised as `{device-id}/{YYYY}-{MM}.json`.
 
-**Bypassing the cache:** Pass `--no-cache` to `monthly-summary` or `daily-breakdown` to skip both reading from and writing to the cache. Useful when data looks unexpectedly stale.
+**Bypassing the cache:** Pass `--no-cache` to `monthly-summary` or `playtime` to skip both reading from and writing to the cache. Useful when data looks unexpectedly stale.
 
 **Clearing the cache:** Use the `clear-cache` command (CLI) or `switch_clear_cache` tool (MCP) — see the command examples above.
 
@@ -280,7 +280,7 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
 | `switch_get_device`           | Get detailed status for a specific device                                |
 | `switch_get_today_summary`    | Get today's usage summary for a device                                   |
 | `switch_get_monthly_summary`  | Get monthly usage summary (optionally for a specific month)              |
-| `switch_get_daily_breakdown`  | Get per-day playtime breakdown for a month (current month or historical) |
+| `switch_get_playtime`         | Get per-day playtime breakdown for a month (current month or historical) |
 | `switch_clear_cache`          | Clear locally cached historic play data (all, by device, year, or month) |
 
 #### Playtime Controls

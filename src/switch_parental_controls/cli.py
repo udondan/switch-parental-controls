@@ -23,12 +23,12 @@ from switch_parental_controls.client import switch_client
 from switch_parental_controls.device_cache import devices_from_client, resolve_device_id, save_cache
 from switch_parental_controls.models import (
     AddExtraTimeInput,
-    DailyBreakdownInput,
     DayOfWeek,
     DeviceInput,
     ListDevicesInput,
     MonthlySummaryInput,
     PlayerInput,
+    PlaytimeInput,
     ResponseFormat,
     SetAppAllowListInput,
     SetBedtimeAlarmInput,
@@ -342,7 +342,7 @@ def monthly_summary(
     _execute(run)
 
 
-@cli.command("daily-breakdown")
+@cli.command("playtime")
 @_DEVICE_ARG
 @click.option("--year", type=int, default=None, help="Year (e.g. 2024). Omit for current month.")
 @click.option("--month", type=int, default=None, help="Month 1-12. Required if --year is set.")
@@ -351,12 +351,12 @@ def monthly_summary(
 @click.option("--no-cache", "skip_cache", is_flag=True, default=False, help="Skip cache; always fetch fresh data.")
 @_FORMAT_OPTION
 @click.pass_obj
-def daily_breakdown(
+def playtime(
     obj: dict, device: str | None, year: int | None, month: int | None,
     day: int | None, player_id: str | None, skip_cache: bool, fmt: str
 ) -> None:
     """Get per-day playtime breakdown for a month, or a single day."""
-    from switch_parental_controls.devices import switch_get_daily_breakdown
+    from switch_parental_controls.devices import switch_get_playtime
 
     async def run() -> str:
         token = _require_token()
@@ -364,13 +364,13 @@ def daily_breakdown(
             _populate_state(client, http_session, obj)
             did = _resolve(client, device)
             try:
-                params = DailyBreakdownInput(
+                params = PlaytimeInput(
                     device_id=did, year=year, month=month, day=day, player_id=player_id,
                     response_format=ResponseFormat(fmt), skip_cache=skip_cache
                 )
             except Exception as exc:
                 return f"Error: {exc}"
-            return await switch_get_daily_breakdown(params, None)
+            return await switch_get_playtime(params, None)
 
     _execute(run)
 
@@ -383,7 +383,7 @@ def daily_breakdown(
 def clear_cache_cmd(obj: dict, device: str | None, year: int | None, month: int | None) -> None:
     """Clear locally cached historic play data.
 
-    Removes cached API responses so the next monthly-summary or daily-breakdown
+    Removes cached API responses so the next monthly-summary or playtime
     request fetches fresh data. Without options, clears the entire cache.
     """
     from switch_parental_controls.data_cache import clear_data_cache

@@ -102,8 +102,8 @@ class MonthlySummaryInput(BaseModel):
         return self
 
 
-class DailyBreakdownInput(MonthlySummaryInput):
-    """Input model for daily breakdown queries, extending monthly summary with a day filter."""
+class PlaytimeInput(MonthlySummaryInput):
+    """Input model for playtime queries, extending monthly summary with a day filter."""
 
     year: int | None = Field(
         default=None,
@@ -125,7 +125,7 @@ class DailyBreakdownInput(MonthlySummaryInput):
     )
 
     @model_validator(mode="after")
-    def validate_day(self) -> "DailyBreakdownInput":
+    def validate_day(self) -> "PlaytimeInput":
         if self.day is not None and (self.year is None or self.month is None):
             raise ValueError("year and month are required when day is provided")
         return self
