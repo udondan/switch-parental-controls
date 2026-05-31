@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.1](https://github.com/udondan/switch-parental-controls/compare/v1.1.0...v1.1.1) (2026-05-31)
+
+
+### Bug Fixes
+
+* bump pynintendoparental to 2.4.0 ([#32](https://github.com/udondan/switch-parental-controls/issues/32)) ([d7884c9](https://github.com/udondan/switch-parental-controls/commit/d7884c9206f94d88dd90590d0d673e0140c22765))
+
+
+### Documentation
+
+* fix ToC anchor links on PyPI ([#30](https://github.com/udondan/switch-parental-controls/issues/30)) ([56558d6](https://github.com/udondan/switch-parental-controls/commit/56558d6c896e2b6d8eb8ec568bc5060f3e59f2f3))
+
 ## [1.1.0](https://github.com/udondan/switch-parental-controls/compare/v1.0.0...v1.1.0) (2026-05-29)
 
 
