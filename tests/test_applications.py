@@ -4,6 +4,7 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
+from pynintendoparental.application import ApplicationRegistry
 
 from switch_parental_controls import server
 from tests.conftest import make_mock_application, make_mock_client, make_mock_device
@@ -17,7 +18,7 @@ def mock_app():
 @pytest.fixture
 def mock_device(mock_app):
     device = make_mock_device()
-    device.applications = {mock_app.application_id: mock_app}
+    device.applications.add_application(mock_app)
     return device
 
 
@@ -81,7 +82,7 @@ async def test_list_applications_no_client():
 @pytest.mark.asyncio
 async def test_list_applications_empty(mock_device, mock_client):
     """Should return 'no applications' message when device has no apps."""
-    mock_device.applications = {}
+    mock_device.applications = ApplicationRegistry()
     from switch_parental_controls.applications import switch_list_applications
     from switch_parental_controls.models import DeviceInput
 

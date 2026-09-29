@@ -4,6 +4,8 @@ from datetime import time
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pynintendoparental.application import ApplicationRegistry
+from pynintendoparental.player import PlayerRegistry
 
 
 def make_mock_device(
@@ -77,8 +79,8 @@ def make_mock_device(
             ],
         },
     ]
-    device.players = {}
-    device.applications = {}
+    device.players = PlayerRegistry()
+    device.applications = ApplicationRegistry()
 
     # Async methods
     device.update = AsyncMock()
@@ -116,12 +118,12 @@ def make_mock_device(
 
     def get_player(player_id):
         if player_id in device.players:
-            return device.players[player_id]
+            return device.players.get_player(player_id)
         raise ValueError(f"Player {player_id} not found")
 
     def get_application(app_id):
         if app_id in device.applications:
-            return device.applications[app_id]
+            return device.applications.get_application(app_id)
         raise ValueError(f"Application {app_id} not found")
 
     device.get_player = get_player

@@ -4,6 +4,7 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
+from pynintendoparental.player import PlayerRegistry
 
 from switch_parental_controls import server
 from tests.conftest import make_mock_client, make_mock_device, make_mock_player
@@ -17,7 +18,7 @@ def mock_player():
 @pytest.fixture
 def mock_device(mock_player):
     device = make_mock_device()
-    device.players = {mock_player.player_id: mock_player}
+    device.players.add_player(mock_player)
     return device
 
 
@@ -90,7 +91,7 @@ async def test_list_players_device_not_found():
 @pytest.mark.asyncio
 async def test_list_players_empty(mock_device, mock_client):
     """Should return 'no players' message when device has no players."""
-    mock_device.players = {}
+    mock_device.players = PlayerRegistry()
     from switch_parental_controls.models import DeviceInput
     from switch_parental_controls.players import switch_list_players
 
