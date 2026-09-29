@@ -46,7 +46,11 @@ def make_mock_device(
             "exceededTime": 0,
             "players": [
                 {
-                    "profile": {"playerId": "player-001", "nickname": "TestKid", "imageUri": "https://example.com/avatar.png"},
+                    "profile": {
+                        "playerId": "player-001",
+                        "nickname": "TestKid",
+                        "imageUri": "https://example.com/avatar.png",
+                    },
                     "playingTime": 45,
                     "playedGames": [],
                 }
@@ -59,7 +63,11 @@ def make_mock_device(
             "exceededTime": 10,
             "players": [
                 {
-                    "profile": {"playerId": "player-001", "nickname": "TestKid", "imageUri": "https://example.com/avatar.png"},
+                    "profile": {
+                        "playerId": "player-001",
+                        "nickname": "TestKid",
+                        "imageUri": "https://example.com/avatar.png",
+                    },
                     "playingTime": 75,
                     "playedGames": [],
                 }
@@ -72,7 +80,11 @@ def make_mock_device(
             "exceededTime": 0,
             "players": [
                 {
-                    "profile": {"playerId": "player-001", "nickname": "TestKid", "imageUri": "https://example.com/avatar.png"},
+                    "profile": {
+                        "playerId": "player-001",
+                        "nickname": "TestKid",
+                        "imageUri": "https://example.com/avatar.png",
+                    },
                     "playingTime": 30,
                     "playedGames": [],
                 }

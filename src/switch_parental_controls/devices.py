@@ -332,6 +332,7 @@ async def switch_get_playtime(params: PlaytimeInput, ctx: Context) -> str:
 
         if params.day is not None:
             import calendar as _cal
+
             max_days = _cal.monthrange(year, month)[1]
             if params.day > max_days:
                 return f"Error: day {params.day} is out of range for {year}-{month:02d} (max: {max_days})."
@@ -391,12 +392,14 @@ async def switch_get_playtime(params: PlaytimeInput, ctx: Context) -> str:
 
                 if target_date is not None:
                     d = player_days[0]
-                    return "\n".join([
-                        f"# Day Summary — {player_nickname} on {device.name}",
-                        f"**Date**: {target_date}",
-                        "",
-                        f"- **Playing time**: {format_minutes(d['playingTime'])}",
-                    ])
+                    return "\n".join(
+                        [
+                            f"# Day Summary — {player_nickname} on {device.name}",
+                            f"**Date**: {target_date}",
+                            "",
+                            f"- **Playing time**: {format_minutes(d['playingTime'])}",
+                        ]
+                    )
 
                 month_label = dt_date(year, month, 1).strftime("%B %Y")
                 total = sum(d["playingTime"] for d in player_days)
@@ -481,11 +484,7 @@ async def switch_get_playtime(params: PlaytimeInput, ctx: Context) -> str:
 
             if params.player_id:
                 player_entry = next(
-                    (
-                        p
-                        for p in summary.get("players", [])
-                        if p.get("profile", {}).get("playerId") == params.player_id
-                    ),
+                    (p for p in summary.get("players", []) if p.get("profile", {}).get("playerId") == params.player_id),
                     None,
                 )
                 if player_entry is None:
@@ -502,8 +501,7 @@ async def switch_get_playtime(params: PlaytimeInput, ctx: Context) -> str:
                 )
                 if not daily_stats:
                     return (
-                        f"No daily data for player '{player_nickname}' "
-                        f"in {year}-{month:02d} on device '{device.name}'."
+                        f"No daily data for player '{player_nickname}' in {year}-{month:02d} on device '{device.name}'."
                     )
 
                 if target_date is not None:
@@ -531,12 +529,14 @@ async def switch_get_playtime(params: PlaytimeInput, ctx: Context) -> str:
 
                 if target_date is not None:
                     d = daily_stats[0]
-                    return "\n".join([
-                        f"# Day Summary — {player_nickname} on {device.name}",
-                        f"**Date**: {target_date}",
-                        "",
-                        f"- **Playing time**: {format_minutes(d.get('totalTime', 0))}",
-                    ])
+                    return "\n".join(
+                        [
+                            f"# Day Summary — {player_nickname} on {device.name}",
+                            f"**Date**: {target_date}",
+                            "",
+                            f"- **Playing time**: {format_minutes(d.get('totalTime', 0))}",
+                        ]
+                    )
 
                 month_label = dt_date(year, month, 1).strftime("%B %Y")
                 total = sum(d.get("totalTime", 0) for d in daily_stats)
@@ -577,12 +577,14 @@ async def switch_get_playtime(params: PlaytimeInput, ctx: Context) -> str:
 
             if target_date is not None:
                 d = daily_stats[0]
-                return "\n".join([
-                    f"# Day Summary — {device.name}",
-                    f"**Date**: {target_date}",
-                    "",
-                    f"- **Playing time**: {format_minutes(d.get('totalTime', 0))}",
-                ])
+                return "\n".join(
+                    [
+                        f"# Day Summary — {device.name}",
+                        f"**Date**: {target_date}",
+                        "",
+                        f"- **Playing time**: {format_minutes(d.get('totalTime', 0))}",
+                    ]
+                )
 
             month_label = dt_date(year, month, 1).strftime("%B %Y")
             total = sum(d.get("totalTime", 0) for d in daily_stats)
@@ -667,11 +669,7 @@ async def switch_get_monthly_summary(params: MonthlySummaryInput, ctx: Context) 
         if params.response_format == ResponseFormat.JSON:
             if params.player_id:
                 player_entry = next(
-                    (
-                        p
-                        for p in summary.get("players", [])
-                        if p.get("profile", {}).get("playerId") == params.player_id
-                    ),
+                    (p for p in summary.get("players", []) if p.get("profile", {}).get("playerId") == params.player_id),
                     None,
                 )
                 if player_entry is None:
@@ -694,11 +692,7 @@ async def switch_get_monthly_summary(params: MonthlySummaryInput, ctx: Context) 
 
         if params.player_id:
             player_entry = next(
-                (
-                    p
-                    for p in summary.get("players", [])
-                    if p.get("profile", {}).get("playerId") == params.player_id
-                ),
+                (p for p in summary.get("players", []) if p.get("profile", {}).get("playerId") == params.player_id),
                 None,
             )
             if player_entry is None:

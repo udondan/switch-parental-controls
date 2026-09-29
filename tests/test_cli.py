@@ -893,9 +893,7 @@ def test_playtime_day_flag(runner, monkeypatch, mock_client_with_device, mock_se
             new=AsyncMock(return_value="# Day Summary"),
         ) as mock_tool,
     ):
-        result = runner.invoke(
-            cli, ["playtime", "device-001", "--year", "2026", "--month", "4", "--day", "1"]
-        )
+        result = runner.invoke(cli, ["playtime", "device-001", "--year", "2026", "--month", "4", "--day", "1"])
 
     assert result.exit_code == 0
     params = mock_tool.call_args[0][0]

@@ -10,8 +10,9 @@ All commands use [mise](https://mise.jdx.dev/) as the task runner.
 mise run install          # Create .venv and install all dependencies
 mise run test             # Run unit tests (excludes integration tests)
 mise run test-integration # Run integration tests against the real Nintendo API
-mise run lint             # Run ruff linter
+mise run lint             # Run ruff linter and format check
 mise run lint-fix         # Run ruff and auto-fix issues
+mise run format           # Format code with ruff
 mise run run              # Start the MCP server
 mise run inspect          # Open MCP Inspector (browser UI)
 ```
