@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.2](https://github.com/udondan/switch-parental-controls/compare/v1.1.1...v1.1.2) (2026-09-29)
+
+
+### Bug Fixes
+
+* migrate to MCP Python SDK 2.x ([#42](https://github.com/udondan/switch-parental-controls/issues/42)) ([cb5b85e](https://github.com/udondan/switch-parental-controls/commit/cb5b85efaff3b0c6ef92976ae08bf9b7802c56cf))
+
+
+### Dependencies
+
+* **deps:** update actions/checkout action to v7 ([#33](https://github.com/udondan/switch-parental-controls/issues/33)) ([f1c55a2](https://github.com/udondan/switch-parental-controls/commit/f1c55a2dd8b72210e2cce8258cd909a0089c4621))
+* **deps:** update actions/setup-python action to v7 ([#35](https://github.com/udondan/switch-parental-controls/issues/35)) ([9fc8374](https://github.com/udondan/switch-parental-controls/commit/9fc837481202f579de1c6b9ad7405dc25fe10352))
+* **deps:** update jdx/mise-action action to v5 ([#41](https://github.com/udondan/switch-parental-controls/issues/41)) ([5e45dfb](https://github.com/udondan/switch-parental-controls/commit/5e45dfb713b341ba84e145f15d679523a4a70107))
+* **deps:** update pypa/gh-action-pypi-publish action to v1.14.1 ([#34](https://github.com/udondan/switch-parental-controls/issues/34)) ([2e0db1d](https://github.com/udondan/switch-parental-controls/commit/2e0db1db3fe5e9a26938365189d38b31db303668))
+* **deps:** update pypa/gh-action-pypi-publish action to v1.14.2 ([#36](https://github.com/udondan/switch-parental-controls/issues/36)) ([33ca52c](https://github.com/udondan/switch-parental-controls/commit/33ca52c36968ac9c534111923bbad2ee826116f0))
+
 ## [1.1.1](https://github.com/udondan/switch-parental-controls/compare/v1.1.0...v1.1.1) (2026-05-31)
 
 
