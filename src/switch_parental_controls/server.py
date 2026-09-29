@@ -21,7 +21,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import aiohttp
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ _state: dict[str, Any] = {
 
 
 @asynccontextmanager
-async def lifespan(server: FastMCP):
+async def lifespan(server: MCPServer):
     """Manage the aiohttp session and Nintendo client lifecycle."""
     session_token = os.environ.get("SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN")
     if not session_token:
@@ -76,8 +76,8 @@ async def lifespan(server: FastMCP):
         _state["lang"] = None
 
 
-# Initialize the FastMCP server
-mcp = FastMCP(
+# Initialize the MCP server
+mcp = MCPServer(
     "switch_parental_controls",
     instructions=(
         "This server provides tools to manage Nintendo Switch Parental Controls. "
@@ -90,7 +90,7 @@ mcp = FastMCP(
 
 # Import tool modules to register their tools on the mcp instance.
 # These imports must happen after mcp is defined so the @mcp.tool decorators
-# can reference the correct FastMCP instance.
+# can reference the correct MCPServer instance.
 # NOTE: Do NOT run this file directly (e.g. python server.py or python -m switch_parental_controls.server).
 # Use 'python -m switch_parental_controls mcp' (or 'switch-parental-controls mcp') instead, which
 # routes through __main__.py and ensures this module is always imported as

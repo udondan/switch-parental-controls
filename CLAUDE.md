@@ -25,7 +25,7 @@ pytest tests/test_cli.py -k "test_list_devices" -v
 
 ## Architecture
 
-This is a dual-mode project: the same logic is exposed as both a **Click CLI** and a **FastMCP server** for AI assistant use.
+This is a dual-mode project: the same logic is exposed as both a **Click CLI** and a **MCP server** (`MCPServer` from the MCP Python SDK 2.x) for AI assistant use.
 
 ### Core Data Flow
 
@@ -39,7 +39,7 @@ This is a dual-mode project: the same logic is exposed as both a **Click CLI** a
 
 | Module | Role |
 | --- | --- |
-| `server.py` | FastMCP server setup, lifespan, and tool imports (tools must be imported *after* `mcp` is initialized) |
+| `server.py` | MCP server setup, lifespan, and tool imports (tools must be imported *after* `mcp` is initialized) |
 | `cli.py` | Click CLI; each subcommand delegates to the same functions used by MCP tools |
 | `client.py` | `switch_client()` async context manager for creating and tearing down the aiohttp session and Nintendo client |
 | `models.py` | Pydantic input models with strict validation (`extra="forbid"`) |

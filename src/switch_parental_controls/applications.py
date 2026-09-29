@@ -4,7 +4,7 @@ Provides tools to read application information and manage the allow-list
 (safe launch settings) for games on Nintendo Switch devices.
 """
 
-from mcp.server.fastmcp import Context
+from mcp.server.mcpserver import Context
 from pynintendoparental.enum import SafeLaunchSetting
 
 from switch_parental_controls.models import DeviceInput, ResponseFormat, SetAppAllowListInput
@@ -80,7 +80,7 @@ async def switch_list_applications(params: DeviceInput, ctx: Context) -> str:
             return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         await device.update()
-        apps = list(device.applications.values())
+        apps = list(device.applications)
 
         if not apps:
             return f"No applications tracked on device '{device.name}'."
