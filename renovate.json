@@ -1,14 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>udondan/renovate-config"],
-  "prHourlyLimit": 10,
-  "customManagers": [
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/^mise\\.toml$/"],
-      "matchStrings": ["python = \"(?<currentValue>[^\"]+)\""],
-      "depNameTemplate": "python",
-      "datasourceTemplate": "python-version"
-    }
-  ]
+  "extends": ["github>udondan/renovate-config"]
 }
