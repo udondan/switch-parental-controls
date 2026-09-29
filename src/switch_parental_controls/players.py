@@ -75,7 +75,7 @@ async def switch_list_players(params: DeviceInput, ctx: Context) -> str:
             return f"Error: Device '{params.device_id}' not found. Use switch_list_devices to see available device IDs."
 
         await device.update()
-        players = list(device.players.values())
+        players = list(device.players)
 
         if not players:
             return f"No players found on device '{device.name}'."
@@ -174,7 +174,7 @@ async def switch_get_player(params: PlayerInput, ctx: Context) -> str:
             for app_entry in apps:
                 app_id = app_entry.get("meta", {}).get("applicationId", "unknown")
                 play_time = app_entry.get("playingTime", 0)
-                app_obj = device.applications.get(app_id)
+                app_obj = device.applications.get_application(app_id) if app_id in device.applications else None
                 app_name = app_obj.name if app_obj else app_id
                 lines.append(f"- **{app_name}**: {format_minutes(play_time)}")
         else:

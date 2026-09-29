@@ -486,7 +486,7 @@ async def first_player_id(real_client, first_device_id):
     await device.update()
     if not device.players:
         pytest.skip("No players found on this device")
-    return next(iter(device.players))
+    return next(iter(device.players)).player_id
 
 
 async def test_playtime_player_filter_current_month(first_device_id, first_player_id):
