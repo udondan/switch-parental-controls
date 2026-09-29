@@ -7,7 +7,7 @@ a session token. They work even when no session token is configured.
 import shlex
 
 import aiohttp
-from mcp.server.fastmcp import Context
+from mcp.server.mcpserver import Context
 
 from switch_parental_controls.models import CompleteLoginInput
 from switch_parental_controls.server import _state, mcp

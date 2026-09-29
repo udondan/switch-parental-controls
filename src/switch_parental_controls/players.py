@@ -3,7 +3,7 @@
 Provides tools to read player information associated with Nintendo Switch devices.
 """
 
-from mcp.server.fastmcp import Context
+from mcp.server.mcpserver import Context
 
 from switch_parental_controls.models import DeviceInput, PlayerInput, ResponseFormat
 from switch_parental_controls.server import _state, mcp

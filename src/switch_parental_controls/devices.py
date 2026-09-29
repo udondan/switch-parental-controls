@@ -6,7 +6,7 @@ on Nintendo Switch devices.
 
 from datetime import datetime, time
 
-from mcp.server.fastmcp import Context
+from mcp.server.mcpserver import Context
 from pynintendoparental.enum import DeviceTimerMode, FunctionalRestrictionLevel, RestrictionMode
 
 from switch_parental_controls.data_cache import (
