@@ -21,8 +21,15 @@ description = "Run the MCP server"
 run = ".venv/bin/python -m switch_parental_controls mcp"
 
 [tasks.lint]
-description = "Run linter"
-run = ".venv/bin/ruff check src/ tests/"
+description = "Run linter and check formatting"
+run = [
+  ".venv/bin/ruff check src/ tests/",
+  ".venv/bin/ruff format --check src/ tests/",
+]
+
+[tasks.format]
+description = "Format code"
+run = ".venv/bin/ruff format src/ tests/"
 
 [tasks.lint-fix]
 description = "Run linter and fix issues"

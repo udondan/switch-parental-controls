@@ -319,8 +319,13 @@ def today_summary(obj: dict, device: str | None, fmt: str) -> None:
 @_FORMAT_OPTION
 @click.pass_obj
 def monthly_summary(
-    obj: dict, device: str | None, year: int | None, month: int | None,
-    player_id: str | None, skip_cache: bool, fmt: str
+    obj: dict,
+    device: str | None,
+    year: int | None,
+    month: int | None,
+    player_id: str | None,
+    skip_cache: bool,
+    fmt: str,
 ) -> None:
     """Get the monthly usage summary for a device."""
     from switch_parental_controls.devices import switch_get_monthly_summary
@@ -332,8 +337,12 @@ def monthly_summary(
             did = _resolve(client, device)
             try:
                 params = MonthlySummaryInput(
-                    device_id=did, year=year, month=month, player_id=player_id,
-                    response_format=ResponseFormat(fmt), skip_cache=skip_cache
+                    device_id=did,
+                    year=year,
+                    month=month,
+                    player_id=player_id,
+                    response_format=ResponseFormat(fmt),
+                    skip_cache=skip_cache,
                 )
             except Exception as exc:
                 return f"Error: {exc}"
@@ -352,8 +361,14 @@ def monthly_summary(
 @_FORMAT_OPTION
 @click.pass_obj
 def playtime(
-    obj: dict, device: str | None, year: int | None, month: int | None,
-    day: int | None, player_id: str | None, skip_cache: bool, fmt: str
+    obj: dict,
+    device: str | None,
+    year: int | None,
+    month: int | None,
+    day: int | None,
+    player_id: str | None,
+    skip_cache: bool,
+    fmt: str,
 ) -> None:
     """Get per-day playtime breakdown for a month, or a single day."""
     from switch_parental_controls.devices import switch_get_playtime
@@ -365,8 +380,13 @@ def playtime(
             did = _resolve(client, device)
             try:
                 params = PlaytimeInput(
-                    device_id=did, year=year, month=month, day=day, player_id=player_id,
-                    response_format=ResponseFormat(fmt), skip_cache=skip_cache
+                    device_id=did,
+                    year=year,
+                    month=month,
+                    day=day,
+                    player_id=player_id,
+                    response_format=ResponseFormat(fmt),
+                    skip_cache=skip_cache,
                 )
             except Exception as exc:
                 return f"Error: {exc}"

@@ -268,9 +268,7 @@ _PAST_YEAR = 2026
 _PAST_MONTH = 4
 
 
-async def test_get_monthly_summary_past_month_creates_cache(
-    first_device_id, tmp_path, monkeypatch, real_client
-):
+async def test_get_monthly_summary_past_month_creates_cache(first_device_id, tmp_path, monkeypatch, real_client):
     """Fetching a past month writes a cache file."""
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
@@ -287,9 +285,7 @@ async def test_get_monthly_summary_past_month_creates_cache(
     assert _cache_path(first_device_id, _PAST_YEAR, _PAST_MONTH).exists()
 
 
-async def test_get_monthly_summary_past_month_cache_hit(
-    first_device_id, tmp_path, monkeypatch, real_client
-):
+async def test_get_monthly_summary_past_month_cache_hit(first_device_id, tmp_path, monkeypatch, real_client):
     """Second call for the same past month is served from cache — API not called."""
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
@@ -297,7 +293,10 @@ async def test_get_monthly_summary_past_month_cache_hit(
     from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
 
-    minimal = {"overall": {"dailyStats": [{"date": f"{_PAST_YEAR}-{_PAST_MONTH:02d}-01", "totalTime": 60}]}, "players": []}  # noqa: E501
+    minimal = {
+        "overall": {"dailyStats": [{"date": f"{_PAST_YEAR}-{_PAST_MONTH:02d}-01", "totalTime": 60}]},
+        "players": [],
+    }  # noqa: E501
     save_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH, minimal)
 
     params = MonthlySummaryInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
@@ -327,9 +326,7 @@ async def test_get_monthly_summary_skip_cache(first_device_id, tmp_path, monkeyp
     assert "sentinel" not in result
 
 
-async def test_get_playtime_past_month_creates_cache(
-    first_device_id, tmp_path, monkeypatch, real_client
-):
+async def test_get_playtime_past_month_creates_cache(first_device_id, tmp_path, monkeypatch, real_client):
     """playtime for a past month writes a cache file."""
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
@@ -346,9 +343,7 @@ async def test_get_playtime_past_month_creates_cache(
     assert _cache_path(first_device_id, _PAST_YEAR, _PAST_MONTH).exists()
 
 
-async def test_get_playtime_past_month_cache_hit(
-    first_device_id, tmp_path, monkeypatch, real_client
-):
+async def test_get_playtime_past_month_cache_hit(first_device_id, tmp_path, monkeypatch, real_client):
     """Second playtime call for a past month uses the cache."""
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
@@ -356,7 +351,10 @@ async def test_get_playtime_past_month_cache_hit(
     from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
 
-    minimal = {"overall": {"dailyStats": [{"date": f"{_PAST_YEAR}-{_PAST_MONTH:02d}-01", "totalTime": 60}]}, "players": []}  # noqa: E501
+    minimal = {
+        "overall": {"dailyStats": [{"date": f"{_PAST_YEAR}-{_PAST_MONTH:02d}-01", "totalTime": 60}]},
+        "players": [],
+    }  # noqa: E501
     save_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH, minimal)
 
     params = PlaytimeInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH)
@@ -506,9 +504,7 @@ async def test_playtime_player_filter_past_month(first_device_id, first_player_i
     from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
 
-    params = PlaytimeInput(
-        device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH, player_id=first_player_id
-    )
+    params = PlaytimeInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH, player_id=first_player_id)
     result = await switch_get_playtime(params, MagicMock())
     assert isinstance(result, str)
     assert "Error: Not authenticated" not in result
@@ -544,9 +540,14 @@ def test_cli_monthly_summary_player_flag(cli_runner, first_device_id, first_play
     result = cli_runner.invoke(
         cli,
         [
-            "monthly-summary", first_device_id,
-            "--year", str(_PAST_YEAR), "--month", str(_PAST_MONTH),
-            "--player", first_player_id,
+            "monthly-summary",
+            first_device_id,
+            "--year",
+            str(_PAST_YEAR),
+            "--month",
+            str(_PAST_MONTH),
+            "--player",
+            first_player_id,
         ],
     )
     assert result.exit_code == 0, result.output

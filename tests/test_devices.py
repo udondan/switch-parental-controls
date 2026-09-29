@@ -947,9 +947,7 @@ async def test_playtime_day_filter_current_month(mock_device):
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
-        result = await switch_get_playtime(
-            PlaytimeInput(device_id="device-001", year=2026, month=5, day=1), ctx
-        )
+        result = await switch_get_playtime(PlaytimeInput(device_id="device-001", year=2026, month=5, day=1), ctx)
 
     assert "Day Summary" in result
     assert "2026-05-01" in result
@@ -970,9 +968,7 @@ async def test_playtime_day_filter_historical_month(mock_device):
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
-        result = await switch_get_playtime(
-            PlaytimeInput(device_id="device-001", year=2026, month=4, day=1), ctx
-        )
+        result = await switch_get_playtime(PlaytimeInput(device_id="device-001", year=2026, month=4, day=1), ctx)
 
     assert "Day Summary" in result
     assert "2026-04-01" in result
@@ -993,9 +989,7 @@ async def test_playtime_day_filter_invalid_day(mock_device):
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
-        result = await switch_get_playtime(
-            PlaytimeInput(device_id="device-001", year=2026, month=4, day=31), ctx
-        )
+        result = await switch_get_playtime(PlaytimeInput(device_id="device-001", year=2026, month=4, day=31), ctx)
 
     assert "Error" in result
     assert "31" in result
@@ -1016,9 +1010,7 @@ async def test_playtime_day_filter_no_data(mock_device):
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
-        result = await switch_get_playtime(
-            PlaytimeInput(device_id="device-001", year=2026, month=4, day=15), ctx
-        )
+        result = await switch_get_playtime(PlaytimeInput(device_id="device-001", year=2026, month=4, day=15), ctx)
 
     assert "No data available for 2026-04-15" in result
 
@@ -1085,9 +1077,7 @@ async def test_playtime_day_filter_historical_month_player(mock_device):
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_playtime(
-            PlaytimeInput(
-                device_id="device-001", year=2026, month=4, day=1, player_id="player-001"
-            ),
+            PlaytimeInput(device_id="device-001", year=2026, month=4, day=1, player_id="player-001"),
             ctx,
         )
 
@@ -1163,9 +1153,7 @@ async def test_playtime_current_month_player_filter_markdown(mock_device):
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
-        result = await switch_get_playtime(
-            PlaytimeInput(device_id="device-001", player_id="player-001"), ctx
-        )
+        result = await switch_get_playtime(PlaytimeInput(device_id="device-001", player_id="player-001"), ctx)
 
     assert "TestKid" in result
     assert "May 2026" in result
@@ -1215,9 +1203,7 @@ async def test_playtime_current_month_player_not_found(mock_device):
     ctx = MagicMock()
     with patch("switch_parental_controls.devices.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
-        result = await switch_get_playtime(
-            PlaytimeInput(device_id="device-001", player_id="unknown-player"), ctx
-        )
+        result = await switch_get_playtime(PlaytimeInput(device_id="device-001", player_id="unknown-player"), ctx)
 
     assert "Error" in result
     assert "unknown-player" in result
@@ -1265,8 +1251,7 @@ async def test_playtime_past_month_player_filter_json(mock_device):
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_playtime(
             PlaytimeInput(
-                device_id="device-001", year=2026, month=4, player_id="player-001",
-                response_format=ResponseFormat.JSON
+                device_id="device-001", year=2026, month=4, player_id="player-001", response_format=ResponseFormat.JSON
             ),
             ctx,
         )
@@ -1346,8 +1331,7 @@ async def test_monthly_summary_player_filter_json(mock_device):
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_monthly_summary(
             MonthlySummaryInput(
-                device_id="device-001", year=2026, month=4, player_id="player-001",
-                response_format=ResponseFormat.JSON
+                device_id="device-001", year=2026, month=4, player_id="player-001", response_format=ResponseFormat.JSON
             ),
             ctx,
         )
