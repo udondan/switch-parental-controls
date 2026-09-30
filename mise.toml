@@ -1,0 +1,40 @@
+[settings]
+jobs = 1
+
+[tools]
+python = "3.14"
+
+[tasks.install]
+description = "Install dependencies (requires Python >=3.12 on PATH)"
+run = "python -m venv .venv && .venv/bin/pip install -e '.[dev]'"
+
+[tasks.test]
+description = "Run tests"
+run = ".venv/bin/pytest tests/ -v -m 'not integration'"
+
+[tasks.test-integration]
+description = "Run integration tests against the real Nintendo API (requires .env with SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN)"
+run = ".venv/bin/pytest tests/test_integration.py -v -m integration"
+
+[tasks.run]
+description = "Run the MCP server"
+run = ".venv/bin/python -m switch_parental_controls mcp"
+
+[tasks.lint]
+description = "Run linter and check formatting"
+run = [
+  ".venv/bin/ruff check src/ tests/",
+  ".venv/bin/ruff format --check src/ tests/",
+]
+
+[tasks.format]
+description = "Format code"
+run = ".venv/bin/ruff format src/ tests/"
+
+[tasks.lint-fix]
+description = "Run linter and fix issues"
+run = ".venv/bin/ruff check --fix src/ tests/"
+
+[tasks.inspect]
+description = "Open MCP Inspector connected to the switch_parental_controls server (requires Node.js / npx on PATH)"
+run = "npx @modelcontextprotocol/inspector .venv/bin/python -m switch_parental_controls mcp"
