@@ -29,8 +29,10 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    needs: [changes]
-    if: always() && (needs.changes.result == 'skipped' || (needs.changes.result == 'success' && needs.changes.outputs.src == 'true'))
+    needs: [changes, wait-for-turn]
+    # Waits for the turn as well, so the waiting runs of all open pull requests
+    # don't take the runners at once. Pull requests from forks don't wait.
+    if: always() && (needs.wait-for-turn.result == 'success' || needs.wait-for-turn.result == 'skipped') && (needs.changes.result == 'skipped' || (needs.changes.result == 'success' && needs.changes.outputs.src == 'true'))
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
