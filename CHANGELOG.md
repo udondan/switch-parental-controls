@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.4](https://github.com/udondan/switch-parental-controls/compare/v1.1.3...v1.1.4) (2026-10-24)
+
+
+### Dependencies
+
+* **deps:** update dependency python to v3.15.1 ([#57](https://github.com/udondan/switch-parental-controls/issues/57)) ([aa8c5e8](https://github.com/udondan/switch-parental-controls/commit/aa8c5e8d6108c2fac852252778e8f1b1248d9860))
+* **deps:** update pypa/gh-action-pypi-publish action to v1.14.3 ([#55](https://github.com/udondan/switch-parental-controls/issues/55)) ([2dec4a2](https://github.com/udondan/switch-parental-controls/commit/2dec4a221bce3105e77211bfddedf9e35d257104))
+
 ## [1.1.3](https://github.com/udondan/switch-parental-controls/compare/v1.1.2...v1.1.3) (2026-10-15)
 
 
