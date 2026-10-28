@@ -109,9 +109,26 @@ jobs:
           SWITCH_PARENTAL_CONTROLS_TIMEZONE: ${{ secrets.SWITCH_PARENTAL_CONTROLS_TIMEZONE }}
           SWITCH_PARENTAL_CONTROLS_LANG: ${{ secrets.SWITCH_PARENTAL_CONTROLS_LANG }}
 
+  actions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: jdx/mise-action@08ae2a091c038e1e05ec6f5115dc5c69d5a2a6b8 # v5.1.2
+        with:
+          install_args: actionlint shellcheck
+
+      # Also runs shellcheck over every `run:` block.
+      - name: actionlint
+        run: actionlint
+
   required:
     runs-on: ubuntu-latest
-    needs: [changes, test, integration-test]
+    needs: [changes, test, integration-test, actions]
     if: always()
     steps:
       - name: Check result
@@ -121,6 +138,8 @@ jobs:
                 "${{ needs.test.result }}" == "failure" || \
                 "${{ needs.test.result }}" == "cancelled" || \
                 "${{ needs.integration-test.result }}" == "failure" || \
-                "${{ needs.integration-test.result }}" == "cancelled" ]]; then
+                "${{ needs.integration-test.result }}" == "cancelled" || \
+                "${{ needs.actions.result }}" == "failure" || \
+                "${{ needs.actions.result }}" == "cancelled" ]]; then
             exit 1
           fi
