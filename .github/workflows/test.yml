@@ -39,6 +39,7 @@ jobs:
     if: always() && (needs.wait-for-turn.result == 'success' || needs.wait-for-turn.result == 'skipped') && (needs.changes.result == 'skipped' || (needs.changes.result == 'success' && needs.changes.outputs.src == 'true'))
     permissions:
       contents: read
+      id-token: write # Codecov upload via OIDC
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -55,7 +56,50 @@ jobs:
         run: mise run lint
 
       - name: Run tests
-        run: mise run test
+        run: mise run test-coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          fail_ci_if_error: false
+          files: coverage.xml
+
+  # Codecov reports its result as the check runs codecov/project and
+  # codecov/patch. This job waits for them, so a coverage drop fails the
+  # required job. It is skipped along with the tests, e.g. when only the README
+  # changes, and passes with a warning if Codecov doesn't report in time.
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: github.event_name == 'pull_request' && needs.test.result == 'success'
+    timeout-minutes: 10
+    permissions:
+      checks: read
+    steps:
+      - name: Wait for Codecov
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          for _ in $(seq 30); do
+            checks=$(gh api --paginate --slurp "repos/$REPO/commits/$SHA/check-runs?per_page=100" | jq -c '
+              [.[].check_runs[] | select(.app.slug == "codecov" and (.name == "codecov/project" or .name == "codecov/patch"))]
+              | group_by(.name) | map(max_by(.id))')
+            if [[ $(jq '[.[] | select(.status == "completed")] | length' <<<"$checks") == 2 ]]; then
+              jq -r '.[] | "\(.name): \(.conclusion) (\(.output.title))"' <<<"$checks"
+              failed=$(jq -r '.[] | select(.conclusion != "success" and .conclusion != "neutral") | .name' <<<"$checks")
+              if [[ -n "$failed" ]]; then
+                echo "::error::Coverage check failed: ${failed//$'\n'/, }. Details are linked in the checks of this pull request."
+                exit 1
+              fi
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::warning::Codecov didn't report within 5 minutes, coverage is not checked."
 
   # All runs share one live Nintendo account. Many parallel runs, for
   # example of several Renovate PRs, would send bursts of requests that look
@@ -145,7 +189,7 @@ jobs:
 
   required:
     runs-on: ubuntu-latest
-    needs: [changes, test, integration-test, actions]
+    needs: [changes, test, coverage, integration-test, actions]
     if: always()
     steps:
       - name: Check result
@@ -154,6 +198,8 @@ jobs:
                 "${{ needs.changes.result }}" == "cancelled" || \
                 "${{ needs.test.result }}" == "failure" || \
                 "${{ needs.test.result }}" == "cancelled" || \
+                "${{ needs.coverage.result }}" == "failure" || \
+                "${{ needs.coverage.result }}" == "cancelled" || \
                 "${{ needs.integration-test.result }}" == "failure" || \
                 "${{ needs.integration-test.result }}" == "cancelled" || \
                 "${{ needs.actions.result }}" == "failure" || \
