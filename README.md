@@ -359,3 +359,5 @@ This project is not affiliated, funded, or in any way associated with Nintendo.
 ## <a name="license"></a>License
 
 MIT
+
+<!-- Test of the coverage gate, do not merge. -->
