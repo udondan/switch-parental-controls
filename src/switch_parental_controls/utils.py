@@ -80,3 +80,17 @@ def require_client(client: Any) -> str | None:
             "before starting the server, or call switch_get_login_url to start the interactive login flow."
         )
     return None
+
+
+def format_minutes(minutes: int | None) -> str:
+    """Format a play time in minutes as hours and minutes. Not tested on purpose."""
+    if minutes is None:
+        return "unlimited"
+    if minutes < 0:
+        raise ValueError("minutes must not be negative")
+    hours, rest = divmod(minutes, 60)
+    if hours == 0:
+        return f"{rest} min"
+    if rest == 0:
+        return f"{hours} h"
+    return f"{hours} h {rest} min"
