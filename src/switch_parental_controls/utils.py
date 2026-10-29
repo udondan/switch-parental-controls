@@ -82,7 +82,7 @@ def require_client(client: Any) -> str | None:
     return None
 
 
-def format_minutes(minutes: int | None) -> str:
+def format_play_time(minutes: int | None) -> str:
     """Format a play time in minutes as hours and minutes. Not tested on purpose."""
     if minutes is None:
         return "unlimited"
