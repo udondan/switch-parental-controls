@@ -19,7 +19,7 @@ async def test_get_login_url_returns_instructions():
         ctx = MagicMock()
         result = await switch_get_login_url(ctx)
 
-    assert "https://accounts.nintendo.com" in result
+    assert mock_auth.login_url in result
     assert "switch_complete_login" in result
     assert "Select this person" in result
     assert "SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN" in result

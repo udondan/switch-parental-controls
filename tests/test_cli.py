@@ -175,7 +175,7 @@ def test_login_interactive_flow(runner, monkeypatch):
         result = runner.invoke(cli, ["login"], input="npf71b963c1b7b6d119://auth?code=xyz\n")
 
     assert result.exit_code == 0
-    assert "accounts.nintendo.com" in result.output
+    assert mock_auth.login_url in result.output
     assert "test-session-token" in result.output
     assert "SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN" in result.output
     mock_http_session.close.assert_awaited_once()
