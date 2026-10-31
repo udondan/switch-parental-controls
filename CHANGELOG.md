@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.5](https://github.com/udondan/switch-parental-controls/compare/v1.1.4...v1.1.5) (2026-10-31)
+
+
+### Dependencies
+
+* **deps:** update dependency python to v3.15.2 ([#59](https://github.com/udondan/switch-parental-controls/issues/59)) ([d36e108](https://github.com/udondan/switch-parental-controls/commit/d36e108a737f779b341030cab41c0e75b6d58717))
+* **deps:** update jdx/mise-action action to v5.2.3 ([#62](https://github.com/udondan/switch-parental-controls/issues/62)) ([7f72b47](https://github.com/udondan/switch-parental-controls/commit/7f72b4727b06ed76fb4346654d78a1b0a546ef22))
+* **deps:** update jdx/mise-action action to v5.2.3 ([#64](https://github.com/udondan/switch-parental-controls/issues/64)) ([875f581](https://github.com/udondan/switch-parental-controls/commit/875f581198c99ed4f44b4b269e674488a70e38d6))
+* **deps:** update jdx/mise-action action to v5.2.4 ([#69](https://github.com/udondan/switch-parental-controls/issues/69)) ([1579ef6](https://github.com/udondan/switch-parental-controls/commit/1579ef68b0b8fd91aeb2511d135a5f7baaabf25b))
+* **deps:** update udondan/wait-for-turn action to v1.4.2 ([#68](https://github.com/udondan/switch-parental-controls/issues/68)) ([a9bc1e4](https://github.com/udondan/switch-parental-controls/commit/a9bc1e4d2add28afcff4f1278b6b2e8163a7687c))
+
 ## [1.1.4](https://github.com/udondan/switch-parental-controls/compare/v1.1.3...v1.1.4) (2026-10-24)
 
 
