@@ -1,0 +1,42 @@
+{
+  "skill_name": "switch-parental-controls",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "My kids have been gaming way too much lately. I want to set weekdays to a max of 1 hour and weekends to 2 hours. They should also stop at 9pm every night and be able to start again at 7am. How do I configure this on their Switch? We're in the US (America/New_York timezone).",
+      "expected_output": "A complete sequence of CLI commands: set-timer-mode EACH_DAY_OF_THE_WEEK, then set-day-restrictions for each day of the week with correct --playtime-enabled/--max-playtime-minutes AND --bedtime-enabled/--bedtime-alarm-hour/--bedtime-end-hour flags, plus the correct timezone flag. All commands must be syntactically correct and include the required --bedtime-enabled/--bedtime-disabled flag on every set-day-restrictions call.",
+      "files": [],
+      "expectations": [
+        "Uses set-timer-mode EACH_DAY_OF_THE_WEEK before setting per-day restrictions",
+        "Uses --playtime-enabled --max-playtime-minutes 60 for Monday through Friday",
+        "Uses --playtime-enabled --max-playtime-minutes 120 for Saturday and Sunday",
+        "All set-day-restrictions calls include either --bedtime-enabled or --bedtime-disabled",
+        "Bedtime alarm is set to hour 21 (9pm) when --bedtime-enabled is used",
+        "Bedtime end is set to hour 7 (7am) when --bedtime-enabled is used",
+        "Timezone flag -t America/New_York is applied"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want to check what games my kids played last month (April 2025) and how long each game was played. I have two Switches linked to my account - 'Switch #1' is for my older kid and 'Switch #2' is for the younger one. I want to see the monthly summary for Switch #2 first, then the list of games played on it.",
+      "expected_output": "monthly-summary for Switch #2 with --year 2025 --month 4 and --format json. list-applications is not appropriate here since it only shows today's data. The markdown monthly-summary only shows totals and per-player totals — per-game data requires --format json to get the raw API payload.",
+      "files": [],
+      "expectations": [
+        "Uses monthly-summary with --year 2025 --month 4 targeting Switch #2",
+        "Device name 'Switch #2' is passed correctly (quoted if needed)",
+        "Uses --format json because the prompt asks for per-game data, which the markdown output does not expose"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "It's a Friday night and I want to give my kid 45 extra minutes of playtime tonight as a treat. Also, they've been trying to play games that are rated for older teens - I want to lock the Switch down to only allow content appropriate for younger children. How do I do both of those things?",
+      "expected_output": "add-extra-time command with 45 minutes, and set-content-restriction CHILDREN command.",
+      "files": [],
+      "expectations": [
+        "Uses add-extra-time with 45 minutes",
+        "Uses set-content-restriction with CHILDREN level",
+        "Does not confuse add-extra-time argument order (minutes is the last positional arg)"
+      ]
+    }
+  ]
+}
