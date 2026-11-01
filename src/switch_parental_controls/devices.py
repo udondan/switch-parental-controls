@@ -42,6 +42,28 @@ from switch_parental_controls.utils import (
 )
 
 
+async def _known_player_nickname(device, player_id: str) -> str | None:
+    """Return the nickname of a player linked to the device, or None if unknown.
+
+    Used to tell apart an unknown player ID from a known player who simply has
+    no playtime in the requested period (e.g. on the first day of a month).
+    """
+    if not len(device.players):
+        await device.update()
+    player = device.players.get(player_id)
+    if player is None:
+        return None
+    return player.nickname or player_id
+
+
+def _empty_player_entry(player_id: str, nickname: str) -> dict:
+    """Build a monthly-summary player entry with no playtime."""
+    return {
+        "profile": {"playerId": player_id, "nickname": nickname},
+        "summary": {"dailyStats": []},
+    }
+
+
 def _device_to_dict(device) -> dict:
     """Convert a Device object to a serializable dictionary."""
     return {
@@ -362,10 +384,17 @@ async def switch_get_playtime(params: PlaytimeInput, ctx: Context) -> str:
                             break
 
                 if not player_days:
-                    return (
-                        f"Error: Player '{params.player_id}' not found in daily data for {prefix} "
-                        f"on device '{device.name}'. Use switch_list_players to see available player IDs."
-                    )
+                    player_nickname = await _known_player_nickname(device, params.player_id)
+                    if player_nickname is None:
+                        return (
+                            f"Error: Player '{params.player_id}' not found in daily data for {prefix} "
+                            f"on device '{device.name}'. Use switch_list_players to see available player IDs."
+                        )
+                    if params.response_format != ResponseFormat.JSON and target_date is None:
+                        return (
+                            f"No playtime recorded for player '{player_nickname}' "
+                            f"in {prefix} on device '{device.name}'."
+                        )
 
                 if target_date is not None:
                     player_days = [d for d in player_days if d["date"] == target_date]
@@ -488,11 +517,14 @@ async def switch_get_playtime(params: PlaytimeInput, ctx: Context) -> str:
                     None,
                 )
                 if player_entry is None:
-                    return (
-                        f"Error: Player '{params.player_id}' not found in monthly summary for "
-                        f"{year}-{month:02d} on device '{device.name}'. "
-                        "Use switch_list_players to see available player IDs."
-                    )
+                    nickname = await _known_player_nickname(device, params.player_id)
+                    if nickname is None:
+                        return (
+                            f"Error: Player '{params.player_id}' not found in monthly summary for "
+                            f"{year}-{month:02d} on device '{device.name}'. "
+                            "Use switch_list_players to see available player IDs."
+                        )
+                    player_entry = _empty_player_entry(params.player_id, nickname)
 
                 player_nickname = player_entry.get("profile", {}).get("nickname", params.player_id)
                 daily_stats = sorted(
@@ -673,10 +705,13 @@ async def switch_get_monthly_summary(params: MonthlySummaryInput, ctx: Context) 
                     None,
                 )
                 if player_entry is None:
-                    return (
-                        f"Error: Player '{params.player_id}' not found in monthly summary for "
-                        f"device '{device.name}'. Use switch_list_players to see available player IDs."
-                    )
+                    nickname = await _known_player_nickname(device, params.player_id)
+                    if nickname is None:
+                        return (
+                            f"Error: Player '{params.player_id}' not found in monthly summary for "
+                            f"device '{device.name}'. Use switch_list_players to see available player IDs."
+                        )
+                    player_entry = _empty_player_entry(params.player_id, nickname)
                 return to_json({"device_name": device.name, "player": player_entry})
             return to_json({"device_name": device.name, "summary": summary})
 
@@ -696,10 +731,13 @@ async def switch_get_monthly_summary(params: MonthlySummaryInput, ctx: Context) 
                 None,
             )
             if player_entry is None:
-                return (
-                    f"Error: Player '{params.player_id}' not found in monthly summary for "
-                    f"device '{device.name}'. Use switch_list_players to see available player IDs."
-                )
+                nickname = await _known_player_nickname(device, params.player_id)
+                if nickname is None:
+                    return (
+                        f"Error: Player '{params.player_id}' not found in monthly summary for "
+                        f"device '{device.name}'. Use switch_list_players to see available player IDs."
+                    )
+                player_entry = _empty_player_entry(params.player_id, nickname)
 
             nickname = player_entry.get("profile", {}).get("nickname", params.player_id)
             player_daily = sorted(

@@ -552,3 +552,15 @@ def test_cli_monthly_summary_player_flag(cli_runner, first_device_id, first_play
     )
     assert result.exit_code == 0, result.output
     assert "Error" not in result.output
+
+
+async def test_playtime_player_filter_current_month_json(first_device_id, first_player_id):
+    """Current-month playtime for a known player returns valid JSON, even before anyone has played."""
+    from switch_parental_controls.devices import switch_get_playtime
+    from switch_parental_controls.models import PlaytimeInput
+
+    params = PlaytimeInput(device_id=first_device_id, player_id=first_player_id, response_format="json")
+    result = await switch_get_playtime(params, MagicMock())
+    data = json.loads(result)
+    assert data["player_id"] == first_player_id
+    assert isinstance(data["days"], list)

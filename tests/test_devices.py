@@ -1361,3 +1361,136 @@ async def test_monthly_summary_player_not_found(mock_device):
 
     assert "Error" in result
     assert "unknown-player" in result
+
+
+# --- known players without playtime (e.g. first day of a month) ---
+
+
+def _add_idle_player(device):
+    """Register a player on the device who has no playtime in any mock data."""
+    from tests.conftest import make_mock_player
+
+    device.players.add_player(make_mock_player(player_id="player-idle", nickname="IdleKid"))
+
+
+@pytest.mark.asyncio
+async def test_playtime_current_month_known_player_without_playtime(mock_device):
+    """A known player with no daily entries this month is not reported as an error."""
+    import datetime
+
+    from switch_parental_controls.devices import switch_get_playtime
+    from switch_parental_controls.models import PlaytimeInput
+
+    _add_idle_player(mock_device)
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 4, 15, 12, 0)
+        result = await switch_get_playtime(PlaytimeInput(device_id="device-001", player_id="player-idle"), MagicMock())
+
+    assert "Error" not in result
+    assert "No playtime recorded" in result
+    assert "IdleKid" in result
+
+
+@pytest.mark.asyncio
+async def test_playtime_current_month_known_player_without_playtime_json(mock_device):
+    """JSON output for a known player without playtime has an empty days list."""
+    import datetime
+
+    from switch_parental_controls.devices import switch_get_playtime
+    from switch_parental_controls.models import PlaytimeInput
+
+    _add_idle_player(mock_device)
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 4, 15, 12, 0)
+        result = await switch_get_playtime(
+            PlaytimeInput(device_id="device-001", player_id="player-idle", response_format="json"),
+            MagicMock(),
+        )
+
+    data = json.loads(result)
+    assert data["player_id"] == "player-idle"
+    assert data["player_nickname"] == "IdleKid"
+    assert data["days"] == []
+
+
+@pytest.mark.asyncio
+async def test_playtime_past_month_known_player_without_playtime(mock_device):
+    """A known player missing from a past monthly summary is not reported as an error."""
+    import datetime
+
+    from switch_parental_controls.devices import switch_get_playtime
+    from switch_parental_controls.models import PlaytimeInput
+
+    _add_idle_player(mock_device)
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_playtime(
+            PlaytimeInput(device_id="device-001", year=2026, month=4, player_id="player-idle"), MagicMock()
+        )
+
+    assert "Error" not in result
+    assert "IdleKid" in result
+    mock_device.update.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_playtime_past_month_fetches_players_when_registry_empty(mock_device):
+    """If the player registry is empty, the device is updated before deciding a player is unknown."""
+    import datetime
+
+    from switch_parental_controls.devices import switch_get_playtime
+    from switch_parental_controls.models import PlaytimeInput
+
+    mock_device.update.side_effect = lambda: _add_idle_player(mock_device)
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        result = await switch_get_playtime(
+            PlaytimeInput(device_id="device-001", year=2026, month=4, player_id="player-idle"), MagicMock()
+        )
+
+    mock_device.update.assert_awaited_once()
+    assert "Error" not in result
+    assert "IdleKid" in result
+
+
+@pytest.mark.asyncio
+async def test_monthly_summary_known_player_without_playtime(mock_device):
+    """Monthly summary for a known player without playtime shows zero instead of an error."""
+    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    _add_idle_player(mock_device)
+    result = await switch_get_monthly_summary(
+        MonthlySummaryInput(device_id="device-001", year=2026, month=4, player_id="player-idle", skip_cache=True),
+        MagicMock(),
+    )
+
+    assert "Error" not in result
+    assert "IdleKid" in result
+    assert "**Total playtime**: 0" in result
+
+
+@pytest.mark.asyncio
+async def test_monthly_summary_known_player_without_playtime_json(mock_device):
+    """Monthly summary JSON for a known player without playtime has empty dailyStats."""
+    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    _add_idle_player(mock_device)
+    result = await switch_get_monthly_summary(
+        MonthlySummaryInput(
+            device_id="device-001",
+            year=2026,
+            month=4,
+            player_id="player-idle",
+            skip_cache=True,
+            response_format="json",
+        ),
+        MagicMock(),
+    )
+
+    data = json.loads(result)
+    assert data["player"]["profile"]["nickname"] == "IdleKid"
+    assert data["player"]["summary"]["dailyStats"] == []
