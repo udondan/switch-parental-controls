@@ -1,5 +1,11 @@
 # Nintendo Switch Parental Controls
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/udondan/switch-parental-controls/main/assets/banner-dark.webp">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/udondan/switch-parental-controls/main/assets/banner-light.webp">
+  <img alt="Switch Parental Controls – CLI + MCP Server" src="https://raw.githubusercontent.com/udondan/switch-parental-controls/main/assets/banner-light.webp">
+</picture>
+
 A [CLI](#cli-usage) and [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that expose Nintendo Switch Parental Controls as commands and AI-accessible tools. It wraps the [`pynintendoparental`](https://github.com/pantherale0/pynintendoparental) library and allows humans and AI assistants to monitor and manage parental control settings on Nintendo Switch devices.
 
 ## Table of Contents
