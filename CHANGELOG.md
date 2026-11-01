@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.2.0](https://github.com/udondan/switch-parental-controls/compare/v1.1.4...v1.2.0) (2026-11-01)
+
+
+### Features
+
+* publish a Docker image to Docker Hub ([#80](https://github.com/udondan/switch-parental-controls/issues/80)) ([712f0c1](https://github.com/udondan/switch-parental-controls/commit/712f0c12bc3c8b4fa47fa616558b32c3c123fa75))
+
+
+### Bug Fixes
+
+* don't crash on out-of-range timestamps ([#83](https://github.com/udondan/switch-parental-controls/issues/83)) ([6b3d5ad](https://github.com/udondan/switch-parental-controls/commit/6b3d5ad37422834017f067b38f7307338fb0886b))
+* don't report known players without playtime as not found ([#76](https://github.com/udondan/switch-parental-controls/issues/76)) ([48a8779](https://github.com/udondan/switch-parental-controls/commit/48a8779d3b9cf64385dd08d1c46d1392d1bb7628))
+
+
+### Dependencies
+
+* **deps:** update dependency python to v3.15.2 ([#59](https://github.com/udondan/switch-parental-controls/issues/59)) ([d36e108](https://github.com/udondan/switch-parental-controls/commit/d36e108a737f779b341030cab41c0e75b6d58717))
+* **deps:** update jdx/mise-action action to v5.2.3 ([#62](https://github.com/udondan/switch-parental-controls/issues/62)) ([7f72b47](https://github.com/udondan/switch-parental-controls/commit/7f72b4727b06ed76fb4346654d78a1b0a546ef22))
+* **deps:** update jdx/mise-action action to v5.2.3 ([#64](https://github.com/udondan/switch-parental-controls/issues/64)) ([875f581](https://github.com/udondan/switch-parental-controls/commit/875f581198c99ed4f44b4b269e674488a70e38d6))
+* **deps:** update jdx/mise-action action to v5.2.4 ([#69](https://github.com/udondan/switch-parental-controls/issues/69)) ([1579ef6](https://github.com/udondan/switch-parental-controls/commit/1579ef68b0b8fd91aeb2511d135a5f7baaabf25b))
+* **deps:** update udondan/wait-for-turn action to v1.4.2 ([#68](https://github.com/udondan/switch-parental-controls/issues/68)) ([a9bc1e4](https://github.com/udondan/switch-parental-controls/commit/a9bc1e4d2add28afcff4f1278b6b2e8163a7687c))
+
+
+### Documentation
+
+* add light/dark banner to README ([#79](https://github.com/udondan/switch-parental-controls/issues/79)) ([a024b01](https://github.com/udondan/switch-parental-controls/commit/a024b01e40120adcefae71cc16472e3820f4bbdf))
+* move README badges below the banner ([#81](https://github.com/udondan/switch-parental-controls/issues/81)) ([4fabf8e](https://github.com/udondan/switch-parental-controls/commit/4fabf8e4d07c4ef83e282fc5bed636721ba64c86))
+
 ## [1.1.4](https://github.com/udondan/switch-parental-controls/compare/v1.1.3...v1.1.4) (2026-10-24)
 
 
