@@ -106,3 +106,55 @@ async def test_complete_login_api_error():
     result = await switch_complete_login(params, ctx)
 
     assert "Error" in result
+
+
+@pytest.mark.asyncio
+async def test_get_login_url_failure():
+    """switch_get_login_url should return an error if the authenticator can't be created."""
+    with patch("pynintendoparental.authenticator.Authenticator", side_effect=RuntimeError("boom")):
+        from switch_parental_controls.auth import switch_get_login_url
+
+        result = await switch_get_login_url(MagicMock())
+
+    assert result == "Error: RuntimeError: boom"
+
+
+@pytest.mark.asyncio
+async def test_complete_login_replaces_closed_session():
+    """switch_complete_login should give the pending authenticator a new session if the old one is closed."""
+    mock_auth = MagicMock()
+    mock_auth.async_complete_login = AsyncMock()
+    mock_auth.session_token = "test-session-token"
+    mock_auth._client_session = MagicMock(closed=True)
+    server._state["pending_auth"] = mock_auth
+    server._state["http_session"] = MagicMock(closed=True)
+
+    with patch("pynintendoparental.NintendoParental") as mock_np_class:
+        mock_np_class.create = AsyncMock(return_value=MagicMock(update=AsyncMock()))
+
+        from switch_parental_controls.auth import switch_complete_login
+        from switch_parental_controls.models import CompleteLoginInput
+
+        params = CompleteLoginInput(redirect_url="npf71b963c1b7b6d119://auth#session_token=abc")
+        result = await switch_complete_login(params, MagicMock())
+
+    new_session = server._state["http_session"]
+    assert "Login Successful" in result
+    assert not new_session.closed
+    assert mock_auth._client_session is new_session
+
+
+@pytest.mark.asyncio
+async def test_complete_login_authenticator_without_client_session():
+    """switch_complete_login should fail clearly if the library drops the _client_session attribute."""
+    mock_auth = MagicMock(spec=["async_complete_login", "session_token"])
+    server._state["pending_auth"] = mock_auth
+    server._state["http_session"] = None
+
+    from switch_parental_controls.auth import switch_complete_login
+    from switch_parental_controls.models import CompleteLoginInput
+
+    params = CompleteLoginInput(redirect_url="npf71b963c1b7b6d119://auth#session_token=abc")
+    result = await switch_complete_login(params, MagicMock())
+
+    assert result.startswith("Error: AttributeError: pynintendoparental.Authenticator no longer exposes")

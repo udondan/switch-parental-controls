@@ -43,6 +43,11 @@ asyncio_default_fixture_loop_scope = "module"
 testpaths = ["tests"]
 markers = ["integration: mark a test as an integration test requiring real Nintendo API credentials"]
 
+# Applies to `mise run test-coverage`: the run fails if any line is untested.
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+
 [tool.ruff]
 line-length = 120
 target-version = "py312"

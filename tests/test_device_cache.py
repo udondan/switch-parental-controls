@@ -126,3 +126,24 @@ def test_resolve_empty_cache_no_devices_raises(cache_path):
     client.devices = {}
     with pytest.raises(ValueError, match="No devices"):
         resolve_device_id(client, None)
+
+
+def test_load_cache_not_a_dict(cache_path):
+    cache_path.parent.mkdir(parents=True)
+    cache_path.write_text('["abc123"]')
+    assert load_cache() == {}
+
+
+def test_save_cache_ignores_write_errors(cache_path):
+    from unittest.mock import patch
+
+    with patch("pathlib.Path.write_text", side_effect=OSError("read-only")):
+        save_cache({"abc123": "Switch #1"})
+    assert load_cache() == {}
+
+
+def test_resolve_by_name_without_devices_raises(cache_path):
+    client = MagicMock()
+    client.devices = {}
+    with pytest.raises(ValueError, match="No devices found on this account."):
+        resolve_device_id(client, "Switch #1")
