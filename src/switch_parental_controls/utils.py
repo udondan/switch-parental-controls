@@ -18,7 +18,7 @@ def format_timestamp(ts: float | None) -> str:
         return "never"
     try:
         return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
-    except (ValueError, OSError):
+    except (ValueError, OSError, OverflowError):
         return str(ts)
 
 

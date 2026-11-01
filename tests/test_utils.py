@@ -33,6 +33,10 @@ def test_format_timestamp_invalid():
     assert format_timestamp(float("nan")) == "nan"
 
 
+def test_format_timestamp_out_of_range():
+    assert format_timestamp(1e20) == "1e+20"
+
+
 @pytest.mark.parametrize(
     ("minutes", "expected"),
     [(None, "no limit"), (-1, "no limit"), (0, "0 minutes"), (60, "1h"), (15, "15m"), (90.0, "1h 30m")],
