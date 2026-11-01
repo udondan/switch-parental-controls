@@ -1494,3 +1494,137 @@ async def test_monthly_summary_known_player_without_playtime_json(mock_device):
     data = json.loads(result)
     assert data["player"]["profile"]["nickname"] == "IdleKid"
     assert data["player"]["summary"]["dailyStats"] == []
+
+
+# --- remaining branches ---
+
+
+async def _call_playtime(now, **kwargs):
+    """Call switch_get_playtime with datetime.now() frozen at `now`."""
+    import datetime
+
+    from switch_parental_controls.devices import switch_get_playtime
+    from switch_parental_controls.models import PlaytimeInput
+
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = now
+        mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
+        return await switch_get_playtime(PlaytimeInput(device_id="device-001", **kwargs), MagicMock())
+
+
+@pytest.mark.asyncio
+async def test_get_today_summary_no_entry_for_today(mock_device):
+    import datetime
+
+    from switch_parental_controls.devices import switch_get_today_summary
+    from switch_parental_controls.models import DeviceInput
+
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 6, 1, 12, 0)
+        result = await switch_get_today_summary(DeviceInput(device_id="device-001"), MagicMock())
+
+    assert result == "No usage summary available for today (2026-06-01) on device 'My Switch'."
+
+
+@pytest.mark.asyncio
+async def test_get_today_summary_json(mock_device):
+    import datetime
+
+    from switch_parental_controls.devices import switch_get_today_summary
+    from switch_parental_controls.models import DeviceInput, ResponseFormat
+
+    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+        mock_dt.now.return_value = datetime.datetime(2026, 4, 7, 12, 0)
+        result = await switch_get_today_summary(
+            DeviceInput(device_id="device-001", response_format=ResponseFormat.JSON), MagicMock()
+        )
+
+    data = json.loads(result)
+    assert data["date"] == "2026-04-07"
+    assert data["summary"]["playingTime"] == 45
+
+
+@pytest.mark.asyncio
+async def test_playtime_current_month_day_shows_disabled_and_exceeded_time(mock_device):
+    import datetime
+
+    result = await _call_playtime(datetime.datetime(2026, 5, 15, 12, 0), year=2026, month=5, day=2)
+
+    assert "**Date**: 2026-05-02" in result
+    assert "- **Disabled time**: 5m" in result
+    assert "- **Exceeded time**: 10m" in result
+
+
+@pytest.mark.asyncio
+async def test_playtime_current_month_day_without_data(mock_device):
+    import datetime
+
+    result = await _call_playtime(datetime.datetime(2026, 5, 15, 12, 0), year=2026, month=5, day=3)
+
+    assert result == "No data available for 2026-05-03 on device 'My Switch'."
+
+
+@pytest.mark.asyncio
+async def test_playtime_current_month_player_day_without_data(mock_device):
+    import datetime
+
+    result = await _call_playtime(
+        datetime.datetime(2026, 5, 15, 12, 0), year=2026, month=5, day=3, player_id="player-001"
+    )
+
+    assert result == "No data available for 2026-05-03 for player 'TestKid' on device 'My Switch'."
+
+
+@pytest.mark.asyncio
+async def test_playtime_historical_month_without_summary(mock_device):
+    import datetime
+
+    mock_device.get_monthly_summary = AsyncMock(return_value=None)
+    result = await _call_playtime(datetime.datetime(2026, 5, 15, 12, 0), year=2026, month=4)
+
+    assert result == "No monthly summary available for 2026-04 on device 'My Switch'."
+
+
+@pytest.mark.asyncio
+async def test_playtime_historical_month_player_day_without_data(mock_device):
+    import datetime
+
+    result = await _call_playtime(
+        datetime.datetime(2026, 5, 15, 12, 0), year=2026, month=4, day=15, player_id="player-001"
+    )
+
+    assert result == "No data available for 2026-04-15 for player 'TestKid' on device 'My Switch'."
+
+
+@pytest.mark.asyncio
+async def test_playtime_historical_month_without_daily_data(mock_device):
+    import datetime
+
+    mock_device.get_monthly_summary = AsyncMock(return_value={"overall": {"dailyStats": []}, "players": []})
+    result = await _call_playtime(datetime.datetime(2026, 5, 15, 12, 0), year=2026, month=4)
+
+    assert result == "No daily data in monthly summary for 2026-04 on device 'My Switch'."
+
+
+@pytest.mark.asyncio
+async def test_monthly_summary_json_unknown_player(mock_device):
+    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
+
+    result = await switch_get_monthly_summary(
+        MonthlySummaryInput(device_id="device-001", player_id="nobody", response_format=ResponseFormat.JSON),
+        MagicMock(),
+    )
+
+    assert result.startswith("Error: Player 'nobody' not found in monthly summary")
+
+
+@pytest.mark.asyncio
+async def test_monthly_summary_without_daily_stats(mock_device):
+    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.models import MonthlySummaryInput
+
+    mock_device.get_monthly_summary = AsyncMock(return_value={"overall": {"dailyStats": []}, "players": []})
+    result = await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001"), MagicMock())
+
+    assert "**Period**: Unknown month" in result

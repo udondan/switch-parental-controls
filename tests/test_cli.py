@@ -900,3 +900,156 @@ def test_playtime_day_flag(runner, monkeypatch, mock_client_with_device, mock_se
     assert params.day == 1
     assert params.year == 2026
     assert params.month == 4
+
+
+# ---------------------------------------------------------------------------
+# Input errors
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture()
+def client_ctx(monkeypatch, mock_client_with_device, mock_session):
+    """Provide a token and a mocked client for commands that call the API."""
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN", "fake-token")
+    ctx = _make_client_ctx(mock_client_with_device, mock_session)
+    with patch("switch_parental_controls.cli.switch_client", return_value=ctx):
+        yield
+
+
+@pytest.mark.parametrize(
+    ("args", "expected"),
+    [
+        (["playtime", "--day", "3"], "Error: "),
+        (["set-playtime-limit", "device-001"], "Error: Provide --minutes N or --no-limit."),
+        (["add-extra-time", "lots"], "Error: MINUTES must be an integer, got 'lots'."),
+        (["add-extra-time", "999"], "Error: 1 validation error for AddExtraTimeInput"),
+        (
+            ["set-day-restrictions", "FUNDAY", "--playtime-disabled", "--bedtime-disabled"],
+            "Error: DAY must be one of",
+        ),
+        (["set-restriction-mode", "device-001", "LOUD"], "Error: MODE must be one of"),
+        (["set-content-restriction", "device-001", "ADULTS"], "Error: LEVEL must be one of"),
+        (["set-bedtime-alarm", "nine", "0"], "Error: HOUR and MINUTE must be integers."),
+        (["set-bedtime-end", "seven", "0"], "Error: HOUR and MINUTE must be integers."),
+        (["set-bedtime-end", "3", "0"], "Error: 1 validation error for SetBedtimeEndInput"),
+    ],
+)
+def test_invalid_input(runner, client_ctx, args, expected):
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 1
+    assert result.output.startswith(expected)
+
+
+def test_too_many_arguments(runner, client_ctx):
+    result = runner.invoke(cli, ["add-extra-time", "device-001", "30", "extra"])
+    assert result.exit_code == 2
+    assert "Expected: [DEVICE] MINUTES" in result.output
+
+
+def test_unknown_device(runner, client_ctx):
+    with patch("switch_parental_controls.cli.resolve_device_id", side_effect=ValueError("Device 'x' not found.")):
+        result = runner.invoke(cli, ["get-device", "x"])
+    assert result.exit_code == 1
+    assert "Error: Device 'x' not found." in result.output
+
+
+def test_unexpected_error(runner, monkeypatch):
+    monkeypatch.setenv("SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN", "fake-token")
+    ctx = MagicMock()
+    ctx.__aenter__ = AsyncMock(side_effect=RuntimeError("network down"))
+    ctx.__aexit__ = AsyncMock(return_value=False)
+
+    with patch("switch_parental_controls.cli.switch_client", return_value=ctx):
+        result = runner.invoke(cli, ["list-devices"])
+
+    assert result.exit_code == 1
+    assert "Error: network down" in result.output
+
+
+def test_set_bedtime_alarm_without_device(runner, client_ctx):
+    """Device argument can be left out when the account has a single device."""
+    with patch(
+        "switch_parental_controls.devices.switch_set_bedtime_alarm",
+        new=AsyncMock(return_value="✓ Bedtime alarm set."),
+    ) as mock_tool:
+        result = runner.invoke(cli, ["set-bedtime-alarm", "21", "30"])
+
+    assert result.exit_code == 0
+    params = mock_tool.call_args[0][0]
+    assert (params.device_id, params.hour, params.minute) == ("device-001", 21, 30)
+
+
+def test_logout_failure(runner):
+    with patch("switch_parental_controls.credentials.delete_token", side_effect=PermissionError("denied")):
+        result = runner.invoke(cli, ["logout"])
+    assert result.exit_code == 1
+    assert "Could not remove credentials file: denied" in result.output
+
+
+# ---------------------------------------------------------------------------
+# clear-cache
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture()
+def device_cache():
+    with patch(
+        "switch_parental_controls.device_cache.load_cache",
+        return_value={"device-001": "My Switch"},
+    ) as load_cache:
+        yield load_cache
+
+
+@pytest.fixture()
+def clear_data_cache():
+    with patch("switch_parental_controls.data_cache.clear_data_cache", return_value=2) as clear:
+        yield clear
+
+
+def test_clear_cache_all(runner, clear_data_cache):
+    result = runner.invoke(cli, ["clear-cache"])
+    assert result.exit_code == 0
+    assert result.output == "✓ Cleared 2 cached files.\n"
+    clear_data_cache.assert_called_once_with(device_id=None, year=None, month=None)
+
+
+def test_clear_cache_one_file(runner, clear_data_cache):
+    clear_data_cache.return_value = 1
+    result = runner.invoke(cli, ["clear-cache", "--year", "2026", "--month", "4"])
+    assert result.output == "✓ Cleared 1 cached file.\n"
+    clear_data_cache.assert_called_once_with(device_id=None, year=2026, month=4)
+
+
+def test_clear_cache_nothing_found(runner, clear_data_cache):
+    clear_data_cache.return_value = 0
+    result = runner.invoke(cli, ["clear-cache"])
+    assert result.output == "No cached files found matching the given filters.\n"
+
+
+def test_clear_cache_month_without_year(runner, clear_data_cache):
+    result = runner.invoke(cli, ["clear-cache", "--month", "4"])
+    assert result.exit_code == 2
+    assert "--year is required when --month is given." in result.output
+    clear_data_cache.assert_not_called()
+
+
+@pytest.mark.parametrize("device", ["device-001", "my switch"])
+def test_clear_cache_device_by_id_or_name(runner, device_cache, clear_data_cache, device):
+    result = runner.invoke(cli, ["clear-cache", "--device", device])
+    assert result.exit_code == 0
+    clear_data_cache.assert_called_once_with(device_id="device-001", year=None, month=None)
+
+
+def test_clear_cache_unknown_device(runner, device_cache, clear_data_cache):
+    result = runner.invoke(cli, ["clear-cache", "--device", "Other"])
+    assert result.exit_code == 2
+    assert "Device 'Other' not found. Known devices: 'My Switch' (device-001)" in result.output
+    clear_data_cache.assert_not_called()
+
+
+def test_clear_cache_device_without_device_cache(runner, device_cache, clear_data_cache):
+    """Without a device cache, the given device is taken as an ID."""
+    device_cache.return_value = {}
+    result = runner.invoke(cli, ["clear-cache", "--device", "device-002"])
+    assert result.exit_code == 0
+    clear_data_cache.assert_called_once_with(device_id="device-002", year=None, month=None)

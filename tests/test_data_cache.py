@@ -182,3 +182,47 @@ def test_clear_removes_empty_device_dir(tmp_path, monkeypatch):
     clear_data_cache(device_id="dev-a")
     device_dir = tmp_path / "switch-parental-controls" / "cache" / "dev-a"
     assert not device_dir.exists()
+
+
+def test_save_ignores_write_errors():
+    """Should silently skip caching if the file can't be written."""
+    from unittest.mock import patch
+
+    with patch("pathlib.Path.write_text", side_effect=OSError("read-only")):
+        save_data_cache("dev-a", 2026, 1, {"dummy": True})
+    assert load_data_cache("dev-a", 2026, 1) is None
+
+
+def test_clear_unknown_device():
+    """Should return 0 for a device without a cache directory."""
+    _populate("dev-a", [(2026, 1)])
+    assert clear_data_cache(device_id="dev-b") == 0
+
+
+def test_clear_ignores_listing_errors():
+    """Should return 0 if the cache directory can't be listed."""
+    from unittest.mock import patch
+
+    _populate("dev-a", [(2026, 1)])
+    with patch("pathlib.Path.iterdir", side_effect=OSError("denied")):
+        assert clear_data_cache() == 0
+
+
+def test_clear_ignores_delete_errors():
+    """Should skip files that can't be deleted and keep their directory."""
+    from unittest.mock import patch
+
+    _populate("dev-a", [(2026, 1)])
+    with patch("pathlib.Path.unlink", side_effect=OSError("denied")):
+        assert clear_data_cache() == 0
+    assert load_data_cache("dev-a", 2026, 1) == {"dummy": True}
+
+
+def test_clear_ignores_rmdir_errors(tmp_path):
+    """Should keep going if an empty device directory can't be removed."""
+    from unittest.mock import patch
+
+    _populate("dev-a", [(2026, 1)])
+    with patch("pathlib.Path.rmdir", side_effect=OSError("busy")):
+        assert clear_data_cache() == 1
+    assert (tmp_path / "switch-parental-controls" / "cache" / "dev-a").is_dir()

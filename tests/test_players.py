@@ -144,3 +144,15 @@ async def test_get_player_json(mock_player):
 
     assert data["player"]["player_id"] == "player-001"
     assert data["player"]["nickname"] == "TestKid"
+
+
+@pytest.mark.asyncio
+async def test_get_player_without_apps_played_today(mock_player):
+    """Should say so when the player has no apps played today."""
+    from switch_parental_controls.models import PlayerInput
+    from switch_parental_controls.players import switch_get_player
+
+    mock_player.apps = []
+    result = await switch_get_player(PlayerInput(device_id="device-001", player_id="player-001"), MagicMock())
+
+    assert result.endswith("\nNo apps played today.")
