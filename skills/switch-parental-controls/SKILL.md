@@ -30,6 +30,12 @@ pip install switch-parental-controls
 uvx switch-parental-controls <command>
 ```
 
+**Run with Docker:** the image `udondan/switch-parental-controls` takes the same commands. The token and caches live in `/data`, so mount the volume the user logged in with:
+
+```
+docker run --rm -i -v switch-parental-controls:/data udondan/switch-parental-controls <command>
+```
+
 ## Authentication
 
 **Assume the user is already authenticated.** Every command requires a saved session token, and that token is obtained through a one-time interactive login that a human must complete manually — it cannot be automated. Do not attempt to run `login` yourself.

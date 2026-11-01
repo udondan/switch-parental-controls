@@ -15,6 +15,9 @@ mise run lint-fix         # Run ruff and auto-fix issues
 mise run format           # Format code with ruff
 mise run run              # Start the MCP server
 mise run inspect          # Open MCP Inspector (browser UI)
+mise run docker-build     # Build the Docker image udondan/switch-parental-controls
+mise run docker-register  # Add the image to a Docker MCP Toolkit profile (optional profile arg)
+mise run docker           # Both of the above
 ```
 
 To run a single test:

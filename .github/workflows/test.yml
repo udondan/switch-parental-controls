@@ -18,6 +18,7 @@ jobs:
       pull-requests: read # changed files for paths-filter
     outputs:
       src: ${{ steps.filter.outputs.src }}
+      docker: ${{ steps.filter.outputs.docker }}
     steps:
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
@@ -26,6 +27,14 @@ jobs:
             src:
               - src/**
               - tests/**
+              - mise.toml
+              - pyproject.toml
+              - .github/workflows/test.yml
+            docker:
+              - Dockerfile
+              - .dockerignore
+              - docker-mcp.yml
+              - src/**
               - mise.toml
               - pyproject.toml
               - .github/workflows/test.yml
@@ -174,9 +183,50 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }} # zizmor checks the actions online
 
+  # Builds the image and runs it the way the Docker MCP Toolkit does, through
+  # a profile and the gateway. Needs no Nintendo credentials: the server starts
+  # without a token and listing the tools doesn't call the API.
+  docker:
+    name: Docker
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.docker == 'true'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: jdx/mise-action@6be3c7ed4c21d4f76b208d351d95aac273ebb76d # v5.2.4
+        with:
+          install_args: github:docker/mcp-gateway
+
+      - name: Install docker mcp plugin
+        run: |
+          mkdir -p ~/.docker/cli-plugins
+          ln -s "$(mise which docker-mcp)" ~/.docker/cli-plugins/docker-mcp
+          docker mcp version
+
+      - run: mise run docker-build
+
+      - name: Run the CLI in the image
+        run: |
+          docker run --rm udondan/switch-parental-controls --version
+          docker run --rm udondan/switch-parental-controls --help
+
+      - run: mise run docker-register ci
+
+      # The gateway only verifies signatures of images under mcp/, and finds
+      # the locally built image without pulling it.
+      - name: List tools through the gateway
+        run: |
+          docker mcp gateway run --profile ci --dry-run --verbose 2>&1 | tee gateway.log
+          grep -E "switch-parental-controls: \([1-9][0-9]* tools\)" gateway.log
+
   required:
     runs-on: ubuntu-latest
-    needs: [changes, test, coverage, integration-test, actions]
+    needs: [changes, test, coverage, integration-test, actions, docker]
     if: always()
     steps:
       - name: Check result
@@ -190,6 +240,8 @@ jobs:
                 "${{ needs.integration-test.result }}" == "failure" || \
                 "${{ needs.integration-test.result }}" == "cancelled" || \
                 "${{ needs.actions.result }}" == "failure" || \
-                "${{ needs.actions.result }}" == "cancelled" ]]; then
+                "${{ needs.actions.result }}" == "cancelled" || \
+                "${{ needs.docker.result }}" == "failure" || \
+                "${{ needs.docker.result }}" == "cancelled" ]]; then
             exit 1
           fi

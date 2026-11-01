@@ -1,0 +1,28 @@
+# Server definition for the Docker MCP Toolkit.
+# Add it to a profile with `mise run docker-register` (see README, section Docker MCP Toolkit).
+name: switch-parental-controls
+type: server
+image: udondan/switch-parental-controls:latest
+title: Nintendo Switch Parental Controls
+description: Monitor and manage Nintendo Switch parental controls, playtime limits, bedtime, players and app usage
+secrets:
+  - name: switch-parental-controls.session_token
+    env: SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN
+    example: your-session-token
+    description: Nintendo session token (see README, section Authentication)
+env:
+  - name: SWITCH_PARENTAL_CONTROLS_TIMEZONE
+    value: "{{switch-parental-controls.timezone}}"
+  - name: SWITCH_PARENTAL_CONTROLS_LANG
+    value: "{{switch-parental-controls.lang}}"
+config:
+  - name: switch-parental-controls
+    description: Locale settings (optional)
+    type: object
+    properties:
+      timezone:
+        type: string
+        description: IANA timezone, default Europe/London
+      lang:
+        type: string
+        description: Language code, default en-GB
