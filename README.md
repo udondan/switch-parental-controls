@@ -1,5 +1,12 @@
 # Nintendo Switch Parental Controls
 
+[![PyPI](https://img.shields.io/pypi/v/switch-parental-controls)](https://pypi.org/project/switch-parental-controls/)
+[![Docker](https://img.shields.io/docker/v/udondan/switch-parental-controls?sort=semver&label=docker)](https://hub.docker.com/r/udondan/switch-parental-controls)
+[![Python](https://img.shields.io/pypi/pyversions/switch-parental-controls)](https://pypi.org/project/switch-parental-controls/)
+[![Tests](https://github.com/udondan/switch-parental-controls/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/udondan/switch-parental-controls/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/udondan/switch-parental-controls/graph/badge.svg)](https://codecov.io/gh/udondan/switch-parental-controls)
+[![License](https://img.shields.io/github/license/udondan/switch-parental-controls)](LICENSE)
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/udondan/switch-parental-controls/main/assets/banner-dark.webp">
   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/udondan/switch-parental-controls/main/assets/banner-light.webp">
@@ -17,6 +24,7 @@ A [CLI](#cli-usage) and [MCP (Model Context Protocol)](https://modelcontextproto
   - [Authentication](#authentication)
     - [Interactive login](#interactive-login)
     - [Storing your token](#storing-your-token)
+  - [Docker](#docker)
   - [Global Options](#global-options)
   - [Commands](#commands)
 - [Caching](#caching)
@@ -24,6 +32,7 @@ A [CLI](#cli-usage) and [MCP (Model Context Protocol)](https://modelcontextproto
   - [Running the Server](#running-the-server)
   - [Environment Variables](#environment-variables)
   - [MCP Client Configuration](#mcp-client-configuration)
+  - [Docker MCP Toolkit](#docker-mcp-toolkit)
   - [Available Tools](#available-tools)
 - [Development](#development)
 - [CI](#ci)
@@ -66,6 +75,8 @@ Or install globally:
 pip install switch-parental-controls
 switch-parental-controls --help
 ```
+
+The CLI and the MCP server are also available as the Docker image [`udondan/switch-parental-controls`](https://hub.docker.com/r/udondan/switch-parental-controls) (amd64 and arm64), no Python needed. See [Docker](#docker).
 
 ### <a name="authentication"></a>Authentication
 
@@ -118,6 +129,24 @@ SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN="your-token-here" switch-parental-control
 ```
 
 > **Note**: Session tokens can expire. If you get authentication errors, repeat the login flow.
+
+### <a name="docker"></a>Docker
+
+The image stores the token and the caches in `/data`. Mount a volume there so they survive between runs. Log in once (`-it` for the interactive prompt):
+
+```bash
+docker run --rm -it -v switch-parental-controls:/data udondan/switch-parental-controls login
+```
+
+With the same volume, an alias makes the image behave like an installed `switch-parental-controls`. `-e NAME` without a value passes the variable from your shell, if set:
+
+```bash
+alias switch-parental-controls='docker run --rm -i -e SWITCH_PARENTAL_CONTROLS_TIMEZONE -e SWITCH_PARENTAL_CONTROLS_LANG -v switch-parental-controls:/data udondan/switch-parental-controls'
+
+switch-parental-controls today-summary
+```
+
+Instead of the volume, the token can be passed as `-e SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN`.
 
 ### <a name="global-options"></a>Global Options
 
@@ -269,6 +298,76 @@ Add to your MCP client configuration (e.g. Claude Desktop `claude_desktop_config
 }
 ```
 
+With Docker instead of `uvx`, the entry looks like this. `-e NAME` without a value passes the variable from `env` to the container:
+
+```json
+{
+  "mcpServers": {
+    "nintendo": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e",
+        "SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN",
+        "-e",
+        "SWITCH_PARENTAL_CONTROLS_TIMEZONE",
+        "-e",
+        "SWITCH_PARENTAL_CONTROLS_LANG",
+        "udondan/switch-parental-controls"
+      ],
+      "env": {
+        "SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN": "your-token-here",
+        "SWITCH_PARENTAL_CONTROLS_TIMEZONE": "America/New_York",
+        "SWITCH_PARENTAL_CONTROLS_LANG": "en-US"
+      }
+    }
+  }
+}
+```
+
+To use the token saved by `login` instead (see [Docker](#docker)), replace the token's `-e` pair with `"-v", "switch-parental-controls:/data"`.
+
+### <a name="docker-mcp-toolkit"></a>Docker MCP Toolkit
+
+With the [Docker MCP Toolkit](https://docs.docker.com/ai/mcp-catalog-and-toolkit/toolkit/) in Docker Desktop, the server runs as a container behind the MCP Gateway. The gateway starts the container on demand and passes the tools on to the connected clients. The token is stored as a secret in Docker Desktop instead of in plain text in the client configuration.
+
+Requires Docker Desktop with the MCP Toolkit enabled.
+
+1. Download the server definition [`docker-mcp.yml`](docker-mcp.yml) and add it to a Toolkit profile. The Toolkit only reads such files from its catalogs directory:
+
+   ```bash
+   mkdir -p ~/.docker/mcp/catalogs
+   curl -fsSL https://raw.githubusercontent.com/udondan/switch-parental-controls/main/docker-mcp.yml -o ~/.docker/mcp/catalogs/switch-parental-controls.yml
+   # New profile:
+   docker mcp profile create --name switch-parental-controls --id switch-parental-controls --server "file://$HOME/.docker/mcp/catalogs/switch-parental-controls.yml"
+   # Or add it to an existing profile:
+   docker mcp profile server add default --server "file://$HOME/.docker/mcp/catalogs/switch-parental-controls.yml"
+   ```
+
+2. Store the token as a secret (see [Authentication](#authentication) for how to get one):
+
+   ```bash
+   docker mcp secret set switch-parental-controls.session_token=your-token-here
+   ```
+
+3. Optionally set timezone and language. Without them, the defaults `Europe/London` and `en-GB` apply:
+
+   ```bash
+   docker mcp profile config switch-parental-controls --set switch-parental-controls.timezone=America/New_York --set switch-parental-controls.lang=en-US
+   ```
+
+4. Connect a client to the profile:
+
+   ```bash
+   docker mcp client connect claude-desktop --profile switch-parental-controls
+   ```
+
+   `docker mcp client connect --help` lists other clients such as `claude-code`, `cursor` or `vscode`. This also works in Docker Desktop under _MCP Toolkit_.
+
+`docker mcp gateway run --profile switch-parental-controls --dry-run --verbose` checks the setup without starting a client. It should end with `switch-parental-controls: (20 tools)`.
+
 ### <a name="available-tools"></a>Available Tools
 
 #### Authentication Tools
@@ -340,7 +439,18 @@ mise run lint-fix
 
 # Open MCP Inspector (browser UI to test tools interactively)
 mise run inspect
+
+# Build the Docker image
+mise run docker-build
+
+# Add the local image to a Docker MCP Toolkit profile (default: switch-parental-controls)
+mise run docker-register [profile]
+
+# Both of the above
+mise run docker
 ```
+
+The locally built `udondan/switch-parental-controls:latest` takes the place of the published image, so the Docker MCP Toolkit runs the local build. `docker pull udondan/switch-parental-controls` switches back.
 
 ### MCP Inspector
 
@@ -354,7 +464,9 @@ This opens the inspector connected to the switch_parental_controls server. You c
 
 ## <a name="ci"></a>CI
 
-Tests run automatically on pull requests via GitHub Actions. See [`.github/workflows/test.yml`](.github/workflows/test.yml).
+Tests run automatically on pull requests via GitHub Actions. See [`.github/workflows/test.yml`](.github/workflows/test.yml). The `docker` job builds the image and lists its tools through the Docker MCP Gateway.
+
+Each release runs [`.github/workflows/publish.yml`](.github/workflows/publish.yml), which uploads the package to PyPI and pushes the signed image `udondan/switch-parental-controls` (amd64 and arm64, tags `x.y.z`, `x.y`, `x`, `latest`) to Docker Hub.
 
 ## <a name="legal"></a>Legal
 
