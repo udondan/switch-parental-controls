@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/udondan/switch-parental-controls/compare/v1.2.0...v1.2.1) (2026-11-01)
+
+
+### Dependencies
+
+* **deps:** update python docker tag to v3.15 ([#84](https://github.com/udondan/switch-parental-controls/issues/84)) ([4f3e621](https://github.com/udondan/switch-parental-controls/commit/4f3e621d54a3b6a34eeb9896ecf2d0264046a874))
+
 ## [1.2.0](https://github.com/udondan/switch-parental-controls/compare/v1.1.4...v1.2.0) (2026-11-01)
 
 
