@@ -1,4 +1,18 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>udondan/renovate-config"]
+  "extends": ["github>udondan/renovate-config"],
+  "packageRules": [
+    {
+      "description": "Python in the Docker image and .python-version, which uv, mise and CI read",
+      "matchManagers": ["dockerfile", "pyenv"],
+      "matchDepNames": ["python"],
+      "groupName": "python"
+    },
+    {
+      "description": "uv in mise and the uv image the Docker build copies it from",
+      "matchManagers": ["mise", "dockerfile"],
+      "matchDepNames": ["uv", "ghcr.io/astral-sh/uv"],
+      "groupName": "uv"
+    }
+  ]
 }

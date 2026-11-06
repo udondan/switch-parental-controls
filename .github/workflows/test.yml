@@ -29,6 +29,8 @@ jobs:
               - tests/**
               - mise.toml
               - pyproject.toml
+              - uv.lock
+              - .python-version
               - .github/workflows/test.yml
             docker:
               - Dockerfile
@@ -37,6 +39,8 @@ jobs:
               - src/**
               - mise.toml
               - pyproject.toml
+              - uv.lock
+              - .python-version
               - .github/workflows/test.yml
 
   test:
@@ -58,8 +62,9 @@ jobs:
       - name: Install mise
         uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
 
+      # --locked fails if uv.lock doesn't match pyproject.toml.
       - name: Install dependencies
-        run: mise run install
+        run: uv sync --locked
 
       - name: Run linter
         run: mise run lint
@@ -151,8 +156,9 @@ jobs:
       - name: Install mise
         uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
 
+      # --locked fails if uv.lock doesn't match pyproject.toml.
       - name: Install dependencies
-        run: mise run install
+        run: uv sync --locked
 
       - name: Run integration tests (read-only)
         run: mise run test-integration
@@ -200,7 +206,7 @@ jobs:
 
       - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
-          install_args: github:docker/mcp-gateway
+          install_args: uv github:docker/mcp-gateway
 
       - name: Install docker mcp plugin
         run: |
