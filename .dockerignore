@@ -12,7 +12,7 @@
 assets/
 skills/
 tests/
-dist/
+dist/*.tar.gz
 coverage.xml
 src/nintendo_mcp/
 **/__pycache__/

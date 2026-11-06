@@ -10,9 +10,6 @@ dist/
 build/
 .eggs/
 
-# uv
-uv.lock
-
 # Virtual environments
 .venv/
 venv/

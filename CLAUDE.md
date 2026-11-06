@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 All commands use [mise](https://mise.jdx.dev/) as the task runner.
 
 ```bash
-mise run install          # Create .venv and install all dependencies
+mise run install          # Create .venv and install all dependencies from uv.lock (uv sync)
 mise run test             # Run unit tests (excludes integration tests)
 mise run test-integration # Run integration tests against the real Nintendo API
 mise run lint             # Run ruff linter and format check
@@ -15,7 +15,8 @@ mise run lint-fix         # Run ruff and auto-fix issues
 mise run format           # Format code with ruff
 mise run run              # Start the MCP server
 mise run inspect          # Open MCP Inspector (browser UI)
-mise run docker-build     # Build the Docker image udondan/switch-parental-controls
+mise run build            # Build the wheel and sdist into dist/ (uv build)
+mise run docker-build     # Build the wheel, then the Docker image udondan/switch-parental-controls
 mise run docker-register  # Add the image to a Docker MCP Toolkit profile (optional profile arg)
 mise run docker           # Both of the above
 ```
@@ -23,8 +24,8 @@ mise run docker           # Both of the above
 To run a single test:
 
 ```bash
-pytest tests/test_devices.py::test_specific_name -v
-pytest tests/test_cli.py -k "test_list_devices" -v
+uv run pytest tests/test_devices.py::test_specific_name -v
+uv run pytest tests/test_cli.py -k "test_list_devices" -v
 ```
 
 ## Architecture

@@ -422,7 +422,7 @@ Requires Docker Desktop with the MCP Toolkit enabled.
 
 ## <a name="development"></a>Development
 
-Requires [mise](https://mise.jdx.dev/):
+Requires [mise](https://mise.jdx.dev/). It installs uv and the Python version from `.python-version`; dependencies are locked in `uv.lock`.
 
 ```bash
 # Install dependencies
@@ -440,7 +440,7 @@ mise run lint-fix
 # Open MCP Inspector (browser UI to test tools interactively)
 mise run inspect
 
-# Build the Docker image
+# Build the wheel, then the Docker image from it
 mise run docker-build
 
 # Add the local image to a Docker MCP Toolkit profile (default: switch-parental-controls)
