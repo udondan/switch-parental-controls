@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.2](https://github.com/udondan/switch-parental-controls/compare/v1.2.1...v1.2.2) (2026-11-07)
+
+
+### Dependencies
+
+* **deps:** update dependency zizmor to v1.32.0 ([#90](https://github.com/udondan/switch-parental-controls/issues/90)) ([9077964](https://github.com/udondan/switch-parental-controls/commit/9077964b3f565651d755c489671e12579d51c47c))
+* **deps:** update jdx/mise-action action to v5.2.5 ([#87](https://github.com/udondan/switch-parental-controls/issues/87)) ([21ea060](https://github.com/udondan/switch-parental-controls/commit/21ea0604de75b44d4c1432983d253b5f2cc187bd))
+* **deps:** update jdx/mise-action action to v5.2.6 ([#89](https://github.com/udondan/switch-parental-controls/issues/89)) ([d81a014](https://github.com/udondan/switch-parental-controls/commit/d81a01451b478106fa0581d464d4f9462857641b))
+
 ## [1.2.1](https://github.com/udondan/switch-parental-controls/compare/v1.2.0...v1.2.1) (2026-11-01)
 
 
