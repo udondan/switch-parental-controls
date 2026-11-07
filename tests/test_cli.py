@@ -343,7 +343,7 @@ def test_monthly_summary_no_args(runner, monkeypatch, mock_client_with_device, m
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_get_monthly_summary",
+            "switch_parental_controls.summary.switch_get_monthly_summary",
             new=AsyncMock(return_value="# Monthly Summary"),
         ) as mock_tool,
     ):
@@ -362,7 +362,7 @@ def test_monthly_summary_with_year_month(runner, monkeypatch, mock_client_with_d
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_get_monthly_summary",
+            "switch_parental_controls.summary.switch_get_monthly_summary",
             new=AsyncMock(return_value="# Monthly Summary"),
         ) as mock_tool,
     ):
@@ -397,7 +397,7 @@ def test_set_playtime_limit(runner, monkeypatch, mock_client_with_device, mock_s
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_set_daily_playtime_limit",
+            "switch_parental_controls.device_settings.switch_set_daily_playtime_limit",
             new=AsyncMock(return_value="✓ Daily playtime limit set to 2h for 'My Switch'."),
         ) as mock_tool,
     ):
@@ -415,7 +415,7 @@ def test_set_playtime_limit_remove(runner, monkeypatch, mock_client_with_device,
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_set_daily_playtime_limit",
+            "switch_parental_controls.device_settings.switch_set_daily_playtime_limit",
             new=AsyncMock(return_value="✓ Daily playtime limit removed."),
         ) as mock_tool,
     ):
@@ -449,7 +449,7 @@ def test_add_extra_time(runner, monkeypatch, mock_client_with_device, mock_sessi
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_add_extra_time",
+            "switch_parental_controls.device_settings.switch_add_extra_time",
             new=AsyncMock(return_value="✓ Added 30m of extra playtime."),
         ) as mock_tool,
     ):
@@ -472,7 +472,7 @@ def test_set_timer_mode_daily(runner, monkeypatch, mock_client_with_device, mock
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_set_timer_mode",
+            "switch_parental_controls.device_settings.switch_set_timer_mode",
             new=AsyncMock(return_value="✓ Timer mode set to 'DAILY'."),
         ) as mock_tool,
     ):
@@ -501,7 +501,7 @@ def test_set_day_restrictions_playtime_only(runner, monkeypatch, mock_client_wit
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_set_day_restrictions",
+            "switch_parental_controls.device_settings.switch_set_day_restrictions",
             new=AsyncMock(return_value="✓ Restrictions updated for MONDAY."),
         ) as mock_tool,
     ):
@@ -533,7 +533,7 @@ def test_set_day_restrictions_with_bedtime(runner, monkeypatch, mock_client_with
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_set_day_restrictions",
+            "switch_parental_controls.device_settings.switch_set_day_restrictions",
             new=AsyncMock(return_value="✓ Restrictions updated for FRIDAY."),
         ) as mock_tool,
     ):
@@ -592,7 +592,7 @@ def test_set_restriction_mode(runner, monkeypatch, mock_client_with_device, mock
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_set_restriction_mode",
+            "switch_parental_controls.device_settings.switch_set_restriction_mode",
             new=AsyncMock(return_value="✓ Restriction mode set."),
         ) as mock_tool,
     ):
@@ -615,7 +615,7 @@ def test_set_content_restriction(runner, monkeypatch, mock_client_with_device, m
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_set_content_restriction_level",
+            "switch_parental_controls.device_settings.switch_set_content_restriction_level",
             new=AsyncMock(return_value="✓ Content restriction level set."),
         ) as mock_tool,
     ):
@@ -638,7 +638,7 @@ def test_set_bedtime_alarm(runner, monkeypatch, mock_client_with_device, mock_se
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_set_bedtime_alarm",
+            "switch_parental_controls.device_settings.switch_set_bedtime_alarm",
             new=AsyncMock(return_value="✓ Bedtime alarm set to 21:00."),
         ) as mock_tool,
     ):
@@ -673,7 +673,7 @@ def test_set_bedtime_end(runner, monkeypatch, mock_client_with_device, mock_sess
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_set_bedtime_end_time",
+            "switch_parental_controls.device_settings.switch_set_bedtime_end_time",
             new=AsyncMock(return_value="✓ Bedtime end set to 07:00."),
         ) as mock_tool,
     ):
@@ -845,7 +845,7 @@ def test_monthly_summary_player_flag(runner, monkeypatch, mock_client_with_devic
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_get_monthly_summary",
+            "switch_parental_controls.summary.switch_get_monthly_summary",
             new=AsyncMock(return_value="# Monthly Summary"),
         ) as mock_tool,
     ):
@@ -867,7 +867,7 @@ def test_playtime_player_flag(runner, monkeypatch, mock_client_with_device, mock
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_get_playtime",
+            "switch_parental_controls.playtime.switch_get_playtime",
             new=AsyncMock(return_value="# Daily Breakdown"),
         ) as mock_tool,
     ):
@@ -889,7 +889,7 @@ def test_playtime_day_flag(runner, monkeypatch, mock_client_with_device, mock_se
     with (
         patch("switch_parental_controls.cli.switch_client", return_value=ctx),
         patch(
-            "switch_parental_controls.devices.switch_get_playtime",
+            "switch_parental_controls.playtime.switch_get_playtime",
             new=AsyncMock(return_value="# Day Summary"),
         ) as mock_tool,
     ):
@@ -969,7 +969,7 @@ def test_unexpected_error(runner, monkeypatch):
 def test_set_bedtime_alarm_without_device(runner, client_ctx):
     """Device argument can be left out when the account has a single device."""
     with patch(
-        "switch_parental_controls.devices.switch_set_bedtime_alarm",
+        "switch_parental_controls.device_settings.switch_set_bedtime_alarm",
         new=AsyncMock(return_value="✓ Bedtime alarm set."),
     ) as mock_tool:
         result = runner.invoke(cli, ["set-bedtime-alarm", "21", "30"])

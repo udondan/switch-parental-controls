@@ -37,7 +37,7 @@ This is a dual-mode project: the same logic is exposed as both a **Click CLI** a
 1. `cli.py` or `server.py` receives a command/tool call
 2. Inputs are validated via Pydantic models in `models.py`
 3. `switch_client()` context manager in `client.py` creates the `NintendoParental` client and an `aiohttp` session
-4. Business logic in `devices.py`, `players.py`, `applications.py`, `auth.py` calls the underlying library
+4. Business logic in the tool modules (`devices.py`, `summary.py`, `playtime.py`, `device_settings.py`, `players.py`, `applications.py`, `auth.py`) calls the underlying library
 5. Results are returned as formatted markdown strings (or JSON if `response_format="json"`)
 
 ### Key Modules
@@ -45,13 +45,19 @@ This is a dual-mode project: the same logic is exposed as both a **Click CLI** a
 | Module | Role |
 | --- | --- |
 | `server.py` | MCP server setup, lifespan, and tool imports (tools must be imported *after* `mcp` is initialized) |
-| `cli.py` | Click CLI; each subcommand delegates to the same functions used by MCP tools |
+| `cli.py` | Click CLI; each subcommand delegates to the same functions used by MCP tools, mostly through `_run_tool()` |
+| `devices.py` | Tools to list devices, get device details and today's summary |
+| `summary.py` | Monthly summary tool and the shared loading of monthly summaries (with cache) |
+| `playtime.py` | Per-day playtime breakdown tool |
+| `device_settings.py` | Tools that change device settings (limits, timer, bedtime, restrictions) and clear the cache |
+| `players.py`, `applications.py` | Player and application tools |
+| `tools.py` | Helpers shared by the tool modules: `get_device()`, `tool_annotations()`, `list_device_items()` |
 | `client.py` | `switch_client()` async context manager for creating and tearing down the aiohttp session and Nintendo client |
 | `models.py` | Pydantic input models with strict validation (`extra="forbid"`) |
 | `device_cache.py` | Resolves device names→IDs; caches locally to avoid repeated API calls |
 | `data_cache.py` | Caches monthly summary responses; always re-fetches current month |
 | `credentials.py` | XDG-compliant token storage under `~/.config/switch-parental-controls/` |
-| `utils.py` | `handle_error()` for consistent error messages; `to_json()` for pretty-print JSON |
+| `utils.py` | `ToolError` and `handle_error()` for consistent error messages; `to_json()` for pretty-print JSON |
 
 ### Shared State
 
@@ -65,6 +71,17 @@ Both CLI and MCP tools share a `_state` dict (in `server.py`) holding:
 ### Tool Registration Pattern
 
 MCP tools are registered via `@mcp.tool()` decorators in their respective modules. They are imported in `server.py` after `mcp` is initialized — importing before initialization would break decorator registration.
+
+Tool bodies follow one pattern: `device = get_device(params.device_id)` inside `try`, and `except Exception as e: return handle_error(e)`. Helpers raise `ToolError` with a finished error message, which `handle_error()` returns unchanged.
+
+## Code Quality
+
+CI runs [qlty](https://qlty.sh) (`.qlty/qlty.toml`): `qlty check --all` must report no issues, and a pull request must not add code smells (complexity, duplication, many parameters or returns) compared to main. Check locally before pushing:
+
+```bash
+qlty check --all
+qlty smells --all
+```
 
 ### Device Resolution
 

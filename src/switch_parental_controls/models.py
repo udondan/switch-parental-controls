@@ -1,6 +1,7 @@
 """Shared Pydantic models and enums for the Nintendo MCP server."""
 
 from enum import StrEnum
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -24,27 +25,35 @@ class DayOfWeek(StrEnum):
     SUNDAY = "SUNDAY"
 
 
-class DeviceInput(BaseModel):
-    """Input model requiring a device ID."""
+_STRICT_CONFIG = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
+RESPONSE_FORMAT_DESCRIPTION = "Output format: 'markdown' for human-readable or 'json' for machine-readable."
+DEVICE_ID_DESCRIPTION = "The unique device ID. Use switch_list_devices to find it."
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
+
+def _response_format_field():
+    return Field(default=ResponseFormat.MARKDOWN, description=RESPONSE_FORMAT_DESCRIPTION)
+
+
+class _DeviceModel(BaseModel):
+    """Base for input models that take a device ID."""
+
+    model_config = _STRICT_CONFIG
+
+    device_id: str = Field(..., description=DEVICE_ID_DESCRIPTION)
+
+
+class DeviceInput(_DeviceModel):
+    """Input model requiring a device ID."""
 
     device_id: str = Field(
         ...,
         description="The unique device ID (e.g. 'abc123'). Use switch_list_devices to find it.",
     )
-    response_format: ResponseFormat = Field(
-        default=ResponseFormat.MARKDOWN,
-        description="Output format: 'markdown' for human-readable or 'json' for machine-readable.",
-    )
+    response_format: ResponseFormat = _response_format_field()
 
 
-class DeviceOnlyInput(BaseModel):
+class DeviceOnlyInput(_DeviceModel):
     """Input model requiring only a device ID (no response format)."""
-
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
-
-    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
 
 
 class ListDevicesInput(BaseModel):
@@ -52,18 +61,12 @@ class ListDevicesInput(BaseModel):
 
     model_config = ConfigDict(validate_assignment=True, extra="forbid")
 
-    response_format: ResponseFormat = Field(
-        default=ResponseFormat.MARKDOWN,
-        description="Output format: 'markdown' for human-readable or 'json' for machine-readable.",
-    )
+    response_format: ResponseFormat = _response_format_field()
 
 
-class MonthlySummaryInput(BaseModel):
+class MonthlySummaryInput(_DeviceModel):
     """Input model for monthly summary queries."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
-
-    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     year: int | None = Field(
         default=None,
         description="Year for the summary (e.g. 2024). If omitted, returns the most recent available summary.",
@@ -76,10 +79,7 @@ class MonthlySummaryInput(BaseModel):
         ge=1,
         le=12,
     )
-    response_format: ResponseFormat = Field(
-        default=ResponseFormat.MARKDOWN,
-        description="Output format: 'markdown' for human-readable or 'json' for machine-readable.",
-    )
+    response_format: ResponseFormat = _response_format_field()
     player_id: str | None = Field(
         default=None,
         description="Filter results to a specific player ID. Use switch_list_players to find player IDs.",
@@ -131,12 +131,9 @@ class PlaytimeInput(MonthlySummaryInput):
         return self
 
 
-class SetPlaytimeLimitInput(BaseModel):
+class SetPlaytimeLimitInput(_DeviceModel):
     """Input model for setting the daily playtime limit."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
-
-    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     minutes: int = Field(
         ...,
         description="Daily playtime limit in minutes (0-360). Use -1 to remove the limit entirely.",
@@ -145,12 +142,9 @@ class SetPlaytimeLimitInput(BaseModel):
     )
 
 
-class AddExtraTimeInput(BaseModel):
+class AddExtraTimeInput(_DeviceModel):
     """Input model for adding extra playtime."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
-
-    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     minutes: int = Field(
         ...,
         description="Number of extra minutes to add for today (must be positive).",
@@ -159,12 +153,9 @@ class AddExtraTimeInput(BaseModel):
     )
 
 
-class SetTimerModeInput(BaseModel):
+class SetTimerModeInput(_DeviceModel):
     """Input model for setting the timer mode."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
-
-    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     mode: str = Field(
         ...,
         description="Timer mode: 'DAILY' for a single limit for all days, or 'EACH_DAY_OF_THE_WEEK' for per-day limits.",  # noqa: E501
@@ -172,12 +163,9 @@ class SetTimerModeInput(BaseModel):
     )
 
 
-class SetDayRestrictionsInput(BaseModel):
+class SetDayRestrictionsInput(_DeviceModel):
     """Input model for setting per-day-of-week restrictions."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
-
-    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     day_of_week: DayOfWeek = Field(..., description="Day of the week to configure (e.g. 'MONDAY').")
     playtime_enabled: bool = Field(..., description="Whether to enable a playtime limit for this day.")
     max_playtime_minutes: int | None = Field(
@@ -212,30 +200,27 @@ class SetDayRestrictionsInput(BaseModel):
         le=59,
     )
 
+    def _has_bedtime_values(self) -> bool:
+        """True if any bedtime field is set to something other than its default."""
+        hours_set = self.bedtime_alarm_hour is not None or self.bedtime_end_hour is not None
+        return hours_set or bool(self.bedtime_alarm_minute) or bool(self.bedtime_end_minute)
+
     @model_validator(mode="after")
     def validate_playtime_and_bedtime(self) -> "SetDayRestrictionsInput":
         if self.playtime_enabled and self.max_playtime_minutes is None:
             raise ValueError("max_playtime_minutes is required when playtime_enabled is true")
         if not self.playtime_enabled and self.max_playtime_minutes is not None:
             raise ValueError("max_playtime_minutes must not be set when playtime_enabled is false")
-        if self.bedtime_enabled and (self.bedtime_alarm_hour is None or self.bedtime_end_hour is None):
+        if self.bedtime_enabled and None in (self.bedtime_alarm_hour, self.bedtime_end_hour):
             raise ValueError("bedtime_alarm_hour and bedtime_end_hour are required when bedtime_enabled is true")
-        if not self.bedtime_enabled and (
-            self.bedtime_alarm_hour is not None
-            or self.bedtime_end_hour is not None
-            or (self.bedtime_alarm_minute or 0) != 0
-            or (self.bedtime_end_minute or 0) != 0
-        ):
+        if not self.bedtime_enabled and self._has_bedtime_values():
             raise ValueError("bedtime fields must not be set when bedtime_enabled is false")
         return self
 
 
-class SetRestrictionModeInput(BaseModel):
+class SetRestrictionModeInput(_DeviceModel):
     """Input model for setting the restriction mode."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
-
-    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     mode: str = Field(
         ...,
         description=(
@@ -246,12 +231,9 @@ class SetRestrictionModeInput(BaseModel):
     )
 
 
-class SetContentRestrictionInput(BaseModel):
+class SetContentRestrictionInput(_DeviceModel):
     """Input model for setting the content restriction level."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
-
-    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     level: str = Field(
         ...,
         description=(
@@ -262,81 +244,68 @@ class SetContentRestrictionInput(BaseModel):
     )
 
 
-class SetBedtimeAlarmInput(BaseModel):
+def _hour_field(description: str, max_hour: int):
+    return Field(..., description=description, ge=0, le=max_hour)
+
+
+def _minute_field(description: str):
+    return Field(default=0, description=description, ge=0, le=59)
+
+
+class _BedtimeTimeInput(_DeviceModel):
+    """Base for setting a bedtime time. 00:00 disables the setting."""
+
+    setting_name: ClassVar[str]
+    hour_label: ClassVar[str]
+    valid_hours: ClassVar[range]
+
+    hour: int
+    minute: int
+
+    @model_validator(mode="after")
+    def validate_time(self):
+        if self.hour == 0 and self.minute != 0:
+            raise ValueError(f"Use hour=0, minute=0 to disable the {self.setting_name}")
+        if self.hour != 0 and self.hour not in self.valid_hours:
+            first, last = self.valid_hours[0], self.valid_hours[-1]
+            raise ValueError(f"{self.hour_label} must be between {first} and {last}, or 0 to disable")
+        return self
+
+
+class SetBedtimeAlarmInput(_BedtimeTimeInput):
     """Input model for setting the bedtime alarm."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
+    hour: int = _hour_field("Hour for the bedtime alarm (16-23). Use 0 with minute=0 to disable the alarm.", 23)
+    minute: int = _minute_field("Minute for the bedtime alarm (0-59).")
 
-    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
-    hour: int = Field(
-        ...,
-        description="Hour for the bedtime alarm (16-23). Use 0 with minute=0 to disable the alarm.",
-        ge=0,
-        le=23,
-    )
-    minute: int = Field(
-        default=0,
-        description="Minute for the bedtime alarm (0-59).",
-        ge=0,
-        le=59,
-    )
-
-    @model_validator(mode="after")
-    def validate_alarm_time(self) -> "SetBedtimeAlarmInput":
-        if self.hour == 0 and self.minute != 0:
-            raise ValueError("Use hour=0, minute=0 to disable the bedtime alarm")
-        if self.hour != 0 and self.hour not in range(16, 24):
-            raise ValueError("Bedtime alarm hour must be between 16 and 23, or 0 to disable")
-        return self
+    setting_name: ClassVar[str] = "bedtime alarm"
+    hour_label: ClassVar[str] = "Bedtime alarm hour"
+    valid_hours: ClassVar[range] = range(16, 24)
 
 
-class SetBedtimeEndInput(BaseModel):
+class SetBedtimeEndInput(_BedtimeTimeInput):
     """Input model for setting the bedtime end time."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
-
-    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
-    hour: int = Field(
-        ...,
-        description="Hour when bedtime ends and the device can be used again (5-9). Use 0 with minute=0 to disable.",
-        ge=0,
-        le=9,
+    hour: int = _hour_field(
+        "Hour when bedtime ends and the device can be used again (5-9). Use 0 with minute=0 to disable.", 9
     )
-    minute: int = Field(
-        default=0,
-        description="Minute when bedtime ends (0-59).",
-        ge=0,
-        le=59,
-    )
+    minute: int = _minute_field("Minute when bedtime ends (0-59).")
 
-    @model_validator(mode="after")
-    def validate_end_time(self) -> "SetBedtimeEndInput":
-        if self.hour == 0 and self.minute != 0:
-            raise ValueError("Use hour=0, minute=0 to disable the bedtime end time")
-        if self.hour != 0 and self.hour not in range(5, 10):
-            raise ValueError("Bedtime end hour must be between 5 and 9, or 0 to disable")
-        return self
+    setting_name: ClassVar[str] = "bedtime end time"
+    hour_label: ClassVar[str] = "Bedtime end hour"
+    valid_hours: ClassVar[range] = range(5, 10)
 
 
-class PlayerInput(BaseModel):
+class PlayerInput(_DeviceModel):
     """Input model for player queries."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
-
-    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     player_id: str = Field(..., description="The unique player ID. Use switch_list_players to find it.")
-    response_format: ResponseFormat = Field(
-        default=ResponseFormat.MARKDOWN,
-        description="Output format: 'markdown' for human-readable or 'json' for machine-readable.",
-    )
+    response_format: ResponseFormat = _response_format_field()
 
 
-class SetAppAllowListInput(BaseModel):
+class SetAppAllowListInput(_DeviceModel):
     """Input model for setting an application's allow-list status."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
-
-    device_id: str = Field(..., description="The unique device ID. Use switch_list_devices to find it.")
     application_id: str = Field(
         ...,
         description="The unique application ID. Use switch_list_applications to find it.",
@@ -353,7 +322,7 @@ class SetAppAllowListInput(BaseModel):
 class ClearCacheInput(BaseModel):
     """Input model for clearing the historic data cache."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
+    model_config = _STRICT_CONFIG
 
     device_id: str | None = Field(
         default=None,
@@ -382,7 +351,7 @@ class ClearCacheInput(BaseModel):
 class CompleteLoginInput(BaseModel):
     """Input model for completing the Nintendo login flow."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
+    model_config = _STRICT_CONFIG
 
     redirect_url: str = Field(
         ...,

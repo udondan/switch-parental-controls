@@ -46,6 +46,18 @@ def devices_from_client(client) -> dict[str, str]:
     return {dev_id: dev.name for dev_id, dev in client.devices.items()}
 
 
+def _match_device(cache: dict[str, str], name_or_id: str) -> str | None:
+    """Return the ID of the cached device with this ID or (case-insensitive) name."""
+    if name_or_id in cache:
+        return name_or_id
+    lower = name_or_id.lower()
+    return next((dev_id for dev_id, dev_name in cache.items() if dev_name.lower() == lower), None)
+
+
+def _candidates(cache: dict[str, str]) -> str:
+    return ", ".join(f"'{name}' ({did})" for did, name in cache.items())
+
+
 def resolve_device_id(client, name_or_id: str | None) -> str:
     """Return a device_id from a name, ID, or None (auto-select if single device).
 
@@ -61,25 +73,31 @@ def resolve_device_id(client, name_or_id: str | None) -> str:
         if cache:
             save_cache(cache)
 
-    def _candidates() -> str:
-        return ", ".join(f"'{name}' ({did})" for did, name in cache.items())
-
-    if name_or_id is not None:
-        if len(cache) == 0:
-            raise ValueError("No devices found on this account.")
-        # Exact ID match
-        if name_or_id in cache:
-            return name_or_id
-        # Case-insensitive name match
-        lower = name_or_id.lower()
-        for dev_id, dev_name in cache.items():
-            if dev_name.lower() == lower:
-                return dev_id
-        raise ValueError(f"Device '{name_or_id}' not found. Available: {_candidates()}")
-
-    # No device specified — auto-select if unambiguous
     if len(cache) == 0:
         raise ValueError("No devices found on this account.")
+
+    if name_or_id is not None:
+        dev_id = _match_device(cache, name_or_id)
+        if dev_id is None:
+            raise ValueError(f"Device '{name_or_id}' not found. Available: {_candidates(cache)}")
+        return dev_id
+
+    # No device specified — auto-select if unambiguous
     if len(cache) == 1:
         return next(iter(cache))
-    raise ValueError(f"Multiple devices found — pass a name or ID. Available: {_candidates()}")
+    raise ValueError(f"Multiple devices found — pass a name or ID. Available: {_candidates(cache)}")
+
+
+def find_cached_device_id(name_or_id: str) -> str:
+    """Return the device ID for a name or ID, using only the cache.
+
+    Without a cache, the value is taken as a device ID. Raises ValueError if the
+    cache doesn't know the device.
+    """
+    cache = load_cache()
+    if not cache:
+        return name_or_id
+    dev_id = _match_device(cache, name_or_id)
+    if dev_id is None:
+        raise ValueError(f"Device '{name_or_id}' not found. Known devices: {_candidates(cache)}")
+    return dev_id

@@ -158,7 +158,7 @@ async def test_get_today_summary(mock_device):
 @pytest.mark.asyncio
 async def test_set_daily_playtime_limit(mock_device):
     """Should call update_max_daily_playtime and return confirmation."""
-    from switch_parental_controls.devices import switch_set_daily_playtime_limit
+    from switch_parental_controls.device_settings import switch_set_daily_playtime_limit
     from switch_parental_controls.models import SetPlaytimeLimitInput
 
     ctx = MagicMock()
@@ -172,7 +172,7 @@ async def test_set_daily_playtime_limit(mock_device):
 @pytest.mark.asyncio
 async def test_set_daily_playtime_limit_remove(mock_device):
     """Should remove the limit when minutes=-1."""
-    from switch_parental_controls.devices import switch_set_daily_playtime_limit
+    from switch_parental_controls.device_settings import switch_set_daily_playtime_limit
     from switch_parental_controls.models import SetPlaytimeLimitInput
 
     ctx = MagicMock()
@@ -188,7 +188,7 @@ async def test_set_daily_playtime_limit_remove(mock_device):
 @pytest.mark.asyncio
 async def test_add_extra_time(mock_device):
     """Should call add_extra_time and return confirmation."""
-    from switch_parental_controls.devices import switch_add_extra_time
+    from switch_parental_controls.device_settings import switch_add_extra_time
     from switch_parental_controls.models import AddExtraTimeInput
 
     ctx = MagicMock()
@@ -207,7 +207,7 @@ async def test_set_restriction_mode_forced(mock_device):
     """Should set FORCED_TERMINATION mode."""
     from pynintendoparental.enum import RestrictionMode
 
-    from switch_parental_controls.devices import switch_set_restriction_mode
+    from switch_parental_controls.device_settings import switch_set_restriction_mode
     from switch_parental_controls.models import SetRestrictionModeInput
 
     ctx = MagicMock()
@@ -224,7 +224,7 @@ async def test_set_restriction_mode_alarm(mock_device):
     """Should set ALARM mode."""
     from pynintendoparental.enum import RestrictionMode
 
-    from switch_parental_controls.devices import switch_set_restriction_mode
+    from switch_parental_controls.device_settings import switch_set_restriction_mode
     from switch_parental_controls.models import SetRestrictionModeInput
 
     ctx = MagicMock()
@@ -240,7 +240,7 @@ async def test_set_restriction_mode_alarm(mock_device):
 @pytest.mark.asyncio
 async def test_set_bedtime_alarm(mock_device):
     """Should set bedtime alarm and return confirmation."""
-    from switch_parental_controls.devices import switch_set_bedtime_alarm
+    from switch_parental_controls.device_settings import switch_set_bedtime_alarm
     from switch_parental_controls.models import SetBedtimeAlarmInput
 
     ctx = MagicMock()
@@ -253,7 +253,7 @@ async def test_set_bedtime_alarm(mock_device):
 @pytest.mark.asyncio
 async def test_set_bedtime_alarm_disable(mock_device):
     """Should disable bedtime alarm when hour=0, minute=0."""
-    from switch_parental_controls.devices import switch_set_bedtime_alarm
+    from switch_parental_controls.device_settings import switch_set_bedtime_alarm
     from switch_parental_controls.models import SetBedtimeAlarmInput
 
     ctx = MagicMock()
@@ -269,8 +269,8 @@ async def test_set_bedtime_alarm_disable(mock_device):
 @pytest.mark.asyncio
 async def test_get_monthly_summary_default(mock_device):
     """Should return most-recent monthly summary in markdown when no year/month given."""
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     ctx = MagicMock()
     result = await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001"), ctx)
@@ -285,8 +285,8 @@ async def test_get_monthly_summary_specific_month(mock_device):
     """Should pass a datetime to get_monthly_summary when year and month are provided."""
     from datetime import datetime
 
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     ctx = MagicMock()
     await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001", year=2025, month=3), ctx)
@@ -299,8 +299,8 @@ async def test_get_monthly_summary_none(mock_device):
     """Should return 'no summary' message when API returns None."""
     mock_device.get_monthly_summary = AsyncMock(return_value=None)
 
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     ctx = MagicMock()
     result = await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001"), ctx)
@@ -311,8 +311,8 @@ async def test_get_monthly_summary_none(mock_device):
 @pytest.mark.asyncio
 async def test_get_monthly_summary_json(mock_device):
     """Should return JSON output when response_format is json."""
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     ctx = MagicMock()
     result = await switch_get_monthly_summary(
@@ -344,7 +344,7 @@ async def test_set_timer_mode_daily(mock_device):
     """Should call set_timer_mode with DAILY enum and return confirmation."""
     from pynintendoparental.enum import DeviceTimerMode
 
-    from switch_parental_controls.devices import switch_set_timer_mode
+    from switch_parental_controls.device_settings import switch_set_timer_mode
     from switch_parental_controls.models import SetTimerModeInput
 
     ctx = MagicMock()
@@ -360,7 +360,7 @@ async def test_set_timer_mode_each_day(mock_device):
     """Should call set_timer_mode with EACH_DAY_OF_THE_WEEK enum."""
     from pynintendoparental.enum import DeviceTimerMode
 
-    from switch_parental_controls.devices import switch_set_timer_mode
+    from switch_parental_controls.device_settings import switch_set_timer_mode
     from switch_parental_controls.models import SetTimerModeInput
 
     ctx = MagicMock()
@@ -376,7 +376,7 @@ async def test_set_timer_mode_each_day(mock_device):
 @pytest.mark.asyncio
 async def test_set_day_restrictions_playtime_only(mock_device):
     """Should call set_daily_restrictions with playtime enabled, no bedtime."""
-    from switch_parental_controls.devices import switch_set_day_restrictions
+    from switch_parental_controls.device_settings import switch_set_day_restrictions
     from switch_parental_controls.models import SetDayRestrictionsInput
 
     ctx = MagicMock()
@@ -407,7 +407,7 @@ async def test_set_day_restrictions_playtime_only(mock_device):
 @pytest.mark.asyncio
 async def test_set_day_restrictions_bedtime_only(mock_device):
     """Should call set_daily_restrictions with bedtime enabled, no playtime."""
-    from switch_parental_controls.devices import switch_set_day_restrictions
+    from switch_parental_controls.device_settings import switch_set_day_restrictions
     from switch_parental_controls.models import SetDayRestrictionsInput
 
     ctx = MagicMock()
@@ -523,7 +523,7 @@ def test_set_day_restrictions_bedtime_enabled_without_hours_rejected():
 @pytest.mark.asyncio
 async def test_set_bedtime_end_time(mock_device):
     """Should call set_bedtime_end_time with the specified time."""
-    from switch_parental_controls.devices import switch_set_bedtime_end_time
+    from switch_parental_controls.device_settings import switch_set_bedtime_end_time
     from switch_parental_controls.models import SetBedtimeEndInput
 
     ctx = MagicMock()
@@ -537,7 +537,7 @@ async def test_set_bedtime_end_time(mock_device):
 @pytest.mark.asyncio
 async def test_set_bedtime_end_time_disable(mock_device):
     """Should return 'disabled' confirmation when hour=0 and minute=0."""
-    from switch_parental_controls.devices import switch_set_bedtime_end_time
+    from switch_parental_controls.device_settings import switch_set_bedtime_end_time
     from switch_parental_controls.models import SetBedtimeEndInput
 
     ctx = MagicMock()
@@ -555,7 +555,7 @@ async def test_set_content_restriction_level(mock_device):
     """Should set content restriction level."""
     from pynintendoparental.enum import FunctionalRestrictionLevel
 
-    from switch_parental_controls.devices import switch_set_content_restriction_level
+    from switch_parental_controls.device_settings import switch_set_content_restriction_level
     from switch_parental_controls.models import SetContentRestrictionInput
 
     ctx = MagicMock()
@@ -574,8 +574,8 @@ async def test_set_content_restriction_level(mock_device):
 async def test_playtime_no_client():
     """Should return auth error when client is not set."""
     server._state["client"] = None
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
     result = await switch_get_playtime(PlaytimeInput(device_id="device-001"), ctx)
@@ -589,11 +589,11 @@ async def test_playtime_current_month_markdown(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_playtime(PlaytimeInput(device_id="device-001"), ctx)
 
@@ -612,11 +612,11 @@ async def test_playtime_current_month_total(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_playtime(PlaytimeInput(device_id="device-001"), ctx)
 
@@ -631,11 +631,11 @@ async def test_playtime_current_month_json(mock_device):
     import json
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput, ResponseFormat
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_playtime(
             PlaytimeInput(device_id="device-001", response_format=ResponseFormat.JSON), ctx
@@ -656,11 +656,11 @@ async def test_playtime_historical_month_markdown(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_playtime(PlaytimeInput(device_id="device-001", year=2026, month=4), ctx)
@@ -678,11 +678,11 @@ async def test_playtime_historical_month_json(mock_device):
     import json
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput, ResponseFormat
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_playtime(
@@ -704,12 +704,12 @@ async def test_playtime_no_data(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     mock_device.daily_summaries = []
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_playtime(PlaytimeInput(device_id="device-001"), ctx)
 
@@ -720,8 +720,8 @@ async def test_playtime_no_data(mock_device):
 @pytest.mark.asyncio
 async def test_playtime_unknown_device(mock_client):
     """Should return error for unknown device ID."""
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
     result = await switch_get_playtime(PlaytimeInput(device_id="no-such-device"), ctx)
@@ -738,11 +738,11 @@ async def test_monthly_summary_cache_miss_saves(mock_device):
     import datetime
 
     from switch_parental_controls.data_cache import load_data_cache
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.summary.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
@@ -759,8 +759,8 @@ async def test_monthly_summary_cache_hit_skips_api(mock_device):
     import datetime
 
     from switch_parental_controls.data_cache import save_data_cache
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     cached_summary = {
         "overall": {
@@ -771,7 +771,7 @@ async def test_monthly_summary_cache_hit_skips_api(mock_device):
     save_data_cache("device-001", 2026, 4, cached_summary)
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.summary.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
@@ -790,14 +790,14 @@ async def test_monthly_summary_skip_cache_bypasses_hit(mock_device):
     import datetime
 
     from switch_parental_controls.data_cache import load_data_cache, save_data_cache
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     old_data = {"overall": {"dailyStats": [{"date": "2026-04-01", "totalTime": 1}]}, "players": []}
     save_data_cache("device-001", 2026, 4, old_data)
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.summary.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
@@ -817,11 +817,11 @@ async def test_monthly_summary_current_month_not_cached(mock_device):
     import datetime
 
     from switch_parental_controls.data_cache import load_data_cache
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.summary.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
@@ -838,11 +838,11 @@ async def test_monthly_summary_no_year_not_cached(mock_device):
     import datetime
 
     from switch_parental_controls.data_cache import _cache_dir
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.summary.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001"), ctx)
 
@@ -862,11 +862,11 @@ async def test_playtime_past_month_cache_miss_saves(mock_device):
     import datetime
 
     from switch_parental_controls.data_cache import load_data_cache
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
@@ -883,8 +883,8 @@ async def test_playtime_past_month_cache_hit_skips_api(mock_device):
     import datetime
 
     from switch_parental_controls.data_cache import save_data_cache
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     save_data_cache(
         "device-001",
@@ -894,7 +894,7 @@ async def test_playtime_past_month_cache_hit_skips_api(mock_device):
     )
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         with patch("switch_parental_controls.data_cache.datetime") as mock_dc_dt:
@@ -912,11 +912,11 @@ async def test_playtime_current_month_not_cached(mock_device):
     import datetime
 
     from switch_parental_controls.data_cache import load_data_cache
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         await switch_get_playtime(PlaytimeInput(device_id="device-001"), ctx)
 
@@ -941,11 +941,11 @@ async def test_playtime_day_filter_current_month(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_playtime(PlaytimeInput(device_id="device-001", year=2026, month=5, day=1), ctx)
 
@@ -961,11 +961,11 @@ async def test_playtime_day_filter_historical_month(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_playtime(PlaytimeInput(device_id="device-001", year=2026, month=4, day=1), ctx)
@@ -982,11 +982,11 @@ async def test_playtime_day_filter_invalid_day(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_playtime(PlaytimeInput(device_id="device-001", year=2026, month=4, day=31), ctx)
@@ -1003,11 +1003,11 @@ async def test_playtime_day_filter_no_data(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_playtime(PlaytimeInput(device_id="device-001", year=2026, month=4, day=15), ctx)
@@ -1021,11 +1021,11 @@ async def test_playtime_day_filter_with_player(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_playtime(
             PlaytimeInput(device_id="device-001", year=2026, month=5, day=1, player_id="player-001"), ctx
@@ -1045,11 +1045,11 @@ async def test_playtime_day_filter_current_month_json(mock_device):
     import json
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput, ResponseFormat
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_playtime(
             PlaytimeInput(device_id="device-001", year=2026, month=5, day=1, response_format=ResponseFormat.JSON),
@@ -1069,11 +1069,11 @@ async def test_playtime_day_filter_historical_month_player(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_playtime(
@@ -1098,7 +1098,7 @@ async def test_clear_cache_tool_all(tmp_path, monkeypatch):
     """switch_clear_cache with no filters should clear all cache files."""
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
     from switch_parental_controls.data_cache import save_data_cache
-    from switch_parental_controls.devices import switch_clear_cache
+    from switch_parental_controls.device_settings import switch_clear_cache
     from switch_parental_controls.models import ClearCacheInput
 
     save_data_cache("device-001", 2026, 3, {"dummy": True})
@@ -1112,7 +1112,7 @@ async def test_clear_cache_tool_all(tmp_path, monkeypatch):
 @pytest.mark.asyncio
 async def test_clear_cache_tool_no_files():
     """switch_clear_cache with empty cache returns 'no files found' message."""
-    from switch_parental_controls.devices import switch_clear_cache
+    from switch_parental_controls.device_settings import switch_clear_cache
     from switch_parental_controls.models import ClearCacheInput
 
     ctx = MagicMock()
@@ -1125,7 +1125,7 @@ async def test_clear_cache_tool_specific_month(tmp_path, monkeypatch):
     """switch_clear_cache with year+month should delete only matching files."""
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
     from switch_parental_controls.data_cache import load_data_cache, save_data_cache
-    from switch_parental_controls.devices import switch_clear_cache
+    from switch_parental_controls.device_settings import switch_clear_cache
     from switch_parental_controls.models import ClearCacheInput
 
     save_data_cache("device-001", 2026, 3, {"dummy": True})
@@ -1147,11 +1147,11 @@ async def test_playtime_current_month_player_filter_markdown(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_playtime(PlaytimeInput(device_id="device-001", player_id="player-001"), ctx)
 
@@ -1171,11 +1171,11 @@ async def test_playtime_current_month_player_filter_json(mock_device):
     import json
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput, ResponseFormat
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_playtime(
             PlaytimeInput(device_id="device-001", player_id="player-001", response_format=ResponseFormat.JSON),
@@ -1197,11 +1197,11 @@ async def test_playtime_current_month_player_not_found(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         result = await switch_get_playtime(PlaytimeInput(device_id="device-001", player_id="unknown-player"), ctx)
 
@@ -1215,11 +1215,11 @@ async def test_playtime_past_month_player_filter_markdown(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_playtime(
@@ -1242,11 +1242,11 @@ async def test_playtime_past_month_player_filter_json(mock_device):
     import json
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput, ResponseFormat
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_playtime(
@@ -1271,11 +1271,11 @@ async def test_playtime_past_month_player_not_found(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_playtime(
@@ -1295,11 +1295,11 @@ async def test_monthly_summary_player_filter_markdown(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.summary.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_monthly_summary(
@@ -1322,11 +1322,11 @@ async def test_monthly_summary_player_filter_json(mock_device):
     import json
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.summary.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_monthly_summary(
@@ -1348,11 +1348,11 @@ async def test_monthly_summary_player_not_found(mock_device):
     import datetime
     from unittest.mock import patch
 
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     ctx = MagicMock()
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.summary.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_monthly_summary(
@@ -1378,11 +1378,11 @@ async def test_playtime_current_month_known_player_without_playtime(mock_device)
     """A known player with no daily entries this month is not reported as an error."""
     import datetime
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     _add_idle_player(mock_device)
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 4, 15, 12, 0)
         result = await switch_get_playtime(PlaytimeInput(device_id="device-001", player_id="player-idle"), MagicMock())
 
@@ -1396,11 +1396,11 @@ async def test_playtime_current_month_known_player_without_playtime_json(mock_de
     """JSON output for a known player without playtime has an empty days list."""
     import datetime
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     _add_idle_player(mock_device)
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 4, 15, 12, 0)
         result = await switch_get_playtime(
             PlaytimeInput(device_id="device-001", player_id="player-idle", response_format="json"),
@@ -1418,11 +1418,11 @@ async def test_playtime_past_month_known_player_without_playtime(mock_device):
     """A known player missing from a past monthly summary is not reported as an error."""
     import datetime
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     _add_idle_player(mock_device)
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_playtime(
@@ -1439,11 +1439,11 @@ async def test_playtime_past_month_fetches_players_when_registry_empty(mock_devi
     """If the player registry is empty, the device is updated before deciding a player is unknown."""
     import datetime
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     mock_device.update.side_effect = lambda: _add_idle_player(mock_device)
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = datetime.datetime(2026, 5, 15, 12, 0)
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         result = await switch_get_playtime(
@@ -1458,8 +1458,8 @@ async def test_playtime_past_month_fetches_players_when_registry_empty(mock_devi
 @pytest.mark.asyncio
 async def test_monthly_summary_known_player_without_playtime(mock_device):
     """Monthly summary for a known player without playtime shows zero instead of an error."""
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     _add_idle_player(mock_device)
     result = await switch_get_monthly_summary(
@@ -1475,8 +1475,8 @@ async def test_monthly_summary_known_player_without_playtime(mock_device):
 @pytest.mark.asyncio
 async def test_monthly_summary_known_player_without_playtime_json(mock_device):
     """Monthly summary JSON for a known player without playtime has empty dailyStats."""
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     _add_idle_player(mock_device)
     result = await switch_get_monthly_summary(
@@ -1503,10 +1503,10 @@ async def _call_playtime(now, **kwargs):
     """Call switch_get_playtime with datetime.now() frozen at `now`."""
     import datetime
 
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
-    with patch("switch_parental_controls.devices.datetime") as mock_dt:
+    with patch("switch_parental_controls.playtime.datetime") as mock_dt:
         mock_dt.now.return_value = now
         mock_dt.side_effect = lambda *a, **kw: datetime.datetime(*a, **kw)
         return await switch_get_playtime(PlaytimeInput(device_id="device-001", **kwargs), MagicMock())
@@ -1608,8 +1608,8 @@ async def test_playtime_historical_month_without_daily_data(mock_device):
 
 @pytest.mark.asyncio
 async def test_monthly_summary_json_unknown_player(mock_device):
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     result = await switch_get_monthly_summary(
         MonthlySummaryInput(device_id="device-001", player_id="nobody", response_format=ResponseFormat.JSON),
@@ -1621,8 +1621,8 @@ async def test_monthly_summary_json_unknown_player(mock_device):
 
 @pytest.mark.asyncio
 async def test_monthly_summary_without_daily_stats(mock_device):
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     mock_device.get_monthly_summary = AsyncMock(return_value={"overall": {"dailyStats": []}, "players": []})
     result = await switch_get_monthly_summary(MonthlySummaryInput(device_id="device-001"), MagicMock())

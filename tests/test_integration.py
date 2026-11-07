@@ -106,8 +106,8 @@ async def test_get_today_summary(first_device_id):
 
 async def test_get_monthly_summary(first_device_id):
     """Monthly summary should be returned without an auth error."""
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     result = await switch_get_monthly_summary(MonthlySummaryInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
@@ -116,8 +116,8 @@ async def test_get_monthly_summary(first_device_id):
 
 async def test_get_playtime(first_device_id):
     """Daily breakdown for the current month should be returned without an auth error."""
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     result = await switch_get_playtime(PlaytimeInput(device_id=first_device_id), MagicMock())
     assert isinstance(result, str)
@@ -273,8 +273,8 @@ async def test_get_monthly_summary_past_month_creates_cache(first_device_id, tmp
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     from switch_parental_controls.data_cache import _cache_path
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     device = real_client.devices[first_device_id]
     device.get_monthly_summary = AsyncMock(return_value=device.last_month_summary)
@@ -290,8 +290,8 @@ async def test_get_monthly_summary_past_month_cache_hit(first_device_id, tmp_pat
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     from switch_parental_controls.data_cache import save_data_cache
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     minimal = {
         "overall": {"dailyStats": [{"date": f"{_PAST_YEAR}-{_PAST_MONTH:02d}-01", "totalTime": 60}]},
@@ -312,8 +312,8 @@ async def test_get_monthly_summary_skip_cache(first_device_id, tmp_path, monkeyp
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     from switch_parental_controls.data_cache import save_data_cache
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     save_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH, {"sentinel": True})
 
@@ -331,8 +331,8 @@ async def test_get_playtime_past_month_creates_cache(first_device_id, tmp_path, 
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     from switch_parental_controls.data_cache import _cache_path
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     device = real_client.devices[first_device_id]
     device.get_monthly_summary = AsyncMock(return_value=device.last_month_summary)
@@ -348,8 +348,8 @@ async def test_get_playtime_past_month_cache_hit(first_device_id, tmp_path, monk
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     from switch_parental_controls.data_cache import save_data_cache
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     minimal = {
         "overall": {"dailyStats": [{"date": f"{_PAST_YEAR}-{_PAST_MONTH:02d}-01", "totalTime": 60}]},
@@ -370,7 +370,7 @@ async def test_switch_clear_cache(first_device_id, tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     from switch_parental_controls.data_cache import _cache_path, save_data_cache
-    from switch_parental_controls.devices import switch_clear_cache
+    from switch_parental_controls.device_settings import switch_clear_cache
     from switch_parental_controls.models import ClearCacheInput
 
     save_data_cache(first_device_id, _PAST_YEAR, _PAST_MONTH, {"x": 1})
@@ -489,8 +489,8 @@ async def first_player_id(real_client, first_device_id):
 
 async def test_playtime_player_filter_current_month(first_device_id, first_player_id):
     """Daily breakdown filtered by player should return that player's data without error."""
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     params = PlaytimeInput(device_id=first_device_id, player_id=first_player_id)
     result = await switch_get_playtime(params, MagicMock())
@@ -501,8 +501,8 @@ async def test_playtime_player_filter_current_month(first_device_id, first_playe
 
 async def test_playtime_player_filter_past_month(first_device_id, first_player_id):
     """Daily breakdown for a past month filtered by player should return per-player daily stats."""
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     params = PlaytimeInput(device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH, player_id=first_player_id)
     result = await switch_get_playtime(params, MagicMock())
@@ -512,8 +512,8 @@ async def test_playtime_player_filter_past_month(first_device_id, first_player_i
 
 async def test_monthly_summary_player_filter(first_device_id, first_player_id):
     """Monthly summary filtered by player should return that player's total and breakdown."""
-    from switch_parental_controls.devices import switch_get_monthly_summary
     from switch_parental_controls.models import MonthlySummaryInput
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
     params = MonthlySummaryInput(
         device_id=first_device_id, year=_PAST_YEAR, month=_PAST_MONTH, player_id=first_player_id
@@ -556,8 +556,8 @@ def test_cli_monthly_summary_player_flag(cli_runner, first_device_id, first_play
 
 async def test_playtime_player_filter_current_month_json(first_device_id, first_player_id):
     """Current-month playtime for a known player returns valid JSON, even before anyone has played."""
-    from switch_parental_controls.devices import switch_get_playtime
     from switch_parental_controls.models import PlaytimeInput
+    from switch_parental_controls.playtime import switch_get_playtime
 
     params = PlaytimeInput(device_id=first_device_id, player_id=first_player_id, response_format="json")
     result = await switch_get_playtime(params, MagicMock())

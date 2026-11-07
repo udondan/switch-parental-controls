@@ -11,6 +11,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/switch-parental-controls)](https://pypi.org/project/switch-parental-controls/)
 [![Tests](https://github.com/udondan/switch-parental-controls/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/udondan/switch-parental-controls/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/udondan/switch-parental-controls/graph/badge.svg)](https://codecov.io/gh/udondan/switch-parental-controls)
+[![Maintainability](https://qlty.sh/gh/udondan/projects/switch-parental-controls/maintainability.svg)](https://qlty.sh/gh/udondan/projects/switch-parental-controls)
 [![License](https://img.shields.io/github/license/udondan/switch-parental-controls)](LICENSE)
 
 A [CLI](#cli-usage) and [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that expose Nintendo Switch Parental Controls as commands and AI-accessible tools. It wraps the [`pynintendoparental`](https://github.com/pantherale0/pynintendoparental) library and allows humans and AI assistants to monitor and manage parental control settings on Nintendo Switch devices.
