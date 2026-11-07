@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "switch-parental-controls"
+version = "1.2.2"
+description = "Nintendo Switch Parental Controls"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+classifiers = [
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Topic :: Games/Entertainment",
+]
+dependencies = [
+    "mcp[cli]>=2.0.0,<3",
+    "pydantic>=2.0.0",
+    "pynintendoparental>=2.6.0,<3",
+    "aiohttp>=3.9.0",
+    "click>=8.1.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0.0", "pytest-cov>=7.1.0", "pytest-asyncio>=0.23.0", "ruff>=0.4.0", "python-dotenv>=1.0.0"]
+
+[project.scripts]
+switch-parental-controls = "switch_parental_controls.cli:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "module"
+testpaths = ["tests"]
+markers = ["integration: mark a test as an integration test requiring real Nintendo API credentials"]
+
+# Applies to `mise run test-coverage`: the run fails if any line is untested.
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
