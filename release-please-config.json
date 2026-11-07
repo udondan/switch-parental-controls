@@ -21,7 +21,14 @@
       "release-type": "python",
       "include-component-in-tag": false,
       "pull-request-title-pattern": "chore: release ${version}",
-      "bump-minor-pre-major": true
+      "bump-minor-pre-major": true,
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name.value=='switch-parental-controls')].version"
+        }
+      ]
     }
   }
 }
