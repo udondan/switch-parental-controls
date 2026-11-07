@@ -10,19 +10,14 @@ import aiohttp
 from mcp.server.mcpserver import Context
 
 from switch_parental_controls.models import CompleteLoginInput
-from switch_parental_controls.server import _state, mcp
+from switch_parental_controls.server import DEFAULT_LANG, DEFAULT_TIMEZONE, _state, mcp
+from switch_parental_controls.tools import tool_annotations
 from switch_parental_controls.utils import handle_error
 
 
 @mcp.tool(
     name="switch_get_login_url",
-    annotations={
-        "title": "Get Nintendo Login URL",
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": False,
-        "openWorldHint": True,
-    },
+    annotations=tool_annotations("Get Nintendo Login URL", read_only=True, idempotent=False),
 )
 async def switch_get_login_url(ctx: Context) -> str:
     """Get the Nintendo login URL to start the interactive authentication flow.
@@ -76,13 +71,7 @@ async def switch_get_login_url(ctx: Context) -> str:
 
 @mcp.tool(
     name="switch_complete_login",
-    annotations={
-        "title": "Complete Nintendo Login",
-        "readOnlyHint": False,
-        "destructiveHint": False,
-        "idempotentHint": False,
-        "openWorldHint": True,
-    },
+    annotations=tool_annotations("Complete Nintendo Login", read_only=False, idempotent=False),
 )
 async def switch_complete_login(params: CompleteLoginInput, ctx: Context) -> str:
     """Complete the Nintendo login flow using the redirect URL from the browser.
@@ -134,8 +123,8 @@ async def switch_complete_login(params: CompleteLoginInput, ctx: Context) -> str
         # Initialize the Nintendo client with the new token
         from pynintendoparental import NintendoParental
 
-        timezone = _state.get("timezone") or "Europe/London"
-        lang = _state.get("lang") or "en-GB"
+        timezone = _state.get("timezone") or DEFAULT_TIMEZONE
+        lang = _state.get("lang") or DEFAULT_LANG
         client = await NintendoParental.create(auth, timezone=timezone, lang=lang)
         await client.update()
         _state["client"] = client

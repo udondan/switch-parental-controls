@@ -7,89 +7,54 @@ import pytest
 from pynintendoparental.application import ApplicationRegistry
 from pynintendoparental.player import PlayerRegistry
 
+PLAYER_ID = "player-001"
+PLAYER_NICKNAME = "TestKid"
+PLAYER_AVATAR = "https://example.com/avatar.png"
 
-def make_mock_device(
-    device_id="device-001",
-    name="My Switch",
-    model="Switch",
-    limit_time=120,
-    today_playing_time=45,
-    today_time_remaining=75,
-    bedtime_alarm=time(21, 0),
-    bedtime_end=time(7, 0),
-    forced_termination_mode=True,
-    alarms_enabled=True,
-    last_sync=1700000000.0,
-    timer_mode_str="DAILY",
-):
-    """Create a mock Device object."""
+_DEVICE_DEFAULTS = {
+    "device_id": "device-001",
+    "name": "My Switch",
+    "model": "Switch",
+    "limit_time": 120,
+    "today_playing_time": 45,
+    "today_time_remaining": 75,
+    "bedtime_alarm": time(21, 0),
+    "bedtime_end": time(7, 0),
+    "forced_termination_mode": True,
+    "alarms_enabled": True,
+    "last_sync": 1700000000.0,
+}
+
+
+def _daily_entry(date, playing_time, player_playing_time, disabled_time=0, exceeded_time=0):
+    """One entry of Device.daily_summaries with a single player."""
+    return {
+        "date": date,
+        "playingTime": playing_time,
+        "disabledTime": disabled_time,
+        "exceededTime": exceeded_time,
+        "players": [
+            {
+                "profile": {"playerId": PLAYER_ID, "nickname": PLAYER_NICKNAME, "imageUri": PLAYER_AVATAR},
+                "playingTime": player_playing_time,
+                "playedGames": [],
+            }
+        ],
+    }
+
+
+def make_mock_device(timer_mode_str="DAILY", **overrides):
+    """Create a mock Device object. Keyword arguments override the attributes in _DEVICE_DEFAULTS."""
     from pynintendoparental.enum import DeviceTimerMode
 
     device = MagicMock()
-    device.device_id = device_id
-    device.name = name
-    device.model = model
-    device.limit_time = limit_time
-    device.today_playing_time = today_playing_time
-    device.today_time_remaining = today_time_remaining
-    device.bedtime_alarm = bedtime_alarm
-    device.bedtime_end = bedtime_end
-    device.forced_termination_mode = forced_termination_mode
-    device.alarms_enabled = alarms_enabled
-    device.last_sync = last_sync
+    for attribute, value in {**_DEVICE_DEFAULTS, **overrides}.items():
+        setattr(device, attribute, value)
     device.timer_mode = DeviceTimerMode(timer_mode_str)
     device.daily_summaries = [
-        {
-            "date": "2026-05-01",
-            "playingTime": 60,
-            "disabledTime": 0,
-            "exceededTime": 0,
-            "players": [
-                {
-                    "profile": {
-                        "playerId": "player-001",
-                        "nickname": "TestKid",
-                        "imageUri": "https://example.com/avatar.png",
-                    },
-                    "playingTime": 45,
-                    "playedGames": [],
-                }
-            ],
-        },
-        {
-            "date": "2026-05-02",
-            "playingTime": 90,
-            "disabledTime": 5,
-            "exceededTime": 10,
-            "players": [
-                {
-                    "profile": {
-                        "playerId": "player-001",
-                        "nickname": "TestKid",
-                        "imageUri": "https://example.com/avatar.png",
-                    },
-                    "playingTime": 75,
-                    "playedGames": [],
-                }
-            ],
-        },
-        {
-            "date": "2026-04-07",
-            "playingTime": 45,
-            "disabledTime": 0,
-            "exceededTime": 0,
-            "players": [
-                {
-                    "profile": {
-                        "playerId": "player-001",
-                        "nickname": "TestKid",
-                        "imageUri": "https://example.com/avatar.png",
-                    },
-                    "playingTime": 30,
-                    "playedGames": [],
-                }
-            ],
-        },
+        _daily_entry("2026-05-01", 60, 45),
+        _daily_entry("2026-05-02", 90, 75, disabled_time=5, exceeded_time=10),
+        _daily_entry("2026-04-07", 45, 30),
     ]
     device.players = PlayerRegistry()
     device.applications = ApplicationRegistry()
@@ -115,7 +80,7 @@ def make_mock_device(
             },
             "players": [
                 {
-                    "profile": {"playerId": "player-001", "nickname": "TestKid"},
+                    "profile": {"playerId": PLAYER_ID, "nickname": PLAYER_NICKNAME},
                     "summary": {
                         "stat": {"totalDays": 2, "averageTime": 60},
                         "dailyStats": [
@@ -145,9 +110,9 @@ def make_mock_device(
 
 
 def make_mock_player(
-    player_id="player-001",
-    nickname="TestKid",
-    player_image="https://example.com/avatar.png",
+    player_id=PLAYER_ID,
+    nickname=PLAYER_NICKNAME,
+    player_image=PLAYER_AVATAR,
     playing_time=45,
     apps=None,
 ):

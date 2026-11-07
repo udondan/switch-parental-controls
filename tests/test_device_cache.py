@@ -6,6 +6,7 @@ import pytest
 
 from switch_parental_controls.device_cache import (
     devices_from_client,
+    find_cached_device_id,
     load_cache,
     resolve_device_id,
     save_cache,
@@ -147,3 +148,24 @@ def test_resolve_by_name_without_devices_raises(cache_path):
     client.devices = {}
     with pytest.raises(ValueError, match="No devices found on this account."):
         resolve_device_id(client, "Switch #1")
+
+
+# ---------------------------------------------------------------------------
+# find_cached_device_id
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("name_or_id", ["abc123", "Switch #1", "SWITCH #1"])
+def test_find_cached_device_id_by_id_or_name(cache_path, name_or_id):
+    save_cache({"abc123": "Switch #1"})
+    assert find_cached_device_id(name_or_id) == "abc123"
+
+
+def test_find_cached_device_id_unknown_raises(cache_path):
+    save_cache({"abc123": "Switch #1"})
+    with pytest.raises(ValueError, match=r"Device 'Other' not found. Known devices: 'Switch #1' \(abc123\)"):
+        find_cached_device_id("Other")
+
+
+def test_find_cached_device_id_without_cache_takes_id(cache_path):
+    assert find_cached_device_id("xyz789") == "xyz789"

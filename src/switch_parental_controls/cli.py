@@ -16,6 +16,9 @@ Environment Variables:
 import asyncio
 import os
 import sys
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from typing import Any
 
 import click
 
@@ -39,7 +42,7 @@ from switch_parental_controls.models import (
     SetRestrictionModeInput,
     SetTimerModeInput,
 )
-from switch_parental_controls.server import _state
+from switch_parental_controls.server import DEFAULT_LANG, DEFAULT_TIMEZONE, _state
 
 
 def _require_token() -> str:
@@ -108,7 +111,7 @@ def _execute(coro_factory) -> None:
     "--timezone",
     "-t",
     envvar="SWITCH_PARENTAL_CONTROLS_TIMEZONE",
-    default="Europe/London",
+    default=DEFAULT_TIMEZONE,
     show_default=True,
     help="IANA timezone (e.g. America/New_York).",
 )
@@ -116,7 +119,7 @@ def _execute(coro_factory) -> None:
     "--lang",
     "-l",
     envvar="SWITCH_PARENTAL_CONTROLS_LANG",
-    default="en-GB",
+    default=DEFAULT_LANG,
     show_default=True,
     help="Language code (e.g. en-US).",
 )
@@ -229,6 +232,16 @@ _FORMAT_OPTION = click.option(
 
 _DEVICE_ARG = click.argument("device", required=False, default=None, metavar="[DEVICE]")
 
+_TIMER_MODES = {"DAILY", "EACH_DAY_OF_THE_WEEK"}
+_RESTRICTION_MODES = {"FORCED_TERMINATION", "ALARM"}
+_CONTENT_LEVELS = {"NONE", "CHILDREN", "YOUNG_TEENS", "OLDER_TEENS", "CUSTOM"}
+_DAYS = {d.value for d in DayOfWeek}
+_HOUR_MINUTE_USAGE = "[DEVICE] HOUR MINUTE"
+
+
+class _ArgError(Exception):
+    """An invalid command argument, reported as an error result."""
+
 
 def _split(args: tuple, n_extra: int, usage: str) -> tuple[str | None, tuple]:
     """Split nargs=-1 positional args into (device_or_none, extra_args).
@@ -243,12 +256,79 @@ def _split(args: tuple, n_extra: int, usage: str) -> tuple[str | None, tuple]:
     raise click.UsageError(f"Expected: {usage}")
 
 
+def _value_args(args: tuple, usage: str) -> Callable[[], tuple]:
+    """Parser for '[DEVICE] VALUE'."""
+    return lambda: _split(args, 1, usage)
+
+
+def _choice_args(args: tuple, usage: str, name: str, valid: set[str]) -> Callable[[], tuple]:
+    """Parser for '[DEVICE] CHOICE', where CHOICE is one of `valid` (case-insensitive)."""
+
+    def parse() -> tuple:
+        device, rest = _split(args, 1, usage)
+        value = rest[0].upper()
+        if value not in valid:
+            raise _ArgError(f"{name} must be one of {sorted(valid)}, got '{rest[0]}'.")
+        return device, (value,)
+
+    return parse
+
+
+def _int_args(args: tuple, n_extra: int, usage: str, error: str) -> Callable[[], tuple]:
+    """Parser for '[DEVICE] N...' with integer values. `error` may use {0} for the first value."""
+
+    def parse() -> tuple:
+        device, rest = _split(args, n_extra, usage)
+        try:
+            return device, tuple(int(value) for value in rest)
+        except ValueError:
+            raise _ArgError(error.format(*rest)) from None
+
+    return parse
+
+
 def _resolve(client, device: str | None) -> str:
     """Resolve device name/ID/None inside an async run() body; returns device_id."""
     try:
         return resolve_device_id(client, device)
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
+
+
+def _run_tool(
+    obj: dict,
+    tool: Callable[..., Awaitable[str]],
+    build_params: Callable[..., Any],
+    device: str | None = None,
+    parse: Callable[[], tuple] | None = None,
+) -> None:
+    """Run an MCP tool for one device and print its result.
+
+    Checks the token first, then parses the positional arguments (`parse` returns
+    the device and the parsed values), connects, resolves the device and calls
+    the tool with `build_params(device_id, *values)`.
+    """
+
+    async def run() -> str:
+        token = _require_token()
+        try:
+            target, values = parse() if parse else (device, ())
+        except _ArgError as exc:
+            return f"Error: {exc}"
+        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
+            _populate_state(client, http_session, obj)
+            did = _resolve(client, target)
+            try:
+                params = build_params(did, *values)
+            except Exception as exc:
+                return f"Error: {exc}"
+            return await tool(params, None)
+
+    _execute(run)
+
+
+def _device_input(fmt: str) -> Callable[[str], DeviceInput]:
+    return lambda did: DeviceInput(device_id=did, response_format=ResponseFormat(fmt))
 
 
 # ---------------------------------------------------------------------------
@@ -282,14 +362,7 @@ def get_device(obj: dict, device: str | None, fmt: str) -> None:
     """Get detailed status for a specific device."""
     from switch_parental_controls.devices import switch_get_device
 
-    async def run() -> str:
-        token = _require_token()
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device)
-            return await switch_get_device(DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None)
-
-    _execute(run)
+    _run_tool(obj, switch_get_device, _device_input(fmt), device)
 
 
 @cli.command("today-summary")
@@ -300,14 +373,7 @@ def today_summary(obj: dict, device: str | None, fmt: str) -> None:
     """Get today's usage summary for a device."""
     from switch_parental_controls.devices import switch_get_today_summary
 
-    async def run() -> str:
-        token = _require_token()
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device)
-            return await switch_get_today_summary(DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None)
-
-    _execute(run)
+    _run_tool(obj, switch_get_today_summary, _device_input(fmt), device)
 
 
 @cli.command("monthly-summary")
@@ -318,37 +384,14 @@ def today_summary(obj: dict, device: str | None, fmt: str) -> None:
 @click.option("--no-cache", "skip_cache", is_flag=True, default=False, help="Skip cache; always fetch fresh data.")
 @_FORMAT_OPTION
 @click.pass_obj
-def monthly_summary(
-    obj: dict,
-    device: str | None,
-    year: int | None,
-    month: int | None,
-    player_id: str | None,
-    skip_cache: bool,
-    fmt: str,
-) -> None:
+def monthly_summary(obj: dict, device: str | None, fmt: str, **filters: Any) -> None:
     """Get the monthly usage summary for a device."""
-    from switch_parental_controls.devices import switch_get_monthly_summary
+    from switch_parental_controls.summary import switch_get_monthly_summary
 
-    async def run() -> str:
-        token = _require_token()
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device)
-            try:
-                params = MonthlySummaryInput(
-                    device_id=did,
-                    year=year,
-                    month=month,
-                    player_id=player_id,
-                    response_format=ResponseFormat(fmt),
-                    skip_cache=skip_cache,
-                )
-            except Exception as exc:
-                return f"Error: {exc}"
-            return await switch_get_monthly_summary(params, None)
+    def build_params(did: str) -> MonthlySummaryInput:
+        return MonthlySummaryInput(device_id=did, response_format=ResponseFormat(fmt), **filters)
 
-    _execute(run)
+    _run_tool(obj, switch_get_monthly_summary, build_params, device)
 
 
 @cli.command("playtime")
@@ -360,39 +403,14 @@ def monthly_summary(
 @click.option("--no-cache", "skip_cache", is_flag=True, default=False, help="Skip cache; always fetch fresh data.")
 @_FORMAT_OPTION
 @click.pass_obj
-def playtime(
-    obj: dict,
-    device: str | None,
-    year: int | None,
-    month: int | None,
-    day: int | None,
-    player_id: str | None,
-    skip_cache: bool,
-    fmt: str,
-) -> None:
+def playtime(obj: dict, device: str | None, fmt: str, **filters: Any) -> None:
     """Get per-day playtime breakdown for a month, or a single day."""
-    from switch_parental_controls.devices import switch_get_playtime
+    from switch_parental_controls.playtime import switch_get_playtime
 
-    async def run() -> str:
-        token = _require_token()
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device)
-            try:
-                params = PlaytimeInput(
-                    device_id=did,
-                    year=year,
-                    month=month,
-                    day=day,
-                    player_id=player_id,
-                    response_format=ResponseFormat(fmt),
-                    skip_cache=skip_cache,
-                )
-            except Exception as exc:
-                return f"Error: {exc}"
-            return await switch_get_playtime(params, None)
+    def build_params(did: str) -> PlaytimeInput:
+        return PlaytimeInput(device_id=did, response_format=ResponseFormat(fmt), **filters)
 
-    _execute(run)
+    _run_tool(obj, switch_get_playtime, build_params, device)
 
 
 @cli.command("clear-cache")
@@ -406,35 +424,18 @@ def clear_cache_cmd(obj: dict, device: str | None, year: int | None, month: int 
     Removes cached API responses so the next monthly-summary or playtime
     request fetches fresh data. Without options, clears the entire cache.
     """
-    from switch_parental_controls.data_cache import clear_data_cache
+    from switch_parental_controls.data_cache import clear_data_cache, cleared_message
+    from switch_parental_controls.device_cache import find_cached_device_id
 
     if month is not None and year is None:
         raise click.UsageError("--year is required when --month is given.")
 
-    device_id: str | None = None
-    if device is not None:
-        from switch_parental_controls.device_cache import load_cache
+    try:
+        device_id = find_cached_device_id(device) if device is not None else None
+    except ValueError as exc:
+        raise click.UsageError(str(exc)) from exc
 
-        cache = load_cache()
-        if device in cache:
-            device_id = device
-        else:
-            lower = device.lower()
-            for did, dname in cache.items():
-                if dname.lower() == lower:
-                    device_id = did
-                    break
-            if device_id is None:
-                if cache:
-                    candidates = ", ".join(f"'{name}' ({did})" for did, name in cache.items())
-                    raise click.UsageError(f"Device '{device}' not found. Known devices: {candidates}")
-                device_id = device
-
-    n = clear_data_cache(device_id=device_id, year=year, month=month)
-    if n == 0:
-        click.echo("No cached files found matching the given filters.")
-    else:
-        click.echo(f"✓ Cleared {n} cached file{'s' if n != 1 else ''}.")
+    click.echo(cleared_message(clear_data_cache(device_id=device_id, year=year, month=month)))
 
 
 # ---------------------------------------------------------------------------
@@ -452,33 +453,57 @@ def set_playtime_limit(obj: dict, device: str | None, minutes: int | None, remov
 
     Use --minutes N to set a limit (0-360), or --no-limit to remove it entirely.
     """
-    from switch_parental_controls.devices import switch_set_daily_playtime_limit
+    from switch_parental_controls.device_settings import switch_set_daily_playtime_limit
 
-    async def run() -> str:
-        token = _require_token()
+    def parse() -> tuple:
         if remove_limit:
-            mins = -1
-        elif minutes is not None:
-            mins = minutes
-        else:
-            return "Error: Provide --minutes N or --no-limit."
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device)
-            try:
-                params = SetPlaytimeLimitInput(device_id=did, minutes=mins)
-            except Exception as exc:
-                return f"Error: {exc}"
-            return await switch_set_daily_playtime_limit(params, None)
+            return device, (-1,)
+        if minutes is not None:
+            return device, (minutes,)
+        raise _ArgError("Provide --minutes N or --no-limit.")
 
-    _execute(run)
+    def build_params(did: str, mins: int) -> SetPlaytimeLimitInput:
+        return SetPlaytimeLimitInput(device_id=did, minutes=mins)
+
+    _run_tool(obj, switch_set_daily_playtime_limit, build_params, parse=parse)
 
 
-@cli.command("add-extra-time")
-@click.argument("args", nargs=-1, metavar="[DEVICE] MINUTES")
-@click.pass_obj
-def add_extra_time(obj: dict, args: tuple) -> None:
-    """Add extra playtime for today.
+@dataclass(frozen=True)
+class _Setting:
+    """A '[DEVICE] VALUE...' command that calls a device_settings tool."""
+
+    name: str
+    metavar: str
+    help_text: str
+    tool_name: str
+    build_params: Callable[..., Any]
+    parse: Callable[[tuple], Callable[[], tuple]]
+
+
+def _setting_command(setting: _Setting) -> click.Command:
+    """Register the command for a setting."""
+
+    @cli.command(setting.name, help=setting.help_text)
+    @click.argument("args", nargs=-1, metavar=setting.metavar)
+    @click.pass_obj
+    def command(obj: dict, args: tuple) -> None:
+        from switch_parental_controls import device_settings
+
+        tool = getattr(device_settings, setting.tool_name)
+        _run_tool(obj, tool, setting.build_params, parse=setting.parse(args))
+
+    return command
+
+
+def _hour_minute_args(args: tuple) -> Callable[[], tuple]:
+    return _int_args(args, 2, _HOUR_MINUTE_USAGE, "HOUR and MINUTE must be integers.")
+
+
+add_extra_time = _setting_command(
+    _Setting(
+        "add-extra-time",
+        "[DEVICE] MINUTES",
+        """Add extra playtime for today.
 
     MINUTES is required (1-360). DEVICE is optional if the account has one device.
 
@@ -486,33 +511,18 @@ def add_extra_time(obj: dict, args: tuple) -> None:
     Examples:
       add-extra-time 30
       add-extra-time "Switch #1" 30
-    """
-    from switch_parental_controls.devices import switch_add_extra_time
+    """,
+        "switch_add_extra_time",
+        lambda did, minutes: AddExtraTimeInput(device_id=did, minutes=minutes),
+        lambda args: _int_args(args, 1, "[DEVICE] MINUTES", "MINUTES must be an integer, got '{0}'."),
+    )
+)
 
-    async def run() -> str:
-        token = _require_token()
-        device_raw, rest = _split(args, 1, "[DEVICE] MINUTES")
-        try:
-            minutes = int(rest[0])
-        except ValueError:
-            return f"Error: MINUTES must be an integer, got '{rest[0]}'."
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device_raw)
-            try:
-                params = AddExtraTimeInput(device_id=did, minutes=minutes)
-            except Exception as exc:
-                return f"Error: {exc}"
-            return await switch_add_extra_time(params, None)
-
-    _execute(run)
-
-
-@cli.command("set-timer-mode")
-@click.argument("args", nargs=-1, metavar="[DEVICE] MODE")
-@click.pass_obj
-def set_timer_mode(obj: dict, args: tuple) -> None:
-    """Set timer mode: DAILY or EACH_DAY_OF_THE_WEEK.
+set_timer_mode = _setting_command(
+    _Setting(
+        "set-timer-mode",
+        "[DEVICE] MODE",
+        """Set timer mode: DAILY or EACH_DAY_OF_THE_WEEK.
 
     DEVICE is optional if the account has one device.
 
@@ -520,23 +530,12 @@ def set_timer_mode(obj: dict, args: tuple) -> None:
     Examples:
       set-timer-mode DAILY
       set-timer-mode "Switch #1" EACH_DAY_OF_THE_WEEK
-    """
-    from switch_parental_controls.devices import switch_set_timer_mode
-
-    _valid_modes = {"DAILY", "EACH_DAY_OF_THE_WEEK"}
-
-    async def run() -> str:
-        token = _require_token()
-        device_raw, rest = _split(args, 1, "[DEVICE] DAILY|EACH_DAY_OF_THE_WEEK")
-        mode = rest[0].upper()
-        if mode not in _valid_modes:
-            return f"Error: MODE must be one of {sorted(_valid_modes)}, got '{rest[0]}'."
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device_raw)
-            return await switch_set_timer_mode(SetTimerModeInput(device_id=did, mode=mode), None)
-
-    _execute(run)
+    """,
+        "switch_set_timer_mode",
+        lambda did, mode: SetTimerModeInput(device_id=did, mode=mode),
+        lambda args: _choice_args(args, "[DEVICE] DAILY|EACH_DAY_OF_THE_WEEK", "MODE", _TIMER_MODES),
+    )
+)
 
 
 @cli.command("set-day-restrictions")
@@ -553,17 +552,7 @@ def set_timer_mode(obj: dict, args: tuple) -> None:
 @click.option("--bedtime-end-hour", type=int, default=None, help="End hour (5-9). Required with --bedtime-enabled.")
 @click.option("--bedtime-end-minute", type=int, default=0, show_default=True, help="End minute (0-59).")
 @click.pass_obj
-def set_day_restrictions(
-    obj: dict,
-    args: tuple,
-    playtime_enabled: bool,
-    max_playtime_minutes: int | None,
-    bedtime_enabled: bool,
-    bedtime_alarm_hour: int | None,
-    bedtime_alarm_minute: int,
-    bedtime_end_hour: int | None,
-    bedtime_end_minute: int,
-) -> None:
+def set_day_restrictions(obj: dict, args: tuple, **restrictions: Any) -> None:
     """Set playtime and bedtime restrictions for a specific day of the week.
 
     DAY must be one of: MONDAY TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY SUNDAY.
@@ -574,48 +563,28 @@ def set_day_restrictions(
       set-day-restrictions MONDAY --playtime-enabled --max-playtime-minutes 90 --bedtime-disabled
       set-day-restrictions "Switch #1" SATURDAY --playtime-disabled --bedtime-disabled
     """
-    from switch_parental_controls.devices import switch_set_day_restrictions
+    from switch_parental_controls.device_settings import switch_set_day_restrictions
 
-    _valid_days = {d.value for d in DayOfWeek}
+    def build_params(did: str, day: str) -> SetDayRestrictionsInput:
+        return SetDayRestrictionsInput(device_id=did, day_of_week=DayOfWeek(day), **restrictions)
 
-    async def run() -> str:
-        token = _require_token()
-        device_raw, rest = _split(args, 1, "[DEVICE] DAY")
-        day = rest[0].upper()
-        if day not in _valid_days:
-            return f"Error: DAY must be one of {sorted(_valid_days)}, got '{rest[0]}'."
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device_raw)
-            try:
-                params = SetDayRestrictionsInput(
-                    device_id=did,
-                    day_of_week=DayOfWeek(day),
-                    playtime_enabled=playtime_enabled,
-                    max_playtime_minutes=max_playtime_minutes,
-                    bedtime_enabled=bedtime_enabled,
-                    bedtime_alarm_hour=bedtime_alarm_hour,
-                    bedtime_alarm_minute=bedtime_alarm_minute,
-                    bedtime_end_hour=bedtime_end_hour,
-                    bedtime_end_minute=bedtime_end_minute,
-                )
-            except Exception as exc:
-                return f"Error: {exc}"
-            return await switch_set_day_restrictions(params, None)
-
-    _execute(run)
+    _run_tool(
+        obj,
+        switch_set_day_restrictions,
+        build_params,
+        parse=_choice_args(args, "[DEVICE] DAY", "DAY", _DAYS),
+    )
 
 
 # ---------------------------------------------------------------------------
 # Devices — restriction controls
 # ---------------------------------------------------------------------------
 
-
-@cli.command("set-restriction-mode")
-@click.argument("args", nargs=-1, metavar="[DEVICE] MODE")
-@click.pass_obj
-def set_restriction_mode(obj: dict, args: tuple) -> None:
-    """Set what happens when the limit is reached: FORCED_TERMINATION or ALARM.
+set_restriction_mode = _setting_command(
+    _Setting(
+        "set-restriction-mode",
+        "[DEVICE] MODE",
+        """Set what happens when the limit is reached: FORCED_TERMINATION or ALARM.
 
     DEVICE is optional if the account has one device.
 
@@ -623,30 +592,18 @@ def set_restriction_mode(obj: dict, args: tuple) -> None:
     Examples:
       set-restriction-mode ALARM
       set-restriction-mode "Switch #1" FORCED_TERMINATION
-    """
-    from switch_parental_controls.devices import switch_set_restriction_mode
+    """,
+        "switch_set_restriction_mode",
+        lambda did, mode: SetRestrictionModeInput(device_id=did, mode=mode),
+        lambda args: _choice_args(args, "[DEVICE] FORCED_TERMINATION|ALARM", "MODE", _RESTRICTION_MODES),
+    )
+)
 
-    _valid = {"FORCED_TERMINATION", "ALARM"}
-
-    async def run() -> str:
-        token = _require_token()
-        device_raw, rest = _split(args, 1, "[DEVICE] FORCED_TERMINATION|ALARM")
-        mode = rest[0].upper()
-        if mode not in _valid:
-            return f"Error: MODE must be one of {sorted(_valid)}, got '{rest[0]}'."
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device_raw)
-            return await switch_set_restriction_mode(SetRestrictionModeInput(device_id=did, mode=mode), None)
-
-    _execute(run)
-
-
-@cli.command("set-content-restriction")
-@click.argument("args", nargs=-1, metavar="[DEVICE] LEVEL")
-@click.pass_obj
-def set_content_restriction(obj: dict, args: tuple) -> None:
-    """Set content restriction level: NONE, CHILDREN, YOUNG_TEENS, OLDER_TEENS, or CUSTOM.
+set_content_restriction = _setting_command(
+    _Setting(
+        "set-content-restriction",
+        "[DEVICE] LEVEL",
+        """Set content restriction level: NONE, CHILDREN, YOUNG_TEENS, OLDER_TEENS, or CUSTOM.
 
     DEVICE is optional if the account has one device.
 
@@ -654,32 +611,20 @@ def set_content_restriction(obj: dict, args: tuple) -> None:
     Examples:
       set-content-restriction CHILDREN
       set-content-restriction "Switch #1" YOUNG_TEENS
-    """
-    from switch_parental_controls.devices import switch_set_content_restriction_level
+    """,
+        "switch_set_content_restriction_level",
+        lambda did, level: SetContentRestrictionInput(device_id=did, level=level),
+        lambda args: _choice_args(
+            args, "[DEVICE] NONE|CHILDREN|YOUNG_TEENS|OLDER_TEENS|CUSTOM", "LEVEL", _CONTENT_LEVELS
+        ),
+    )
+)
 
-    _valid = {"NONE", "CHILDREN", "YOUNG_TEENS", "OLDER_TEENS", "CUSTOM"}
-
-    async def run() -> str:
-        token = _require_token()
-        device_raw, rest = _split(args, 1, "[DEVICE] NONE|CHILDREN|YOUNG_TEENS|OLDER_TEENS|CUSTOM")
-        level = rest[0].upper()
-        if level not in _valid:
-            return f"Error: LEVEL must be one of {sorted(_valid)}, got '{rest[0]}'."
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device_raw)
-            return await switch_set_content_restriction_level(
-                SetContentRestrictionInput(device_id=did, level=level), None
-            )
-
-    _execute(run)
-
-
-@cli.command("set-bedtime-alarm")
-@click.argument("args", nargs=-1, metavar="[DEVICE] HOUR MINUTE")
-@click.pass_obj
-def set_bedtime_alarm(obj: dict, args: tuple) -> None:
-    """Set bedtime alarm time. HOUR 16-23 (or 0 0 to disable).
+set_bedtime_alarm = _setting_command(
+    _Setting(
+        "set-bedtime-alarm",
+        _HOUR_MINUTE_USAGE,
+        """Set bedtime alarm time. HOUR 16-23 (or 0 0 to disable).
 
     DEVICE is optional if the account has one device.
 
@@ -687,33 +632,18 @@ def set_bedtime_alarm(obj: dict, args: tuple) -> None:
     Examples:
       set-bedtime-alarm 21 0
       set-bedtime-alarm "Switch #1" 21 30
-    """
-    from switch_parental_controls.devices import switch_set_bedtime_alarm
+    """,
+        "switch_set_bedtime_alarm",
+        lambda did, hour, minute: SetBedtimeAlarmInput(device_id=did, hour=hour, minute=minute),
+        _hour_minute_args,
+    )
+)
 
-    async def run() -> str:
-        token = _require_token()
-        device_raw, rest = _split(args, 2, "[DEVICE] HOUR MINUTE")
-        try:
-            hour, minute = int(rest[0]), int(rest[1])
-        except ValueError:
-            return "Error: HOUR and MINUTE must be integers."
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device_raw)
-            try:
-                params = SetBedtimeAlarmInput(device_id=did, hour=hour, minute=minute)
-            except Exception as exc:
-                return f"Error: {exc}"
-            return await switch_set_bedtime_alarm(params, None)
-
-    _execute(run)
-
-
-@cli.command("set-bedtime-end")
-@click.argument("args", nargs=-1, metavar="[DEVICE] HOUR MINUTE")
-@click.pass_obj
-def set_bedtime_end(obj: dict, args: tuple) -> None:
-    """Set when bedtime ends / device is usable again. HOUR 5-9 (or 0 0 to disable).
+set_bedtime_end = _setting_command(
+    _Setting(
+        "set-bedtime-end",
+        _HOUR_MINUTE_USAGE,
+        """Set when bedtime ends / device is usable again. HOUR 5-9 (or 0 0 to disable).
 
     DEVICE is optional if the account has one device.
 
@@ -721,26 +651,12 @@ def set_bedtime_end(obj: dict, args: tuple) -> None:
     Examples:
       set-bedtime-end 7 0
       set-bedtime-end "Switch #1" 7 30
-    """
-    from switch_parental_controls.devices import switch_set_bedtime_end_time
-
-    async def run() -> str:
-        token = _require_token()
-        device_raw, rest = _split(args, 2, "[DEVICE] HOUR MINUTE")
-        try:
-            hour, minute = int(rest[0]), int(rest[1])
-        except ValueError:
-            return "Error: HOUR and MINUTE must be integers."
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device_raw)
-            try:
-                params = SetBedtimeEndInput(device_id=did, hour=hour, minute=minute)
-            except Exception as exc:
-                return f"Error: {exc}"
-            return await switch_set_bedtime_end_time(params, None)
-
-    _execute(run)
+    """,
+        "switch_set_bedtime_end_time",
+        lambda did, hour, minute: SetBedtimeEndInput(device_id=did, hour=hour, minute=minute),
+        _hour_minute_args,
+    )
+)
 
 
 # ---------------------------------------------------------------------------
@@ -756,14 +672,7 @@ def list_players(obj: dict, device: str | None, fmt: str) -> None:
     """List all players (Nintendo accounts) on a device."""
     from switch_parental_controls.players import switch_list_players
 
-    async def run() -> str:
-        token = _require_token()
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device)
-            return await switch_list_players(DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None)
-
-    _execute(run)
+    _run_tool(obj, switch_list_players, _device_input(fmt), device)
 
 
 @cli.command("get-player")
@@ -782,18 +691,12 @@ def get_player(obj: dict, args: tuple, fmt: str) -> None:
     """
     from switch_parental_controls.players import switch_get_player
 
-    async def run() -> str:
-        token = _require_token()
-        device_raw, rest = _split(args, 1, "[DEVICE] PLAYER_ID")
-        player_id = rest[0]
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device_raw)
-            return await switch_get_player(
-                PlayerInput(device_id=did, player_id=player_id, response_format=ResponseFormat(fmt)), None
-            )
-
-    _execute(run)
+    _run_tool(
+        obj,
+        switch_get_player,
+        lambda did, player_id: PlayerInput(device_id=did, player_id=player_id, response_format=ResponseFormat(fmt)),
+        parse=_value_args(args, "[DEVICE] PLAYER_ID"),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -809,14 +712,7 @@ def list_applications(obj: dict, device: str | None, fmt: str) -> None:
     """List all tracked applications (games) on a device."""
     from switch_parental_controls.applications import switch_list_applications
 
-    async def run() -> str:
-        token = _require_token()
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device)
-            return await switch_list_applications(DeviceInput(device_id=did, response_format=ResponseFormat(fmt)), None)
-
-    _execute(run)
+    _run_tool(obj, switch_list_applications, _device_input(fmt), device)
 
 
 @cli.command("set-app-allow-list")
@@ -835,15 +731,9 @@ def set_app_allow_list(obj: dict, args: tuple, allow: bool) -> None:
     """
     from switch_parental_controls.applications import switch_set_app_allow_list
 
-    async def run() -> str:
-        token = _require_token()
-        device_raw, rest = _split(args, 1, "[DEVICE] APP_ID")
-        application_id = rest[0]
-        async with switch_client(obj["timezone"], obj["lang"], token) as (client, http_session):
-            _populate_state(client, http_session, obj)
-            did = _resolve(client, device_raw)
-            return await switch_set_app_allow_list(
-                SetAppAllowListInput(device_id=did, application_id=application_id, allow=allow), None
-            )
-
-    _execute(run)
+    _run_tool(
+        obj,
+        switch_set_app_allow_list,
+        lambda did, app_id: SetAppAllowListInput(device_id=did, application_id=app_id, allow=allow),
+        parse=_value_args(args, "[DEVICE] APP_ID"),
+    )

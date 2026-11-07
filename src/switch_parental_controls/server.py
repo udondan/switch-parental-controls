@@ -25,6 +25,9 @@ from mcp.server.mcpserver import MCPServer
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_TIMEZONE = "Europe/London"
+DEFAULT_LANG = "en-GB"
+
 # Mutable state shared across tools (populated by lifespan, switch_complete_login, or CLI via _populate_state)
 _state: dict[str, Any] = {
     "client": None,
@@ -42,9 +45,9 @@ async def lifespan(server: MCPServer):
 
             session_token = load_token()
         except Exception:
-            pass
-    timezone = os.environ.get("SWITCH_PARENTAL_CONTROLS_TIMEZONE") or "Europe/London"
-    lang = os.environ.get("SWITCH_PARENTAL_CONTROLS_LANG") or "en-GB"
+            logger.debug("Could not read the saved session token.", exc_info=True)
+    timezone = os.environ.get("SWITCH_PARENTAL_CONTROLS_TIMEZONE") or DEFAULT_TIMEZONE
+    lang = os.environ.get("SWITCH_PARENTAL_CONTROLS_LANG") or DEFAULT_LANG
 
     http_session = aiohttp.ClientSession()
     _state["http_session"] = http_session
@@ -95,7 +98,15 @@ mcp = MCPServer(
 # Use 'python -m switch_parental_controls mcp' (or 'switch-parental-controls mcp') instead, which
 # routes through __main__.py and ensures this module is always imported as
 # 'switch_parental_controls.server' — never executed as '__main__'.
-from switch_parental_controls import applications, auth, devices, players  # noqa: E402, F401
+from switch_parental_controls import (  # noqa: E402, F401
+    applications,
+    auth,
+    device_settings,
+    devices,
+    players,
+    playtime,
+    summary,
+)
 
 
 def main():

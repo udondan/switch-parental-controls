@@ -14,6 +14,7 @@ response to determine the actual month, adding complexity with little benefit.
 
 import json
 import os
+from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -47,12 +48,45 @@ def load_data_cache(device_id: str, year: int, month: int) -> dict | None:
 
 def save_data_cache(device_id: str, year: int, month: int, data: dict) -> None:
     """Write the monthly summary dict to the cache (best-effort; silently ignored on failure)."""
-    try:
+    with suppress(OSError):
         path = _cache_path(device_id, year, month)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data, indent=2) + "\n")
+
+
+def _device_dirs(base: Path, device_id: str | None) -> list[Path]:
+    """Cache directories of the given device, or of all devices."""
+    if device_id is not None:
+        return [base / device_id]
+    try:
+        return [p for p in base.iterdir() if p.is_dir()]
     except OSError:
-        pass
+        return []
+
+
+def _cached_files(device_dir: Path, year: int | None, month: int | None) -> list[Path]:
+    """Cache files of a device directory matching the year/month filter."""
+    if year is not None and month is not None:
+        return [device_dir / f"{year}-{month:02d}.json"]
+    if year is not None:
+        return list(device_dir.glob(f"{year}-??.json"))
+    return list(device_dir.glob("????-??.json"))
+
+
+def _delete_files(files: list[Path]) -> int:
+    """Delete the files and return how many were deleted."""
+    deleted = 0
+    for f in files:
+        with suppress(OSError):
+            f.unlink()
+            deleted += 1
+    return deleted
+
+
+def _remove_if_empty(directory: Path) -> None:
+    with suppress(OSError):
+        if not any(directory.iterdir()):
+            directory.rmdir()
 
 
 def clear_data_cache(
@@ -69,37 +103,15 @@ def clear_data_cache(
         return 0
 
     deleted = 0
-
-    if device_id is not None:
-        device_dirs = [base / device_id]
-    else:
-        try:
-            device_dirs = [p for p in base.iterdir() if p.is_dir()]
-        except OSError:
-            return 0
-
-    for device_dir in device_dirs:
-        if not device_dir.is_dir():
-            continue
-        if year is not None and month is not None:
-            candidates = [device_dir / f"{year}-{month:02d}.json"]
-        elif year is not None:
-            candidates = list(device_dir.glob(f"{year}-??.json"))
-        else:
-            candidates = list(device_dir.glob("????-??.json"))
-
-        for f in candidates:
-            try:
-                f.unlink()
-                deleted += 1
-            except OSError:
-                pass
-
-        # Remove empty device directory
-        try:
-            if not any(device_dir.iterdir()):
-                device_dir.rmdir()
-        except OSError:
-            pass
-
+    for device_dir in _device_dirs(base, device_id):
+        if device_dir.is_dir():
+            deleted += _delete_files(_cached_files(device_dir, year, month))
+            _remove_if_empty(device_dir)
     return deleted
+
+
+def cleared_message(count: int) -> str:
+    """Result message for clear_data_cache()."""
+    if count == 0:
+        return "No cached files found matching the given filters."
+    return f"✓ Cleared {count} cached file{'s' if count != 1 else ''}."
