@@ -21,15 +21,6 @@
 * don't report known players without playtime as not found ([#76](https://github.com/udondan/switch-parental-controls/issues/76)) ([48a8779](https://github.com/udondan/switch-parental-controls/commit/48a8779d3b9cf64385dd08d1c46d1392d1bb7628))
 
 
-### Dependencies
-
-* **deps:** update dependency python to v3.15.2 ([#59](https://github.com/udondan/switch-parental-controls/issues/59)) ([d36e108](https://github.com/udondan/switch-parental-controls/commit/d36e108a737f779b341030cab41c0e75b6d58717))
-* **deps:** update jdx/mise-action action to v5.2.3 ([#62](https://github.com/udondan/switch-parental-controls/issues/62)) ([7f72b47](https://github.com/udondan/switch-parental-controls/commit/7f72b4727b06ed76fb4346654d78a1b0a546ef22))
-* **deps:** update jdx/mise-action action to v5.2.3 ([#64](https://github.com/udondan/switch-parental-controls/issues/64)) ([875f581](https://github.com/udondan/switch-parental-controls/commit/875f581198c99ed4f44b4b269e674488a70e38d6))
-* **deps:** update jdx/mise-action action to v5.2.4 ([#69](https://github.com/udondan/switch-parental-controls/issues/69)) ([1579ef6](https://github.com/udondan/switch-parental-controls/commit/1579ef68b0b8fd91aeb2511d135a5f7baaabf25b))
-* **deps:** update udondan/wait-for-turn action to v1.4.2 ([#68](https://github.com/udondan/switch-parental-controls/issues/68)) ([a9bc1e4](https://github.com/udondan/switch-parental-controls/commit/a9bc1e4d2add28afcff4f1278b6b2e8163a7687c))
-
-
 ### Documentation
 
 * add light/dark banner to README ([#79](https://github.com/udondan/switch-parental-controls/issues/79)) ([a024b01](https://github.com/udondan/switch-parental-controls/commit/a024b01e40120adcefae71cc16472e3820f4bbdf))
@@ -37,21 +28,11 @@
 
 ## [1.1.4](https://github.com/udondan/switch-parental-controls/compare/v1.1.3...v1.1.4) (2026-10-24)
 
-
-### Dependencies
-
-* **deps:** update dependency python to v3.15.1 ([#57](https://github.com/udondan/switch-parental-controls/issues/57)) ([aa8c5e8](https://github.com/udondan/switch-parental-controls/commit/aa8c5e8d6108c2fac852252778e8f1b1248d9860))
-* **deps:** update pypa/gh-action-pypi-publish action to v1.14.3 ([#55](https://github.com/udondan/switch-parental-controls/issues/55)) ([2dec4a2](https://github.com/udondan/switch-parental-controls/commit/2dec4a221bce3105e77211bfddedf9e35d257104))
+Only development dependencies were updated. Nothing changed for users.
 
 ## [1.1.3](https://github.com/udondan/switch-parental-controls/compare/v1.1.2...v1.1.3) (2026-10-15)
 
-
-### Dependencies
-
-* **deps:** pin dependencies ([#49](https://github.com/udondan/switch-parental-controls/issues/49)) ([ebe0ed3](https://github.com/udondan/switch-parental-controls/commit/ebe0ed3b9e2261b6b18a5112d82e03ab22eb9063))
-* **deps:** pin jdx/mise-action action to 08ae2a0 ([#54](https://github.com/udondan/switch-parental-controls/issues/54)) ([68e95d0](https://github.com/udondan/switch-parental-controls/commit/68e95d0c7027cf0fd9b740048328f6802ae8ab58))
-* **deps:** update dependency python to v3.15.0 ([#50](https://github.com/udondan/switch-parental-controls/issues/50)) ([2ecb828](https://github.com/udondan/switch-parental-controls/commit/2ecb828ec87c6a4da6a490331b855b5668bc997e))
-* **deps:** update udondan/wait-for-turn to v1.4.0 ([#53](https://github.com/udondan/switch-parental-controls/issues/53)) ([a15f784](https://github.com/udondan/switch-parental-controls/commit/a15f7844631b341c4840de1347869159916c27cd))
+Only development dependencies were updated. Nothing changed for users.
 
 ## [1.1.2](https://github.com/udondan/switch-parental-controls/compare/v1.1.1...v1.1.2) (2026-09-29)
 
@@ -59,15 +40,6 @@
 ### Bug Fixes
 
 * migrate to MCP Python SDK 2.x ([#42](https://github.com/udondan/switch-parental-controls/issues/42)) ([cb5b85e](https://github.com/udondan/switch-parental-controls/commit/cb5b85efaff3b0c6ef92976ae08bf9b7802c56cf))
-
-
-### Dependencies
-
-* **deps:** update actions/checkout action to v7 ([#33](https://github.com/udondan/switch-parental-controls/issues/33)) ([f1c55a2](https://github.com/udondan/switch-parental-controls/commit/f1c55a2dd8b72210e2cce8258cd909a0089c4621))
-* **deps:** update actions/setup-python action to v7 ([#35](https://github.com/udondan/switch-parental-controls/issues/35)) ([9fc8374](https://github.com/udondan/switch-parental-controls/commit/9fc837481202f579de1c6b9ad7405dc25fe10352))
-* **deps:** update jdx/mise-action action to v5 ([#41](https://github.com/udondan/switch-parental-controls/issues/41)) ([5e45dfb](https://github.com/udondan/switch-parental-controls/commit/5e45dfb713b341ba84e145f15d679523a4a70107))
-* **deps:** update pypa/gh-action-pypi-publish action to v1.14.1 ([#34](https://github.com/udondan/switch-parental-controls/issues/34)) ([2e0db1d](https://github.com/udondan/switch-parental-controls/commit/2e0db1db3fe5e9a26938365189d38b31db303668))
-* **deps:** update pypa/gh-action-pypi-publish action to v1.14.2 ([#36](https://github.com/udondan/switch-parental-controls/issues/36)) ([33ca52c](https://github.com/udondan/switch-parental-controls/commit/33ca52c36968ac9c534111923bbad2ee826116f0))
 
 ## [1.1.1](https://github.com/udondan/switch-parental-controls/compare/v1.1.0...v1.1.1) (2026-05-31)
 
