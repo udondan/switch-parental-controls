@@ -3,7 +3,7 @@
 name: switch-parental-controls
 type: server
 image: udondan/switch-parental-controls:latest
-title: Nintendo Switch Parental Controls
+title: Nintendo Switch Parental Controls (unofficial)
 description: Monitor and manage Nintendo Switch parental controls, playtime limits, bedtime, players and app usage
 secrets:
   - name: switch-parental-controls.session_token

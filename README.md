@@ -1,10 +1,13 @@
-# Nintendo Switch Parental Controls
+# switch-parental-controls
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/udondan/switch-parental-controls/main/assets/banner-dark.webp">
   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/udondan/switch-parental-controls/main/assets/banner-light.webp">
   <img alt="Switch Parental Controls – CLI + MCP Server" src="https://raw.githubusercontent.com/udondan/switch-parental-controls/main/assets/banner-light.webp">
 </picture>
+
+> [!NOTE]
+> Unofficial community project. Not affiliated with, endorsed or authorized by Nintendo.
 
 [![PyPI](https://img.shields.io/pypi/v/switch-parental-controls)](https://pypi.org/project/switch-parental-controls/)
 [![Docker](https://img.shields.io/docker/v/udondan/switch-parental-controls?sort=semver&label=docker)](https://hub.docker.com/r/udondan/switch-parental-controls)
@@ -474,6 +477,8 @@ Each release runs [`.github/workflows/publish.yml`](.github/workflows/publish.ym
 Nintendo and Nintendo Switch are trademarks or registered trademarks of Nintendo in the U.S. and/or other countries.
 
 This project is not affiliated, funded, or in any way associated with Nintendo.
+
+The names are used only to describe compatibility. The API used is not public and may change at any time. Use at your own risk and in accordance with the Nintendo Account terms of service.
 
 ## <a name="license"></a>License
 
