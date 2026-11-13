@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/udondan/switch-parental-controls/compare/v1.2.1...v1.2.2) (2026-11-09)
+
+
+### Documentation
+
+* add trademark disclaimer ([#100](https://github.com/udondan/switch-parental-controls/issues/100)) ([b2a51b9](https://github.com/udondan/switch-parental-controls/commit/b2a51b9f8662ec240c9d0379767cff576487be11))
+
 ## [1.2.1](https://github.com/udondan/switch-parental-controls/compare/v1.2.0...v1.2.1) (2026-11-01)
 
 
