@@ -91,6 +91,8 @@ Devices can be specified by ID or name (case-insensitive). If only one device ex
 
 Every new feature or change must include both unit tests and integration tests — not one or the other. CI runs both suites with real Nintendo API credentials, so integration tests are treated as first-class and must pass before merging.
 
+In `.github/workflows/test.yml`, every job waits for boarding-gate (one run at a time, as all runs share the Nintendo account) and fails if it failed: while another run holds the turn, this branch likely needs a rebase anyway. On pull requests, the `changes` job (`dorny/paths-filter`) decides whether the tests and the Docker job run, and the integration tests only run after the unit tests passed. When the code or the image start depending on another file, add it to that filter, or the tests silently skip.
+
 - All async tests use `asyncio_mode = "auto"` (configured in `pyproject.toml`)
 - Shared mock factories (`make_mock_device`, `make_mock_client`) live in `conftest.py`
 - Mock the `NintendoParental` client at module level; patch `switch_client` to return `(mock_client, mock_session)`
