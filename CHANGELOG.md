@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/udondan/switch-parental-controls/compare/v1.2.2...v1.2.3) (2026-11-21)
+
+
+### Documentation
+
+* turn the Legal section into a Disclaimer ([#111](https://github.com/udondan/switch-parental-controls/issues/111)) ([a752d8d](https://github.com/udondan/switch-parental-controls/commit/a752d8d3cff8489c91ebb5118938e1741821179f))
+
 ## [1.2.2](https://github.com/udondan/switch-parental-controls/compare/v1.2.1...v1.2.2) (2026-11-16)
 
 
