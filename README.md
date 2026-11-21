@@ -40,8 +40,8 @@ A [CLI](#cli-usage) and [MCP (Model Context Protocol)](https://modelcontextproto
   - [Available Tools](#available-tools)
 - [Development](#development)
 - [CI](#ci)
-- [Legal](#legal)
 - [License](#license)
+- [Disclaimer](#disclaimer)
 
 ## <a name="features"></a>Features
 
@@ -472,14 +472,10 @@ Tests run automatically on pull requests via GitHub Actions. See [`.github/workf
 
 Each release runs [`.github/workflows/publish.yml`](.github/workflows/publish.yml), which uploads the package to PyPI and pushes the signed image `udondan/switch-parental-controls` (amd64 and arm64, tags `x.y.z`, `x.y`, `x`, `latest`) to Docker Hub.
 
-## <a name="legal"></a>Legal
-
-Nintendo and Nintendo Switch are trademarks or registered trademarks of Nintendo in the U.S. and/or other countries.
-
-This project is not affiliated, funded, or in any way associated with Nintendo.
-
-The names are used only to describe compatibility. The API used is not public and may change at any time. Use at your own risk and in accordance with the Nintendo Account terms of service.
-
 ## <a name="license"></a>License
 
 MIT
+
+## <a name="disclaimer"></a>Disclaimer
+
+This is an unofficial, independent open-source project and is not affiliated with, funded or endorsed by Nintendo. Nintendo and Nintendo Switch are trademarks or registered trademarks of Nintendo in the U.S. and/or other countries. The names are used only to describe compatibility. The API used is not public and may change at any time. Use at your own risk and in accordance with the Nintendo Account terms of service.
