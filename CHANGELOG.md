@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/udondan/switch-parental-controls/compare/v1.2.3...v1.2.4) (2026-11-26)
+
+
+### Bug Fixes
+
+* send Nintendo app version 2.7.0 to avoid update_required errors ([#120](https://github.com/udondan/switch-parental-controls/issues/120)) ([fe56cde](https://github.com/udondan/switch-parental-controls/commit/fe56cde9f2bf852457279bac22896bb78a50f3cc))
+
 ## [1.2.3](https://github.com/udondan/switch-parental-controls/compare/v1.2.2...v1.2.3) (2026-11-23)
 
 
