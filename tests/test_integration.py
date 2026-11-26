@@ -32,6 +32,8 @@ async def real_client():
     from pynintendoparental import NintendoParental
     from pynintendoparental.authenticator import Authenticator
 
+    import switch_parental_controls  # noqa: F401  # applies the pynintendoparental app version workaround
+
     timezone = os.environ.get("SWITCH_PARENTAL_CONTROLS_TIMEZONE") or "Europe/London"
     lang = os.environ.get("SWITCH_PARENTAL_CONTROLS_LANG") or "en-GB"
 
