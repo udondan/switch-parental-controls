@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "switch-parental-controls"
-version = "1.3.0"
+version = "1.4.0"
 description = "Unofficial CLI and MCP server for Nintendo Switch Parental Controls"
 readme = "README.md"
 license = { text = "MIT" }
