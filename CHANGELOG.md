@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/udondan/switch-parental-controls/compare/v1.2.4...v1.3.0) (2026-11-27)
+
+
+### Features
+
+* publish the MCP server to the MCP Registry ([#122](https://github.com/udondan/switch-parental-controls/issues/122)) ([a2c618b](https://github.com/udondan/switch-parental-controls/commit/a2c618b029058a848cad171c7de31516384b7d2b))
+
 ## [1.2.4](https://github.com/udondan/switch-parental-controls/compare/v1.2.3...v1.2.4) (2026-11-26)
 
 
