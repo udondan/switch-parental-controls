@@ -43,3 +43,8 @@ htmlcov/
 
 # macOS
 .DS_Store
+
+# Reports of mise run lint-tools
+tdqs.md
+tdqs.json
+tdqs-failures.txt
