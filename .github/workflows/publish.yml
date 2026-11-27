@@ -113,3 +113,63 @@ jobs:
         env:
           DIGEST: ${{ steps.push.outputs.digest }}
         run: cosign sign --yes "udondan/switch-parental-controls@${DIGEST}"
+
+  # Lists the server in the MCP Registry as
+  # io.github.udondan/switch-parental-controls, once the package is on PyPI.
+  # The registry checks the mcp-name comment in the README of the PyPI
+  # package. Login via GitHub OIDC, so no token is stored.
+  mcp-registry:
+    name: Publish to MCP Registry
+    needs: publish
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # login to the MCP Registry via GitHub OIDC
+    env:
+      MCP_PUBLISHER_VERSION: v1.8.16
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # release-please bumps both versions in server.json with each release.
+      - name: Check version in server.json
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="${TAG#v}"
+          for path in .version '.packages[0].version'; do
+            actual=$(jq -r "$path" server.json)
+            if [[ "$actual" != "$version" ]]; then
+              echo "::error::server.json $path is $actual, the release is $version"
+              exit 1
+            fi
+          done
+
+      - uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+
+      # Pinned release, verified against its Sigstore bundle before use.
+      - name: Download and verify mcp-publisher
+        run: |
+          set -euo pipefail
+          os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          arch="$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+          archive="mcp-publisher_${os}_${arch}.tar.gz"
+          base_url="https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}"
+
+          curl --fail --location --silent --show-error --output "$archive" "$base_url/$archive"
+          curl --fail --location --silent --show-error --output "$archive.sigstore.json" "$base_url/$archive.sigstore.json"
+          cosign verify-blob \
+            --bundle "$archive.sigstore.json" \
+            --certificate-identity "https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "$archive"
+          tar xzf "$archive" mcp-publisher
+          rm -f "$archive" "$archive.sigstore.json"
+
+      - name: Login to MCP Registry
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        run: ./mcp-publisher publish

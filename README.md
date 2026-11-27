@@ -19,6 +19,8 @@
 
 A [CLI](#cli-usage) and [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that expose Nintendo Switch Parental Controls as commands and AI-accessible tools. It wraps the [`pynintendoparental`](https://github.com/pantherale0/pynintendoparental) library and allows humans and AI assistants to monitor and manage parental control settings on Nintendo Switch devices.
 
+<!-- mcp-name: io.github.udondan/switch-parental-controls -->
+
 ## Table of Contents
 
 - [Features](#features)
@@ -271,6 +273,8 @@ uvx switch-parental-controls mcp
 ```
 
 No clone or install required — `uvx` fetches the package from PyPI and runs it in an isolated environment.
+
+The server is listed in the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.udondan/switch-parental-controls`.
 
 ### <a name="environment-variables"></a>Environment Variables
 
