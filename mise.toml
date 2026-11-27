@@ -12,6 +12,10 @@ shellcheck = "0.11.0"
 zizmor = "1.33.1"
 # The `docker mcp` plugin for the docker job of the Test workflow. Docker Desktop ships its own.
 "github:docker/mcp-gateway" = "0.44.1"
+# For the task lint-tools. mcp-tdqs is published by Glama, which scores the
+# server. It has few downloads so far, which mise only installs when allowed.
+node = "26"
+"npm:mcp-tdqs" = { version = "0.2.0", allow_low_downloads = true }
 
 [tasks.install]
 description = "Create .venv and install all dependencies from uv.lock"
@@ -39,6 +43,29 @@ run = [
   "uv run ruff check src/ tests/",
   "uv run ruff format --check src/ tests/",
 ]
+
+[tasks.lint-tools]
+description = "Lint the MCP tool descriptions (Tool Definition Quality Score); warnings fail"
+# tdqs has no way to suppress a finding. switch_set_day_restrictions takes four
+# required arguments and switch_clear_cache none, which tdqs reports as a
+# possible shadowing. The two tools do unrelated things, so that warning is
+# allowed; every other warning or error fails. tdqs.md holds the full report.
+run = '''
+set -e
+server='uv run python -m switch_parental_controls mcp'
+tdqs lint --command "$server" --server-name switch-parental-controls --fail-on never --format markdown --output tdqs.md
+tdqs lint --command "$server" --server-name switch-parental-controls --fail-on never --format json --output tdqs.json
+jq -r '.findings[]
+  | select(.severity == "error" or .severity == "warning")
+  | select(.rule == "shadow-candidate" and .tool == "switch_set_day_restrictions" | not)
+  | "\(.severity) \(.rule): \(.tool)"' tdqs.json > tdqs-failures.txt
+if [ -s tdqs-failures.txt ]; then
+  cat tdqs-failures.txt
+  echo "See tdqs.md for the details."
+  exit 1
+fi
+echo "tdqs lint: no findings beyond the known shadow-candidate warning."
+'''
 
 [tasks.format]
 description = "Format code"

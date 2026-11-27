@@ -74,6 +74,8 @@ MCP tools are registered via `@model_tool(name, InputModel, tool_annotations(...
 
 The docstring is the tool description clients see: say in the first line what the tool does, then when to use it instead of its sibling tools, what it returns and the exact empty and error messages. Arguments are described in the `Field(description=...)` of the input model, not in the docstring.
 
+`mise run lint-tools` checks the tool definitions with `tdqs lint` (Glama's Tool Definition Quality Score) and runs in the test job of CI: every warning or error fails, except the known false positive that `switch_set_day_restrictions` may be shadowed by `switch_clear_cache`. The full report goes to `tdqs.md`.
+
 Tool bodies follow one pattern: `device = get_device(params.device_id)` inside `try`, and `except Exception as e: return handle_error(e)`. Helpers raise `ToolError` with a finished error message, which `handle_error()` returns unchanged.
 
 ## Code Quality

@@ -106,6 +106,14 @@ jobs:
       - name: Run linter
         run: mise run lint
 
+      # Tool Definition Quality Score (TDQS) of Glama, see the task lint-tools.
+      - name: Lint the MCP tool descriptions
+        run: |
+          status=0
+          mise run lint-tools || status=$?
+          cat tdqs.md >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
       - name: Run tests
         run: mise run test-coverage
 
