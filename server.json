@@ -3,7 +3,7 @@
   "name": "io.github.udondan/switch-parental-controls",
   "title": "Nintendo Switch Parental Controls (unofficial)",
   "description": "Monitor and manage Nintendo Switch parental controls: playtime limits, bedtime, players, app usage",
-  "version": "1.2.4",
+  "version": "1.3.0",
   "repository": {
     "url": "https://github.com/udondan/switch-parental-controls",
     "source": "github"
@@ -12,7 +12,7 @@
     {
       "registryType": "pypi",
       "identifier": "switch-parental-controls",
-      "version": "1.2.4",
+      "version": "1.3.0",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
