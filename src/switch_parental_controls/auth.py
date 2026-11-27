@@ -11,7 +11,7 @@ from mcp.server.mcpserver import Context
 
 from switch_parental_controls.models import CompleteLoginInput
 from switch_parental_controls.server import DEFAULT_LANG, DEFAULT_TIMEZONE, _state, mcp
-from switch_parental_controls.tools import tool_annotations
+from switch_parental_controls.tools import model_tool, tool_annotations
 from switch_parental_controls.utils import handle_error
 
 
@@ -20,22 +20,14 @@ from switch_parental_controls.utils import handle_error
     annotations=tool_annotations("Get Nintendo Login URL", read_only=True, idempotent=False),
 )
 async def switch_get_login_url(ctx: Context) -> str:
-    """Get the Nintendo login URL to start the interactive authentication flow.
+    """Start the Nintendo login: returns the login URL and the steps to follow.
 
-    Use this tool when you don't have a session token yet, or when the current
-    token has expired. This generates a Nintendo OAuth URL that the user must
-    open in their browser.
+    Use it first when the server has no session token, or after a tool reported
+    that the token expired. The user opens the URL, logs in, copies the link of
+    the "Select this person" button and gives it to switch_complete_login.
+    Every call starts a new login and replaces the previous one.
 
-    After opening the URL and logging in with their Nintendo Account, the user
-    will see a "Select this person" button. They should right-click it (or
-    long-press on mobile) to copy the link, then pass that URL to
-    switch_complete_login.
-
-    Returns:
-        str: Step-by-step instructions including the Nintendo login URL.
-
-    Error Handling:
-        - Returns "Error: ..." if the login URL cannot be generated.
+    Returns "Error: ..." if the login URL cannot be created.
     """
     try:
         http_session = _state.get("http_session")
@@ -69,30 +61,20 @@ async def switch_get_login_url(ctx: Context) -> str:
         return handle_error(e)
 
 
-@mcp.tool(
-    name="switch_complete_login",
-    annotations=tool_annotations("Complete Nintendo Login", read_only=False, idempotent=False),
+@model_tool(
+    "switch_complete_login",
+    CompleteLoginInput,
+    tool_annotations("Complete Nintendo Login", read_only=False, idempotent=False),
 )
 async def switch_complete_login(params: CompleteLoginInput, ctx: Context) -> str:
-    """Complete the Nintendo login flow using the redirect URL from the browser.
+    """Finish the Nintendo login with the link copied after switch_get_login_url.
 
-    Call this after switch_get_login_url. Paste the URL you copied from the
-    'Select this person' button on the Nintendo login page.
+    Use it once the user has the link of the "Select this person" button. It
+    signs in, makes the other tools usable and returns the session token with
+    the command to save it as SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN.
 
-    On success, this tool returns your session token. Save it as the
-    SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN environment variable to avoid logging in again.
-
-    Args:
-        params (CompleteLoginInput): Validated input containing:
-            - redirect_url (str): The URL copied from the 'Select this person' button.
-              Starts with 'npf71b963c1b7b6d119://' or similar.
-
-    Returns:
-        str: Success message with the session token, or an error message.
-
-    Error Handling:
-        - Returns "Error: ..." if the redirect URL is invalid or login fails.
-        - Returns "Error: ..." if switch_get_login_url was not called first.
+    Returns "Error: No pending login found. ..." if switch_get_login_url was not
+    called first, and "Error: ..." if the link is invalid or the login fails.
     """
     try:
         auth = _state.get("pending_auth")

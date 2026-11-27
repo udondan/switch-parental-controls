@@ -10,8 +10,7 @@ from mcp.server.mcpserver import Context
 
 from switch_parental_controls.data_cache import is_current_month, load_data_cache, save_data_cache
 from switch_parental_controls.models import MonthlySummaryInput, ResponseFormat
-from switch_parental_controls.server import mcp
-from switch_parental_controls.tools import get_device, get_timezone, tool_annotations
+from switch_parental_controls.tools import get_device, get_timezone, model_tool, tool_annotations
 from switch_parental_controls.utils import MONTH_LABEL_FORMAT, ToolError, format_minutes, handle_error, to_json
 
 
@@ -134,29 +133,25 @@ async def _requested_player_entry(device, summary: dict, player_id: str) -> dict
     return entry
 
 
-@mcp.tool(name="switch_get_monthly_summary", annotations=tool_annotations("Get Monthly Usage Summary", read_only=True))
+@model_tool(
+    "switch_get_monthly_summary", MonthlySummaryInput, tool_annotations("Get Monthly Usage Summary", read_only=True)
+)
 async def switch_get_monthly_summary(params: MonthlySummaryInput, ctx: Context) -> str:
-    """Get the monthly usage summary for a Nintendo Switch device.
+    """Get the playtime totals of a month for a device, per player, or for one player.
 
-    Returns aggregated usage data for a specific month, including total playtime
-    per player and per application. If no month is specified, returns the most
-    recent available summary. When player_id is provided, returns a detailed
-    summary for that specific player including a per-day breakdown.
+    Use it for monthly reports ("how much was played in March"). Without
+    player_id it returns the month's total and the total of each player; with
+    player_id that player's total and playtime per day. Without year and month
+    it returns the most recent month Nintendo has summarised, which is usually
+    the previous month. For single days use switch_get_playtime.
 
-    Args:
-        params (MonthlySummaryInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - year (Optional[int]): Year (e.g. 2024). Omit for most recent.
-            - month (Optional[int]): Month (1-12). Required if year is provided.
-            - player_id (Optional[str]): Filter to a specific player ID.
-            - response_format (str): 'markdown' or 'json' (default: 'markdown').
-
-    Returns:
-        str: Monthly usage summary, or an error message.
-
-    Error Handling:
-        - Returns "Error: Not authenticated..." if no session token is configured.
-        - Returns "No monthly summary available." if no data exists.
+    Returns "No monthly summary available for device '<name>'." if Nintendo has
+    none for the month, and "Error: Player '<id>' not found ..." for an unknown
+    player_id.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     try:
         device = get_device(params.device_id)

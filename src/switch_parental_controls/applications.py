@@ -8,8 +8,7 @@ from mcp.server.mcpserver import Context
 from pynintendoparental.enum import SafeLaunchSetting
 
 from switch_parental_controls.models import DeviceInput, SetAppAllowListInput
-from switch_parental_controls.server import mcp
-from switch_parental_controls.tools import DeviceListing, get_device, list_device_items, tool_annotations
+from switch_parental_controls.tools import DeviceListing, get_device, list_device_items, model_tool, tool_annotations
 from switch_parental_controls.utils import ToolError, format_minutes, handle_error
 
 
@@ -45,45 +44,22 @@ _APPLICATIONS = DeviceListing(
 )
 
 
-@mcp.tool(
-    name="switch_list_applications",
-    annotations=tool_annotations("List Applications on Device", read_only=True),
-)
+@model_tool("switch_list_applications", DeviceInput, tool_annotations("List Applications on Device", read_only=True))
 async def switch_list_applications(params: DeviceInput, ctx: Context) -> str:
-    """List all applications (games) tracked on a Nintendo Switch device.
+    """List the games and apps played on one device, with their allow-list status.
 
-    Returns all games and applications that have been played on the device,
-    including their names, today's playtime, and allow-list status.
+    Use it to find an application_id for switch_set_app_allow_list, or to see
+    today's playtime per app across all players. Each app comes with name,
+    application ID, image URL, today's playtime and whether it is allow-listed
+    (ALLOW: starts regardless of the content restriction level, NONE: normal
+    restrictions). For the apps of one player use switch_get_player.
 
-    The allow-list status indicates whether an application can bypass content
-    restrictions (ALLOW) or is subject to normal restrictions (NONE).
+    Returns "No applications tracked on device '<name>'." if none were played.
 
-    Args:
-        params (DeviceInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - response_format (str): 'markdown' or 'json' (default: 'markdown').
-
-    Returns:
-        str: List of applications with their status, or an error message.
-
-        Success response (JSON):
-        {
-            "count": int,
-            "device_name": str,
-            "applications": [
-                {
-                    "application_id": str,
-                    "name": str,
-                    "image_url": str,
-                    "today_time_played_minutes": int,
-                    "allow_list_status": str   # "NONE" or "ALLOW"
-                }
-            ]
-        }
-
-    Error Handling:
-        - Returns "Error: Not authenticated..." if no session token is configured.
-        - Returns "No applications found..." if no apps have been tracked.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     return await list_device_items(_APPLICATIONS, params.device_id, params.response_format)
 
@@ -108,29 +84,25 @@ def _allow_list_message(app, device, allow: bool) -> str:
     )
 
 
-@mcp.tool(
-    name="switch_set_app_allow_list",
-    annotations=tool_annotations("Set Application Allow-List Status", read_only=False),
+@model_tool(
+    "switch_set_app_allow_list",
+    SetAppAllowListInput,
+    tool_annotations("Set Application Allow-List Status", read_only=False),
 )
 async def switch_set_app_allow_list(params: SetAppAllowListInput, ctx: Context) -> str:
-    """Set whether an application can bypass content restrictions on a Nintendo Switch device.
+    """Allow one app regardless of the content restriction level, or remove that exception.
 
-    Adding an application to the allow-list lets it be launched regardless of the
-    device's content restriction level (age rating filter). This is useful for
-    educational apps or games that are safe but might be blocked by strict settings.
+    Use it when a specific game is blocked by the age rating filter but should
+    be allowed (allow=true), or to undo that (allow=false). To change the
+    filter for all apps use switch_set_content_restriction_level instead.
+    Returns a confirmation with the app name.
 
-    Args:
-        params (SetAppAllowListInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - application_id (str): The unique app ID (from switch_list_applications).
-            - allow (bool): True to add to allow-list, False to remove from allow-list.
-
-    Returns:
-        str: Confirmation message, or an error message.
-
-    Error Handling:
-        - Returns "Error: Not authenticated..." if no session token is configured.
-        - Returns "Error: ..." if the application_id is not found on the device.
+    Returns "Error: Application '<id>' not found on device '<name>'. ..." for an
+    unknown application_id.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     try:
         device = get_device(params.device_id)

@@ -23,8 +23,7 @@ from switch_parental_controls.models import (
     SetRestrictionModeInput,
     SetTimerModeInput,
 )
-from switch_parental_controls.server import mcp
-from switch_parental_controls.tools import get_device, tool_annotations
+from switch_parental_controls.tools import get_device, model_tool, tool_annotations
 from switch_parental_controls.utils import format_minutes, handle_error
 
 
@@ -69,27 +68,24 @@ def _playtime_limit_message(minutes: int, device) -> str:
     return f"✓ Daily playtime limit set to {format_minutes(minutes)} for '{device.name}'."
 
 
-@mcp.tool(
-    name="switch_set_daily_playtime_limit",
-    annotations=tool_annotations("Set Daily Playtime Limit", read_only=False),
+@model_tool(
+    "switch_set_daily_playtime_limit",
+    SetPlaytimeLimitInput,
+    tool_annotations("Set Daily Playtime Limit", read_only=False),
 )
 async def switch_set_daily_playtime_limit(params: SetPlaytimeLimitInput, ctx: Context) -> str:
-    """Set the daily playtime limit for a Nintendo Switch device.
+    """Set the daily playtime limit of a device, or remove it with minutes=-1.
 
-    Sets the maximum number of minutes the device can be used per day.
-    Use -1 to remove the limit entirely.
+    Use it to change the limit that applies to every day while the timer mode
+    is DAILY. For different limits per weekday use switch_set_day_restrictions
+    (with timer mode EACH_DAY_OF_THE_WEEK), for more time today only
+    switch_add_extra_time. Returns a confirmation with the new limit.
 
-    Args:
-        params (SetPlaytimeLimitInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - minutes (int): Daily limit in minutes (0-360), or -1 to remove the limit.
 
-    Returns:
-        str: Confirmation message, or an error message.
-
-    Error Handling:
-        - Returns "Error: Not authenticated..." if no session token is configured.
-        - Returns "Error: ..." if the value is out of range or the API call fails.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     return await _apply_setting(
         params.device_id,
@@ -98,27 +94,23 @@ async def switch_set_daily_playtime_limit(params: SetPlaytimeLimitInput, ctx: Co
     )
 
 
-@mcp.tool(
-    name="switch_add_extra_time",
-    annotations=tool_annotations("Add Extra Playtime", read_only=False, idempotent=False),
+@model_tool(
+    "switch_add_extra_time",
+    AddExtraTimeInput,
+    tool_annotations("Add Extra Playtime", read_only=False, idempotent=False),
 )
 async def switch_add_extra_time(params: AddExtraTimeInput, ctx: Context) -> str:
-    """Add extra playtime for the current day on a Nintendo Switch device.
+    """Give a device extra playtime for today only, on top of its limit.
 
-    Grants additional playing time beyond the configured daily limit for today only.
-    The extra time does not carry over to other days.
+    Use it for a one-off "30 more minutes today"; the limit of other days stays
+    as it is. Every call adds to the extra time already given. To change the
+    limit itself use switch_set_daily_playtime_limit. Returns a confirmation.
 
-    Args:
-        params (AddExtraTimeInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - minutes (int): Number of extra minutes to add (1-360).
 
-    Returns:
-        str: Confirmation message, or an error message.
-
-    Error Handling:
-        - Returns "Error: Not authenticated..." if no session token is configured.
-        - Returns "Error: ..." if the API call fails.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     return await _apply_setting(
         params.device_id,
@@ -127,24 +119,20 @@ async def switch_add_extra_time(params: AddExtraTimeInput, ctx: Context) -> str:
     )
 
 
-@mcp.tool(name="switch_set_timer_mode", annotations=tool_annotations("Set Timer Mode", read_only=False))
+@model_tool("switch_set_timer_mode", SetTimerModeInput, tool_annotations("Set Timer Mode", read_only=False))
 async def switch_set_timer_mode(params: SetTimerModeInput, ctx: Context) -> str:
-    """Set the timer mode for a Nintendo Switch device.
+    """Choose between one limit for every day (DAILY) and one per weekday (EACH_DAY_OF_THE_WEEK).
 
-    Controls whether a single daily limit applies to all days, or whether
-    different limits can be set for each day of the week.
+    Use it before switch_set_day_restrictions, which only takes effect in
+    EACH_DAY_OF_THE_WEEK mode; in DAILY mode switch_set_daily_playtime_limit
+    sets the limit. switch_get_device shows the current mode. Returns a
+    confirmation.
 
-    Args:
-        params (SetTimerModeInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - mode (str): 'DAILY' for a single limit, or 'EACH_DAY_OF_THE_WEEK' for per-day limits.
 
-    Returns:
-        str: Confirmation message, or an error message.
-
-    Error Handling:
-        - Returns "Error: Not authenticated..." if no session token is configured.
-        - Returns "Error: ..." if the mode is invalid or the API call fails.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     return await _set_choice(_TIMER_MODE, params.device_id, params.mode)
 
@@ -192,33 +180,27 @@ async def _set_day_restrictions(device, params: SetDayRestrictionsInput) -> None
     )
 
 
-@mcp.tool(
-    name="switch_set_day_restrictions",
-    annotations=tool_annotations("Set Per-Day Restrictions", read_only=False),
+@model_tool(
+    "switch_set_day_restrictions",
+    SetDayRestrictionsInput,
+    tool_annotations("Set Per-Day Restrictions", read_only=False),
 )
 async def switch_set_day_restrictions(params: SetDayRestrictionsInput, ctx: Context) -> str:
-    """Set playtime and bedtime restrictions for a specific day of the week.
+    """Set the playtime limit and bedtime of one weekday.
 
-    For per-day restrictions to take effect, the device's timer mode should be
-    EACH_DAY_OF_THE_WEEK. Use switch_set_timer_mode first if needed.
+    Use it to give e.g. weekends other rules than school days. Each call sets
+    both settings of that day: playtime_enabled with max_playtime_minutes, and
+    bedtime_enabled with the alarm and end time. It only takes effect while the
+    timer mode is EACH_DAY_OF_THE_WEEK (switch_set_timer_mode). For the same
+    bedtime on every day use switch_set_bedtime_alarm and
+    switch_set_bedtime_end_time. Returns a confirmation with the day's rules.
 
-    Args:
-        params (SetDayRestrictionsInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - day_of_week (str): Day to configure (e.g. 'MONDAY').
-            - playtime_enabled (bool): Whether to enable a playtime limit for this day.
-            - max_playtime_minutes (Optional[int]): Limit in minutes (0-360). Required if playtime_enabled.
-            - bedtime_enabled (bool): Whether to enable bedtime restrictions.
-            - bedtime_alarm_hour (Optional[int]): Bedtime alarm hour (16-23). Required if bedtime_enabled.
-            - bedtime_alarm_minute (Optional[int]): Bedtime alarm minute (0-59).
-            - bedtime_end_hour (Optional[int]): Hour when bedtime ends (5-9). Required if bedtime_enabled.
-            - bedtime_end_minute (Optional[int]): Minute when bedtime ends (0-59).
-
-    Returns:
-        str: Confirmation message, or an error message.
-
-    Error Handling:
-        - Returns "Error: ..." if bedtime values are out of range.
+    Invalid combinations, like playtime_enabled=true without
+    max_playtime_minutes, are rejected with the reason.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     return await _apply_setting(
         params.device_id,
@@ -233,25 +215,21 @@ _RESTRICTION_MODE_DESCRIPTIONS = {
 }
 
 
-@mcp.tool(name="switch_set_restriction_mode", annotations=tool_annotations("Set Restriction Mode", read_only=False))
+@model_tool(
+    "switch_set_restriction_mode", SetRestrictionModeInput, tool_annotations("Set Restriction Mode", read_only=False)
+)
 async def switch_set_restriction_mode(params: SetRestrictionModeInput, ctx: Context) -> str:
-    """Set the restriction mode for a Nintendo Switch device.
+    """Choose what happens when the playtime limit is reached: suspend the game or only show an alarm.
 
-    Controls what happens when the daily playtime limit is reached:
-    either the software is suspended (FORCED_TERMINATION) or only an alarm
-    is shown (ALARM).
+    FORCED_TERMINATION suspends the software at the limit, ALARM only shows a
+    notice on the screen. This applies to the daily and the per-day limits.
+    switch_get_device shows the current mode. Returns a confirmation.
 
-    Args:
-        params (SetRestrictionModeInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - mode (str): 'FORCED_TERMINATION' or 'ALARM'.
 
-    Returns:
-        str: Confirmation message, or an error message.
-
-    Error Handling:
-        - Returns "Error: Not authenticated..." if no session token is configured.
-        - Returns "Error: ..." if the API call fails.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     description = _RESTRICTION_MODE_DESCRIPTIONS.get(params.mode, _RESTRICTION_MODE_DESCRIPTIONS["ALARM"])
     return await _apply_setting(
@@ -261,26 +239,23 @@ async def switch_set_restriction_mode(params: SetRestrictionModeInput, ctx: Cont
     )
 
 
-@mcp.tool(
-    name="switch_set_content_restriction_level",
-    annotations=tool_annotations("Set Content Restriction Level", read_only=False),
+@model_tool(
+    "switch_set_content_restriction_level",
+    SetContentRestrictionInput,
+    tool_annotations("Set Content Restriction Level", read_only=False),
 )
 async def switch_set_content_restriction_level(params: SetContentRestrictionInput, ctx: Context) -> str:
-    """Set the content restriction level for a Nintendo Switch device.
+    """Set which games may start, by age rating, for all apps of a device.
 
-    Controls which games and applications can be launched based on their age rating.
+    Use it to change the age rating filter: NONE, CHILDREN, YOUNG_TEENS,
+    OLDER_TEENS or CUSTOM. To allow one blocked app use
+    switch_set_app_allow_list instead. Returns a confirmation.
 
-    Args:
-        params (SetContentRestrictionInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - level (str): One of: 'NONE', 'CHILDREN', 'YOUNG_TEENS', 'OLDER_TEENS', 'CUSTOM'.
 
-    Returns:
-        str: Confirmation message, or an error message.
-
-    Error Handling:
-        - Returns "Error: Not authenticated..." if no session token is configured.
-        - Returns "Error: ..." if the level is invalid or the API call fails.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     return await _set_choice(_CONTENT_LEVEL, params.device_id, params.level)
 
@@ -300,73 +275,60 @@ async def _set_bedtime_time(params: SetBedtimeAlarmInput | SetBedtimeEndInput, s
     )
 
 
-@mcp.tool(name="switch_set_bedtime_alarm", annotations=tool_annotations("Set Bedtime Alarm", read_only=False))
+@model_tool("switch_set_bedtime_alarm", SetBedtimeAlarmInput, tool_annotations("Set Bedtime Alarm", read_only=False))
 async def switch_set_bedtime_alarm(params: SetBedtimeAlarmInput, ctx: Context) -> str:
-    """Set the bedtime alarm time for a Nintendo Switch device.
+    """Set the time from which a device shows the bedtime alarm, for every day.
 
-    The bedtime alarm notifies that bedtime has arrived. Must be between 16:00 and 23:00.
-    Use hour=0, minute=0 to disable the alarm.
+    Use it for the evening part of bedtime (16:00 to 23:00), or hour=0 and
+    minute=0 to turn the alarm off. The morning end is set with
+    switch_set_bedtime_end_time, a bedtime for single weekdays with
+    switch_set_day_restrictions. Returns a confirmation.
 
-    Args:
-        params (SetBedtimeAlarmInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - hour (int): Alarm hour (16-23, or 0 to disable).
-            - minute (int): Alarm minute (0-59).
-
-    Returns:
-        str: Confirmation message, or an error message.
-
-    Error Handling:
-        - Returns "Error: ..." if the time is outside the valid range (16:00-23:00).
-        - Returns "Error: Not authenticated..." if no session token is configured.
+    Times outside 16:00 to 23:00 are rejected with the reason.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     return await _set_bedtime_time(params, "set_bedtime_alarm", "Bedtime alarm")
 
 
-@mcp.tool(name="switch_set_bedtime_end_time", annotations=tool_annotations("Set Bedtime End Time", read_only=False))
+@model_tool(
+    "switch_set_bedtime_end_time", SetBedtimeEndInput, tool_annotations("Set Bedtime End Time", read_only=False)
+)
 async def switch_set_bedtime_end_time(params: SetBedtimeEndInput, ctx: Context) -> str:
-    """Set the time when bedtime restrictions end on a Nintendo Switch device.
+    """Set the time in the morning from which a device can be used again, for every day.
 
-    This is when the device can be used again after bedtime. Must be between 05:00 and 09:00.
-    Use hour=0, minute=0 to disable bedtime restrictions.
+    Use it for the end of bedtime (05:00 to 09:00), or hour=0 and minute=0 to
+    turn it off. The evening alarm is set with switch_set_bedtime_alarm, a
+    bedtime for single weekdays with switch_set_day_restrictions. Returns a
+    confirmation.
 
-    Args:
-        params (SetBedtimeEndInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - hour (int): End hour (5-9, or 0 to disable).
-            - minute (int): End minute (0-59).
-
-    Returns:
-        str: Confirmation message, or an error message.
-
-    Error Handling:
-        - Returns "Error: ..." if the time is outside the valid range (05:00-09:00).
-        - Returns "Error: Not authenticated..." if no session token is configured.
+    Times outside 05:00 to 09:00 are rejected with the reason.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     return await _set_bedtime_time(params, "set_bedtime_end_time", "Bedtime end time")
 
 
-@mcp.tool(
-    name="switch_clear_cache",
-    annotations=tool_annotations("Clear Historic Data Cache", read_only=False, open_world=False),
+@model_tool(
+    "switch_clear_cache",
+    ClearCacheInput,
+    tool_annotations("Clear Historic Data Cache", read_only=False, open_world=False),
 )
 async def switch_clear_cache(params: ClearCacheInput, ctx: Context) -> str:
-    """Clear cached historic monthly play data.
+    """Delete the local copies of past monthly summaries, so they are fetched again.
 
-    Removes locally cached API responses so the next request fetches fresh data
-    from the Nintendo API. Useful when cached data looks stale or unexpected.
+    Use it when switch_get_monthly_summary or switch_get_playtime show old or
+    unexpected numbers for a past month; for a single call, skip_cache=true on
+    those tools does the same without deleting anything. Without arguments it
+    clears everything, or only one device, year or month. It does not contact
+    Nintendo and changes nothing on the console.
 
-    Filters can be combined: clear a specific month, all months for a device,
-    or all cached data at once.
-
-    Args:
-        params (ClearCacheInput): Validated input containing:
-            - device_id (Optional[str]): Limit to this device. Omit for all devices.
-            - year (Optional[int]): Limit to this year. Omit for all years.
-            - month (Optional[int]): Limit to this month (1-12). Requires year.
-
-    Returns:
-        str: Confirmation message with count of files deleted.
+    Returns "✓ Cleared <n> cached file(s)." or "No cached files found matching
+    the given filters."
     """
     try:
         return cleared_message(clear_data_cache(device_id=params.device_id, year=params.year, month=params.month))
