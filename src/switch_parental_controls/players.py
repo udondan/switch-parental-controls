@@ -6,8 +6,7 @@ Provides tools to read player information associated with Nintendo Switch device
 from mcp.server.mcpserver import Context
 
 from switch_parental_controls.models import DeviceInput, PlayerInput, ResponseFormat
-from switch_parental_controls.server import mcp
-from switch_parental_controls.tools import DeviceListing, get_device, list_device_items, tool_annotations
+from switch_parental_controls.tools import DeviceListing, get_device, list_device_items, model_tool, tool_annotations
 from switch_parental_controls.utils import ToolError, format_minutes, handle_error, to_json
 
 
@@ -44,39 +43,21 @@ _PLAYERS = DeviceListing(
 )
 
 
-@mcp.tool(name="switch_list_players", annotations=tool_annotations("List Players on Device", read_only=True))
+@model_tool("switch_list_players", DeviceInput, tool_annotations("List Players on Device", read_only=True))
 async def switch_list_players(params: DeviceInput, ctx: Context) -> str:
-    """List all players (Nintendo accounts) associated with a Nintendo Switch device.
+    """List the players (user profiles) of one device, with their player IDs.
 
-    Returns all player profiles linked to the device, including their nicknames,
-    avatar URLs, and today's playing time.
+    Use it to find a player_id for switch_get_player, switch_get_playtime or
+    switch_get_monthly_summary, or to compare today's playtime of all players.
+    Each player comes with nickname, player ID, avatar URL and today's
+    playtime; the JSON adds the apps played today.
 
-    Args:
-        params (DeviceInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - response_format (str): 'markdown' or 'json' (default: 'markdown').
+    Returns "No players found on device '<name>'." if the device has none.
 
-    Returns:
-        str: List of players with their status, or an error message.
-
-        Success response (JSON):
-        {
-            "count": int,
-            "device_name": str,
-            "players": [
-                {
-                    "player_id": str,
-                    "nickname": str,
-                    "player_image": str,
-                    "today_playing_time_minutes": int,
-                    "apps_played_today": list
-                }
-            ]
-        }
-
-    Error Handling:
-        - Returns "Error: Not authenticated..." if no session token is configured.
-        - Returns "No players found..." if the device has no associated players.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     return await list_device_items(_PLAYERS, params.device_id, params.response_format)
 
@@ -122,25 +103,21 @@ def _player_details(device, player) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool(name="switch_get_player", annotations=tool_annotations("Get Player Details", read_only=True))
+@model_tool("switch_get_player", PlayerInput, tool_annotations("Get Player Details", read_only=True))
 async def switch_get_player(params: PlayerInput, ctx: Context) -> str:
-    """Get detailed information for a specific player on a Nintendo Switch device.
+    """Get today's playtime of one player, per app.
 
-    Returns the player's profile and a list of applications they played today,
-    including the time spent on each application.
+    Use it for "what did <player> play today and for how long". It returns the
+    nickname, avatar URL, today's total and the time of each app played today.
+    For other days use switch_get_playtime, for a month
+    switch_get_monthly_summary, both with player_id.
 
-    Args:
-        params (PlayerInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - player_id (str): The unique player ID (from switch_list_players).
-            - response_format (str): 'markdown' or 'json' (default: 'markdown').
-
-    Returns:
-        str: Detailed player information including apps played today, or an error message.
-
-    Error Handling:
-        - Returns "Error: Not authenticated..." if no session token is configured.
-        - Returns "Error: ..." if the player_id is not found on the device.
+    Returns "Error: Player '<id>' not found on device '<name>'. ..." for an
+    unknown player_id.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     try:
         device = get_device(params.device_id)

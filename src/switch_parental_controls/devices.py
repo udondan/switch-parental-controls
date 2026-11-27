@@ -9,8 +9,7 @@ from datetime import datetime
 from mcp.server.mcpserver import Context
 
 from switch_parental_controls.models import DeviceInput, ListDevicesInput, ResponseFormat
-from switch_parental_controls.server import mcp
-from switch_parental_controls.tools import get_client, get_device, get_timezone, tool_annotations
+from switch_parental_controls.tools import get_client, get_device, get_timezone, model_tool, tool_annotations
 from switch_parental_controls.utils import (
     ToolError,
     format_minutes,
@@ -52,44 +51,19 @@ def _device_list_entry(device) -> list[str]:
     ]
 
 
-@mcp.tool(name="switch_list_devices", annotations=tool_annotations("List Nintendo Switch Devices", read_only=True))
+@model_tool("switch_list_devices", ListDevicesInput, tool_annotations("List Nintendo Switch Devices", read_only=True))
 async def switch_list_devices(params: ListDevicesInput, ctx: Context) -> str:
-    """List all Nintendo Switch devices linked to the authenticated account.
+    """List the Nintendo Switch consoles of the account, with their device IDs.
 
-    Returns a list of all Nintendo Switch consoles associated with the account,
-    including their IDs, names, models, and current playtime status.
+    Start here: every other tool needs a device_id from this list. Each device
+    comes with its name, model, today's playtime, daily limit, remaining time
+    and last sync; the JSON adds the timer mode, bedtime and restriction mode.
+    Use switch_get_device for the settings of one device.
 
-    Args:
-        params (ListDevicesInput): Validated input containing:
-            - response_format (str): 'markdown' or 'json' (default: 'markdown').
-
-    Returns:
-        str: List of devices with their status, or an error message.
-
-        Success response (JSON):
-        {
-            "count": int,
-            "devices": [
-                {
-                    "device_id": str,
-                    "name": str,
-                    "model": str,
-                    "timer_mode": str | null,
-                    "limit_time_minutes": int,
-                    "today_playing_time_minutes": int,
-                    "today_time_remaining_minutes": int,
-                    "bedtime_alarm": str,
-                    "bedtime_end": str,
-                    "forced_termination_mode": bool,
-                    "alarms_enabled": bool,
-                    "last_sync": str
-                }
-            ]
-        }
-
-    Error Handling:
-        - Returns "Error: Not authenticated..." if no session token is configured.
-        - Returns "Error: No Nintendo Switch devices found..." if account has no devices.
+    Returns "No Nintendo Switch devices found on this account." if there are none.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     try:
         client = get_client()
@@ -138,24 +112,21 @@ def _device_details(device) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool(name="switch_get_device", annotations=tool_annotations("Get Nintendo Switch Device Details", read_only=True))
+@model_tool("switch_get_device", DeviceInput, tool_annotations("Get Nintendo Switch Device Details", read_only=True))
 async def switch_get_device(params: DeviceInput, ctx: Context) -> str:
-    """Get detailed status and settings for a specific Nintendo Switch device.
+    """Get the current parental control settings and today's usage of one device.
 
-    Returns comprehensive information about a device including playtime limits,
-    bedtime settings, restriction mode, and current usage.
+    Use it to see how a device is set up: timer mode, daily limit, today's
+    playtime and remaining time, restriction mode (forced termination or alarm
+    only), bedtime alarm and end, and the number of players and tracked apps.
+    For the settings of each day of the week there is no read tool; for
+    playtime history use switch_get_playtime or switch_get_monthly_summary.
 
-    Args:
-        params (DeviceInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - response_format (str): 'markdown' or 'json' (default: 'markdown').
 
-    Returns:
-        str: Detailed device information, or an error message.
-
-    Error Handling:
-        - Returns "Error: Not authenticated..." if no session token is configured.
-        - Returns "Error: Resource not found..." if device_id is invalid.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     try:
         device = get_device(params.device_id)
@@ -169,24 +140,20 @@ async def switch_get_device(params: DeviceInput, ctx: Context) -> str:
         return handle_error(e)
 
 
-@mcp.tool(name="switch_get_today_summary", annotations=tool_annotations("Get Today's Usage Summary", read_only=True))
+@model_tool("switch_get_today_summary", DeviceInput, tool_annotations("Get Today's Usage Summary", read_only=True))
 async def switch_get_today_summary(params: DeviceInput, ctx: Context) -> str:
-    """Get today's usage summary for a Nintendo Switch device.
+    """Get today's totals of one device: playing, disabled and exceeded time.
 
-    Returns the daily summary including total playtime, disabled time,
-    and exceeded time for the current day.
+    Use it for "how long was the console used today". Disabled time is time
+    the device was blocked, exceeded time is play beyond the limit. For one
+    player use switch_get_player, for other days switch_get_playtime.
 
-    Args:
-        params (DeviceInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - response_format (str): 'markdown' or 'json' (default: 'markdown').
-
-    Returns:
-        str: Today's usage summary, or an error message.
-
-    Error Handling:
-        - Returns "Error: Not authenticated..." if no session token is configured.
-        - Returns "No summary available for today." if no data exists yet.
+    Returns "No usage summary available for today (<date>) on device '<name>'."
+    before the first sync of the day.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     try:
         device = get_device(params.device_id)

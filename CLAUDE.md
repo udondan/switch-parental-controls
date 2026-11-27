@@ -51,7 +51,7 @@ This is a dual-mode project: the same logic is exposed as both a **Click CLI** a
 | `playtime.py` | Per-day playtime breakdown tool |
 | `device_settings.py` | Tools that change device settings (limits, timer, bedtime, restrictions) and clear the cache |
 | `players.py`, `applications.py` | Player and application tools |
-| `tools.py` | Helpers shared by the tool modules: `get_device()`, `tool_annotations()`, `list_device_items()` |
+| `tools.py` | Helpers shared by the tool modules: `model_tool()`, `get_device()`, `tool_annotations()`, `list_device_items()` |
 | `client.py` | `switch_client()` async context manager for creating and tearing down the aiohttp session and Nintendo client |
 | `models.py` | Pydantic input models with strict validation (`extra="forbid"`) |
 | `device_cache.py` | Resolves device names→IDs; caches locally to avoid repeated API calls |
@@ -70,7 +70,9 @@ Both CLI and MCP tools share a `_state` dict (in `server.py`) holding:
 
 ### Tool Registration Pattern
 
-MCP tools are registered via `@mcp.tool()` decorators in their respective modules. They are imported in `server.py` after `mcp` is initialized — importing before initialization would break decorator registration.
+MCP tools are registered via `@model_tool(name, InputModel, tool_annotations(...))` (in `tools.py`) in their respective modules; only a tool without arguments uses `@mcp.tool()`. `model_tool` exposes every field of the input model as a top-level argument with its description, builds the model from the arguments (so its validators run) and passes it to the function as `params`. The modules are imported in `server.py` after `mcp` is initialized — importing before initialization would break decorator registration.
+
+The docstring is the tool description clients see: say in the first line what the tool does, then when to use it instead of its sibling tools, what it returns and the exact empty and error messages. Arguments are described in the `Field(description=...)` of the input model, not in the docstring.
 
 Tool bodies follow one pattern: `device = get_device(params.device_id)` inside `try`, and `except Exception as e: return handle_error(e)`. Helpers raise `ToolError` with a finished error message, which `handle_error()` returns unchanged.
 

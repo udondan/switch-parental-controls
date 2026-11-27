@@ -1,12 +1,17 @@
 """Helpers shared by the MCP tool modules."""
 
-from collections.abc import Callable
+import inspect
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Annotated, Any
 from zoneinfo import ZoneInfo
 
+from mcp.server.mcpserver import Context
+from mcp.server.mcpserver.exceptions import ToolError as InvalidArguments
+from pydantic import BaseModel, Field, ValidationError
+
 from switch_parental_controls.models import ResponseFormat
-from switch_parental_controls.server import DEFAULT_TIMEZONE, _state
+from switch_parental_controls.server import DEFAULT_TIMEZONE, _state, mcp
 from switch_parental_controls.utils import ToolError, handle_error, require_client, to_json
 
 
@@ -19,6 +24,46 @@ def tool_annotations(title: str, *, read_only: bool, idempotent: bool = True, op
         "idempotentHint": idempotent,
         "openWorldHint": open_world,
     }
+
+
+ToolFunction = Callable[[Any, Context], Awaitable[str]]
+
+
+def _argument(name: str, field) -> inspect.Parameter:
+    """The tool argument for one field of an input model, with its description and constraints."""
+    annotation = Annotated[(field.annotation, *field.metadata, Field(description=field.description))]
+    default = inspect.Parameter.empty if field.is_required() else field.default
+    return inspect.Parameter(name, inspect.Parameter.KEYWORD_ONLY, default=default, annotation=annotation)
+
+
+def model_tool(name: str, model: type[BaseModel], annotations: dict) -> Callable[[ToolFunction], ToolFunction]:
+    """Register a `(params, ctx)` function as an MCP tool that takes the fields of `model` as its arguments.
+
+    MCP clients see every field as a top-level argument with its description,
+    instead of one `params` object around them. The tool builds the model from
+    the arguments, so its validators still run, and passes it on. The function
+    itself is returned unchanged for the CLI and the tests.
+    """
+
+    def register(fn: ToolFunction) -> ToolFunction:
+        async def tool(ctx: Context, **arguments: Any) -> str:
+            try:
+                params = model(**arguments)
+            except ValidationError as e:
+                # Rejected like arguments that don't match the schema: the client sees why.
+                raise InvalidArguments(str(e)) from e
+            return await fn(params, ctx)
+
+        parameters = [_argument(field_name, field) for field_name, field in model.model_fields.items()]
+        parameters.append(inspect.Parameter("ctx", inspect.Parameter.KEYWORD_ONLY, annotation=Context))
+        tool.__signature__ = inspect.Signature(parameters, return_annotation=str)
+        tool.__annotations__ = {parameter.name: parameter.annotation for parameter in parameters} | {"return": str}
+        tool.__name__ = fn.__name__
+        tool.__doc__ = fn.__doc__
+        mcp.add_tool(tool, name=name, annotations=annotations)
+        return fn
+
+    return register
 
 
 def get_client():

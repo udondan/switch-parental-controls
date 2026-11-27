@@ -12,14 +12,13 @@ from mcp.server.mcpserver import Context
 
 from switch_parental_controls.data_cache import is_current_month
 from switch_parental_controls.models import PlaytimeInput, ResponseFormat
-from switch_parental_controls.server import mcp
 from switch_parental_controls.summary import (
     find_player_entry,
     known_player_nickname,
     load_monthly_summary,
     sorted_daily_stats,
 )
-from switch_parental_controls.tools import get_device, get_timezone, tool_annotations
+from switch_parental_controls.tools import get_device, get_timezone, model_tool, tool_annotations
 from switch_parental_controls.utils import MONTH_LABEL_FORMAT, ToolError, format_minutes, handle_error, to_json
 
 
@@ -205,27 +204,24 @@ def _render_month(data: _Days, device, period: _Period, show_extras: bool) -> st
     return "\n".join(lines)
 
 
-@mcp.tool(name="switch_get_playtime", annotations=tool_annotations("Get Playtime", read_only=True))
+@model_tool("switch_get_playtime", PlaytimeInput, tool_annotations("Get Playtime", read_only=True))
 async def switch_get_playtime(params: PlaytimeInput, ctx: Context) -> str:
-    """Get per-day playtime breakdown for a month, or a single day when day is specified.
+    """Get the playtime per day of a month, or of a single day, for a device or one player.
 
-    For the current month, returns data from the live daily summaries feed,
-    including playing time, disabled time, and exceeded time per day.
-    For past months, returns total playing time per day from the monthly summary.
-    When player_id is provided, filters results to that specific player.
-    When day is provided, returns data for that single day only.
+    Use it for questions about specific days ("how long on Saturday", "each day
+    this month"). Without year and month it covers the current month, from live
+    data that also shows disabled and exceeded time per day; past months come
+    from the monthly summary. With day it returns that day only, with
+    player_id only that player. For today only use switch_get_today_summary,
+    for the totals of a month switch_get_monthly_summary.
 
-    Args:
-        params (PlaytimeInput): Validated input containing:
-            - device_id (str): The unique device ID (from switch_list_devices).
-            - year (Optional[int]): Year (e.g. 2024). Omit for current month.
-            - month (Optional[int]): Month (1-12). Required if year is provided.
-            - day (Optional[int]): Day (1-31). Requires year and month to be set.
-            - player_id (Optional[str]): Filter to a specific player ID.
-            - response_format (str): 'markdown' or 'json' (default: 'markdown').
-
-    Returns:
-        str: Per-day playtime breakdown, or an error message.
+    Returns "No daily data available for <YYYY-MM> on device '<name>'." or
+    "No data available for <date> ..." when there is nothing for the period,
+    and "Error: Player '<id>' not found ..." for an unknown player_id.
+    Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
+    Returns "Error: Not authenticated. ..." without a session token and
+    "Error: Authentication failed. ..." when it expired; then log in again
+    with switch_get_login_url.
     """
     try:
         device = get_device(params.device_id)
