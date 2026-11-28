@@ -270,6 +270,8 @@ class _BedtimeTimeInput(_DeviceModel):
     setting_name: ClassVar[str]
     hour_label: ClassVar[str]
     valid_hours: ClassVar[range]
+    # Latest minute Nintendo accepts in the last valid hour.
+    latest_minute: ClassVar[int] = 59
 
     hour: int
     minute: int
@@ -281,6 +283,8 @@ class _BedtimeTimeInput(_DeviceModel):
         if self.hour != 0 and self.hour not in self.valid_hours:
             first, last = self.valid_hours[0], self.valid_hours[-1]
             raise ValueError(f"{self.hour_label} must be between {first} and {last}, or 0 to disable")
+        if self.hour == self.valid_hours[-1] and self.minute > self.latest_minute:
+            raise ValueError(f"The latest {self.setting_name} is {self.hour:02d}:{self.latest_minute:02d}")
         return self
 
 
@@ -299,13 +303,16 @@ class SetBedtimeEndInput(_BedtimeTimeInput):
     """Input model for setting the bedtime end time."""
 
     hour: int = _hour_field(
-        "Hour when bedtime ends and the device can be used again (5-9). Use 0 with minute=0 to disable.", 9
+        "Hour when bedtime ends and the device can be used again (5-9, 9 only as 09:00). "
+        "Use 0 with minute=0 to disable.",
+        9,
     )
     minute: int = _minute_field("Minute when bedtime ends (0-59).")
 
     setting_name: ClassVar[str] = "bedtime end time"
     hour_label: ClassVar[str] = "Bedtime end hour"
     valid_hours: ClassVar[range] = range(5, 10)
+    latest_minute: ClassVar[int] = 0
 
 
 class PlayerInput(_DeviceModel):

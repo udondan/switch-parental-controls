@@ -26,6 +26,27 @@ def test_bedtime_end_valid():
     assert SetBedtimeEndInput(device_id="d", hour=7, minute=30).minute == 30
 
 
+def test_bedtime_end_after_nine_rejected():
+    with pytest.raises(ValidationError, match="latest bedtime end time is 09:00"):
+        SetBedtimeEndInput(device_id="d", hour=9, minute=15)
+
+
+def test_bedtime_times_match_the_library_bounds():
+    """Every time the models accept passes the checks of pynintendoparental."""
+    from datetime import time
+
+    from pynintendoparental.device._helpers import validate_bedtime_alarm, validate_bedtime_end
+
+    for model, validate in ((SetBedtimeEndInput, validate_bedtime_end), (SetBedtimeAlarmInput, validate_bedtime_alarm)):
+        for hour in range(24):
+            for minute in range(60):
+                try:
+                    model(device_id="d", hour=hour, minute=minute)
+                except ValidationError:
+                    continue
+                validate(time(hour, minute))
+
+
 def test_clear_cache_month_without_year_rejected():
     with pytest.raises(ValidationError, match="year is required"):
         ClearCacheInput(month=3)

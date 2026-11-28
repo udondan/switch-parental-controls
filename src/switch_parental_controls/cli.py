@@ -651,7 +651,7 @@ set_bedtime_end = _setting_command(
     _Setting(
         "set-bedtime-end",
         _HOUR_MINUTE_USAGE,
-        """Set when bedtime ends / device is usable again. HOUR 5-9 (or 0 0 to disable).
+        """Set when bedtime ends / device is usable again. 05:00-09:00 (or 0 0 to disable).
 
     DEVICE is optional if the account has one device.
 
