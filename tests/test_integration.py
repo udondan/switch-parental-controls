@@ -96,6 +96,20 @@ async def test_get_device(first_device_id):
     assert first_device_id in result
 
 
+async def test_get_device_each_day_of_the_week(first_device_id):
+    """The real device should report the restrictions of all seven weekdays."""
+    from switch_parental_controls.devices import switch_get_device
+    from switch_parental_controls.models import DayOfWeek, DeviceInput, ResponseFormat
+
+    params = DeviceInput(device_id=first_device_id, response_format=ResponseFormat.JSON)
+    data = json.loads(await switch_get_device(params, MagicMock()))
+    days = data["each_day_of_the_week"]
+    assert [day["day_of_week"] for day in days] == [d.value for d in DayOfWeek]
+    for day in days:
+        assert isinstance(day["playtime_enabled"], bool)
+        assert isinstance(day["bedtime_enabled"], bool)
+
+
 async def test_get_today_summary(first_device_id):
     """Today's summary should be returned without an auth error."""
     from switch_parental_controls.devices import switch_get_today_summary
@@ -198,6 +212,7 @@ def test_cli_get_device(cli_runner, first_device_id):
     result = cli_runner.invoke(cli, ["get-device", first_device_id])
     assert result.exit_code == 0, result.output
     assert first_device_id in result.output
+    assert "## Each day of the week" in result.output
 
 
 def test_cli_today_summary(cli_runner, first_device_id):
