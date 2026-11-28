@@ -289,7 +289,7 @@ Set the time the Switch unlocks in the morning.
 switch-parental-controls set-bedtime-end [DEVICE] HOUR MINUTE
 ```
 
-- `HOUR`: 5–9
+- `HOUR`: 5–9 (9 only as 09:00)
 - `MINUTE`: 0–59
 - Use `0 0` to **disable** the bedtime end time.
 
