@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.0](https://github.com/udondan/switch-parental-controls/compare/v1.4.0...v1.5.0) (2026-11-28)
+
+
+### Features
+
+* show the restrictions of each weekday in get_device ([#135](https://github.com/udondan/switch-parental-controls/issues/135)) ([706f392](https://github.com/udondan/switch-parental-controls/commit/706f392597fa39cf4fc1b6e3929ec1df99396138))
+
+
+### Bug Fixes
+
+* reject bedtime end times after 09:00 before calling Nintendo ([#136](https://github.com/udondan/switch-parental-controls/issues/136)) ([09bd102](https://github.com/udondan/switch-parental-controls/commit/09bd102a0fc38e8ffb8c56b0b9c495b4b36ec635))
+* send the weekday and bedtime of set_day_restrictions in the form Nintendo accepts ([#133](https://github.com/udondan/switch-parental-controls/issues/133)) ([0d722de](https://github.com/udondan/switch-parental-controls/commit/0d722de7bd465bacd6415e269e98d8fd05b62fdf))
+
 ## [1.4.0](https://github.com/udondan/switch-parental-controls/compare/v1.3.0...v1.4.0) (2026-11-27)
 
 
