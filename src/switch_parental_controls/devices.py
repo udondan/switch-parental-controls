@@ -4,9 +4,10 @@ Provides tools to read the status of Nintendo Switch devices. Usage history
 lives in playtime.py and summary.py, settings in device_settings.py.
 """
 
-from datetime import datetime
+from datetime import datetime, time
 
 from mcp.server.mcpserver import Context
+from pynintendoparental.const import DAYS_OF_WEEK
 
 from switch_parental_controls.models import DeviceInput, ListDevicesInput, ResponseFormat
 from switch_parental_controls.tools import get_client, get_device, get_timezone, model_tool, tool_annotations
@@ -85,6 +86,58 @@ async def switch_list_devices(params: ListDevicesInput, ctx: Context) -> str:
         return handle_error(e)
 
 
+def _api_time(value: dict | None) -> str:
+    """Format a Nintendo {hour, minute} time as HH:MM; a missing time reads as 'disabled'."""
+    value = value or {}
+    return format_time(time(value.get("hour", 0), value.get("minute", 0)))
+
+
+def _day_restriction(day: str, regulation: dict) -> dict:
+    """The playtime limit and bedtime of one weekday."""
+    playtime = regulation.get("timeToPlayInOneDay") or {}
+    bedtime = regulation.get("bedtime") or {}
+    playtime_enabled = bool(playtime.get("enabled"))
+    bedtime_enabled = bool(bedtime.get("enabled"))
+    # Nintendo names the time the device may be used: it starts in the morning
+    # (our bedtime end) and ends in the evening (our alarm).
+    return {
+        "day_of_week": day.upper(),
+        "playtime_enabled": playtime_enabled,
+        "max_playtime_minutes": playtime.get("limitTime") if playtime_enabled else None,
+        "bedtime_enabled": bedtime_enabled,
+        "bedtime_alarm": _api_time(bedtime.get("endingTime")) if bedtime_enabled else "disabled",
+        "bedtime_end": _api_time(bedtime.get("startingTime")) if bedtime_enabled else "disabled",
+    }
+
+
+def _weekday_restrictions(device) -> list[dict] | None:
+    """The restrictions of each day of the week, or None if the device reports none."""
+    settings = device.parental_control_settings
+    regulations = settings.get("playTimerRegulations", {}) if isinstance(settings, dict) else {}
+    days = regulations.get("eachDayOfTheWeekRegulations")
+    if not isinstance(days, dict):
+        return None
+    return [_day_restriction(day, days.get(day) or {}) for day in DAYS_OF_WEEK]
+
+
+def _weekday_lines(days: list[dict] | None) -> list[str]:
+    """Markdown table of the restrictions of each day of the week."""
+    if days is None:
+        return []
+    lines = [
+        "",
+        "## Each day of the week",
+        "Used while the timer mode is EACH_DAY_OF_THE_WEEK.",
+        "",
+        "| Day | Playtime limit | Bedtime alarm | Bedtime ends |",
+        "| --- | --- | --- | --- |",
+    ]
+    for day in days:
+        limit = format_minutes(day["max_playtime_minutes"])
+        lines.append(f"| {day['day_of_week']} | {limit} | {day['bedtime_alarm']} | {day['bedtime_end']} |")
+    return lines
+
+
 def _device_details(device) -> str:
     """Markdown details of one device."""
     restriction_mode = "Forced termination" if device.forced_termination_mode else "Alarm only"
@@ -105,6 +158,7 @@ def _device_details(device) -> str:
         f"- **Alarms enabled**: {'Yes' if device.alarms_enabled else 'No'}",
         f"- **Bedtime alarm**: {format_time(device.bedtime_alarm)}",
         f"- **Bedtime ends**: {format_time(device.bedtime_end)}",
+        *_weekday_lines(_weekday_restrictions(device)),
         "",
         f"**Players**: {len(device.players)}",
         f"**Applications tracked**: {len(device.applications)}",
@@ -118,9 +172,10 @@ async def switch_get_device(params: DeviceInput, ctx: Context) -> str:
 
     Use it to see how a device is set up: timer mode, daily limit, today's
     playtime and remaining time, restriction mode (forced termination or alarm
-    only), bedtime alarm and end, and the number of players and tracked apps.
-    For the settings of each day of the week there is no read tool; for
-    playtime history use switch_get_playtime or switch_get_monthly_summary.
+    only), bedtime alarm and end, the playtime limit and bedtime of each day of
+    the week (as set by switch_set_day_restrictions), and the number of players
+    and tracked apps. For playtime history use switch_get_playtime or
+    switch_get_monthly_summary.
 
 
     Returns "Error: Device '<id>' not found. ..." for an unknown device_id.
@@ -133,7 +188,9 @@ async def switch_get_device(params: DeviceInput, ctx: Context) -> str:
         await device.update()
 
         if params.response_format == ResponseFormat.JSON:
-            return to_json(_device_to_dict(device))
+            details = _device_to_dict(device)
+            details["each_day_of_the_week"] = _weekday_restrictions(device)
+            return to_json(details)
         return _device_details(device)
 
     except Exception as e:

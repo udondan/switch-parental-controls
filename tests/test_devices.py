@@ -129,6 +129,92 @@ async def test_get_device_json(mock_device):
     assert data["device_id"] == "device-001"
     assert data["name"] == "My Switch"
     assert data["limit_time_minutes"] == 120
+    assert data["each_day_of_the_week"] is None
+
+
+def _weekday_settings():
+    """parental_control_settings with a limit on Monday and a bedtime on Friday."""
+    days = {day: {} for day in ("tuesday", "wednesday", "thursday", "saturday", "sunday")}
+    days["monday"] = {
+        "timeToPlayInOneDay": {"enabled": True, "limitTime": 90},
+        "bedtime": {"enabled": False, "startingTime": {"hour": 6, "minute": 0}},
+    }
+    days["friday"] = {
+        "timeToPlayInOneDay": {"enabled": False, "limitTime": None},
+        "bedtime": {
+            "enabled": True,
+            "startingTime": {"hour": 7, "minute": 30},
+            "endingTime": {"hour": 21, "minute": 15},
+        },
+    }
+    return {"playTimerRegulations": {"eachDayOfTheWeekRegulations": days}}
+
+
+@pytest.mark.asyncio
+async def test_get_device_each_day_of_the_week_json(mock_device):
+    """JSON lists every weekday, with the alarm from endingTime and the end from startingTime."""
+    from switch_parental_controls.devices import switch_get_device
+    from switch_parental_controls.models import DeviceInput, ResponseFormat
+
+    mock_device.parental_control_settings = _weekday_settings()
+    params = DeviceInput(device_id="device-001", response_format=ResponseFormat.JSON)
+    days = json.loads(await switch_get_device(params, MagicMock()))["each_day_of_the_week"]
+
+    assert [d["day_of_week"] for d in days] == [
+        "MONDAY",
+        "TUESDAY",
+        "WEDNESDAY",
+        "THURSDAY",
+        "FRIDAY",
+        "SATURDAY",
+        "SUNDAY",
+    ]
+    assert days[0] == {
+        "day_of_week": "MONDAY",
+        "playtime_enabled": True,
+        "max_playtime_minutes": 90,
+        "bedtime_enabled": False,
+        "bedtime_alarm": "disabled",
+        "bedtime_end": "disabled",
+    }
+    assert days[4] == {
+        "day_of_week": "FRIDAY",
+        "playtime_enabled": False,
+        "max_playtime_minutes": None,
+        "bedtime_enabled": True,
+        "bedtime_alarm": "21:15",
+        "bedtime_end": "07:30",
+    }
+    assert days[1]["playtime_enabled"] is False
+    assert days[1]["bedtime_alarm"] == "disabled"
+
+
+@pytest.mark.asyncio
+async def test_get_device_each_day_of_the_week_markdown(mock_device):
+    """Markdown shows a table row per weekday."""
+    from switch_parental_controls.devices import switch_get_device
+    from switch_parental_controls.models import DeviceInput
+
+    mock_device.parental_control_settings = _weekday_settings()
+    result = await switch_get_device(DeviceInput(device_id="device-001"), MagicMock())
+
+    assert "## Each day of the week" in result
+    assert "| MONDAY | 1h 30m | disabled | disabled |" in result
+    assert "| FRIDAY | no limit | 21:15 | 07:30 |" in result
+    assert "| SUNDAY | no limit | disabled | disabled |" in result
+
+
+@pytest.mark.asyncio
+async def test_get_device_without_weekday_settings_has_no_table(mock_device):
+    """Without eachDayOfTheWeekRegulations the markdown leaves the section out."""
+    from switch_parental_controls.devices import switch_get_device
+    from switch_parental_controls.models import DeviceInput
+
+    mock_device.parental_control_settings = {"playTimerRegulations": {}}
+    result = await switch_get_device(DeviceInput(device_id="device-001"), MagicMock())
+
+    assert "Each day of the week" not in result
+    assert "Players" in result
 
 
 # --- switch_get_today_summary ---

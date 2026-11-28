@@ -359,7 +359,7 @@ def list_devices(obj: dict, fmt: str) -> None:
 @_FORMAT_OPTION
 @click.pass_obj
 def get_device(obj: dict, device: str | None, fmt: str) -> None:
-    """Get detailed status for a specific device."""
+    """Get detailed status for a specific device, including the rules of each weekday."""
     from switch_parental_controls.devices import switch_get_device
 
     _run_tool(obj, switch_get_device, _device_input(fmt), device)

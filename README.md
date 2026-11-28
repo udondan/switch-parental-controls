@@ -391,7 +391,7 @@ Requires Docker Desktop with the MCP Toolkit enabled.
 | Tool                          | Description                                                              |
 | ----------------------------- | ------------------------------------------------------------------------ |
 | `switch_list_devices`         | List all Nintendo Switch devices on the account                          |
-| `switch_get_device`           | Get detailed status for a specific device                                |
+| `switch_get_device`           | Get detailed status for a device, including the rules of each weekday    |
 | `switch_get_today_summary`    | Get today's usage summary for a device                                   |
 | `switch_get_monthly_summary`  | Get monthly usage summary (optionally for a specific month)              |
 | `switch_get_playtime`         | Get per-day playtime breakdown for a month (current month or historical) |

@@ -135,7 +135,7 @@ switch-parental-controls list-devices [--format markdown|json]
 ```
 
 #### `get-device`
-Get detailed status for a specific device.
+Get detailed status for a specific device: timer mode, limits, bedtime, restriction mode, and the playtime limit and bedtime of each day of the week (the values `set-day-restrictions` sets).
 
 ```
 switch-parental-controls get-device [DEVICE] [--format markdown|json]
