@@ -1,0 +1,109 @@
+[settings]
+jobs = 1
+# Python comes from .python-version, which uv reads too. Renovate bumps it with the Docker image.
+idiomatic_version_file_enable_tools = ["python"]
+
+[tools]
+uv = "0.13.10"
+# Workflow linters for the actions job of the Test workflow, which installs only these three.
+actionlint = "1.7.12"
+# The runner's own shellcheck is older and reports differently. actionlint runs it over every `run:` block.
+shellcheck = "0.11.0"
+zizmor = "1.33.1"
+# The `docker mcp` plugin for the docker job of the Test workflow. Docker Desktop ships its own.
+"github:docker/mcp-gateway" = "0.44.1"
+# For the task lint-tools. mcp-tdqs is published by Glama, which scores the
+# server. It has few downloads so far, which mise only installs when allowed.
+node = "26"
+"npm:mcp-tdqs" = { version = "0.2.0", allow_low_downloads = true }
+
+[tasks.install]
+description = "Create .venv and install all dependencies from uv.lock"
+run = "uv sync"
+
+[tasks.test]
+description = "Run tests"
+run = "uv run pytest tests/ -v -m 'not integration'"
+
+[tasks.test-coverage]
+description = "Run tests and write the coverage report to coverage.xml"
+run = "uv run pytest tests/ -v -m 'not integration' --cov=switch_parental_controls --cov-report=xml --cov-report=term"
+
+[tasks.test-integration]
+description = "Run integration tests against the real Nintendo API (requires .env with SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN)"
+run = "uv run pytest tests/test_integration.py -v -m integration"
+
+[tasks.run]
+description = "Run the MCP server"
+run = "uv run python -m switch_parental_controls mcp"
+
+[tasks.lint]
+description = "Run linter and check formatting"
+run = [
+  "uv run ruff check src/ tests/",
+  "uv run ruff format --check src/ tests/",
+]
+
+[tasks.lint-tools]
+description = "Lint the MCP tool descriptions (Tool Definition Quality Score); warnings fail"
+# tdqs has no way to suppress a finding. switch_set_day_restrictions takes four
+# required arguments and switch_clear_cache none, which tdqs reports as a
+# possible shadowing. The two tools do unrelated things, so that warning is
+# allowed; every other warning or error fails. tdqs.md holds the full report.
+run = '''
+set -e
+server='uv run python -m switch_parental_controls mcp'
+tdqs lint --command "$server" --server-name switch-parental-controls --fail-on never --format markdown --output tdqs.md
+tdqs lint --command "$server" --server-name switch-parental-controls --fail-on never --format json --output tdqs.json
+jq -r '.findings[]
+  | select(.severity == "error" or .severity == "warning")
+  | select(.rule == "shadow-candidate" and .tool == "switch_set_day_restrictions" | not)
+  | "\(.severity) \(.rule): \(.tool)"' tdqs.json > tdqs-failures.txt
+if [ -s tdqs-failures.txt ]; then
+  cat tdqs-failures.txt
+  echo "See tdqs.md for the details."
+  exit 1
+fi
+echo "tdqs lint: no findings beyond the known shadow-candidate warning."
+'''
+
+[tasks.format]
+description = "Format code"
+run = "uv run ruff format src/ tests/"
+
+[tasks.lint-fix]
+description = "Run linter and fix issues"
+run = "uv run ruff check --fix src/ tests/"
+
+[tasks.inspect]
+description = "Open MCP Inspector connected to the switch_parental_controls server (requires Node.js / npx on PATH)"
+run = "npx @modelcontextprotocol/inspector uv run python -m switch_parental_controls mcp"
+
+[tasks.build]
+description = "Build the wheel and sdist into dist/"
+run = "uv build --clear"
+
+[tasks.docker-build]
+description = "Build the Docker image from the wheel in dist/"
+depends = ["build"]
+run = "docker build -t udondan/switch-parental-controls ."
+
+[tasks.docker-register]
+description = "Add the server to a Docker MCP Toolkit profile (created if missing)"
+usage = 'arg "[profile]" default="switch-parental-controls" help="Profile ID"'
+# docker mcp only reads server files from its catalogs directory.
+run = """
+catalogs="$HOME/.docker/mcp/catalogs"
+mkdir -p "$catalogs"
+cp docker-mcp.yml "$catalogs/switch-parental-controls.yml"
+server="file://$catalogs/switch-parental-controls.yml"
+if docker mcp profile show "$usage_profile" >/dev/null 2>&1; then
+  docker mcp profile server add "$usage_profile" --server "$server"
+else
+  docker mcp profile create --name "$usage_profile" --id "$usage_profile" --server "$server"
+fi
+"""
+
+[tasks.docker]
+description = "Build the image and add it to a Docker MCP Toolkit profile"
+depends = ["docker-build", "docker-register"]

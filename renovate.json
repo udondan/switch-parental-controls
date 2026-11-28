@@ -1,0 +1,34 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>udondan/renovate-config"],
+  "packageRules": [
+    {
+      "description": "Python in the Docker image and .python-version, which uv, mise and CI read",
+      "matchManagers": ["dockerfile", "pyenv"],
+      "matchDepNames": ["python"],
+      "groupName": "python"
+    },
+    {
+      "description": "uv in mise and the uv image the Docker build copies it from",
+      "matchManagers": ["mise", "dockerfile"],
+      "matchDepNames": ["uv", "ghcr.io/astral-sh/uv"],
+      "groupName": "uv"
+    },
+    {
+      "description": "The final stage base image ships in the Docker image.",
+      "matchManagers": ["dockerfile"],
+      "matchDepTypes": ["final"],
+      "semanticCommitType": "build"
+    },
+    {
+      "description": "Indirect dependencies in uv.lock ship in the Docker image.",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["uv.lock"],
+      "semanticCommitType": "build"
+    }
+  ],
+  "lockFileMaintenance": {
+    "description": "The Docker image installs the locked dependencies, so lock file maintenance ships to users.",
+    "semanticCommitType": "build"
+  }
+}

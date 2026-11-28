@@ -1,0 +1,48 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.udondan/switch-parental-controls",
+  "title": "Nintendo Switch Parental Controls (unofficial)",
+  "description": "Monitor and manage Nintendo Switch parental controls: playtime limits, bedtime, players, app usage",
+  "version": "1.5.0",
+  "repository": {
+    "url": "https://github.com/udondan/switch-parental-controls",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "switch-parental-controls",
+      "version": "1.5.0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "SWITCH_PARENTAL_CONTROLS_SESSION_TOKEN",
+          "description": "Nintendo session token. Optional if `switch-parental-controls login` stored one, or for logging in through the MCP tools",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "SWITCH_PARENTAL_CONTROLS_TIMEZONE",
+          "description": "IANA timezone, e.g. America/New_York",
+          "isRequired": false,
+          "default": "Europe/London"
+        },
+        {
+          "name": "SWITCH_PARENTAL_CONTROLS_LANG",
+          "description": "Language code, e.g. en-US",
+          "isRequired": false,
+          "default": "en-GB"
+        }
+      ]
+    }
+  ]
+}
