@@ -244,9 +244,9 @@ switch-parental-controls set-day-restrictions [DEVICE] DAY [OPTIONS]
 |------|-------------|
 | `--bedtime-enabled` | Enable bedtime restriction for this day |
 | `--bedtime-disabled` | Disable bedtime restriction for this day |
-| `--bedtime-alarm-hour H` | Alarm hour, 16–23 (required when `--bedtime-enabled`) |
+| `--bedtime-alarm-hour H` | Alarm hour, 16–23; 23 only as 23:00 (required when `--bedtime-enabled`) |
 | `--bedtime-alarm-minute M` | Alarm minute, 0–59 (default: 0) |
-| `--bedtime-end-hour H` | End hour, 5–9 (required when `--bedtime-enabled`) |
+| `--bedtime-end-hour H` | End hour, 5–9; 9 only as 09:00 (required when `--bedtime-enabled`) |
 | `--bedtime-end-minute M` | End minute, 0–59 (default: 0) |
 
 ---

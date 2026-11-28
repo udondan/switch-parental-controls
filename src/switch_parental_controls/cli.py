@@ -546,10 +546,18 @@ set_timer_mode = _setting_command(
 )  # noqa: E501
 @click.option("--bedtime-enabled/--bedtime-disabled", required=True, help="Enable/disable bedtime restrictions.")
 @click.option(
-    "--bedtime-alarm-hour", type=int, default=None, help="Alarm hour (16-23). Required with --bedtime-enabled."
-)  # noqa: E501
+    "--bedtime-alarm-hour",
+    type=int,
+    default=None,
+    help="Alarm hour (16-23, 23 only as 23:00). Required with --bedtime-enabled.",
+)
 @click.option("--bedtime-alarm-minute", type=int, default=0, show_default=True, help="Alarm minute (0-59).")
-@click.option("--bedtime-end-hour", type=int, default=None, help="End hour (5-9). Required with --bedtime-enabled.")
+@click.option(
+    "--bedtime-end-hour",
+    type=int,
+    default=None,
+    help="End hour (5-9, 9 only as 09:00). Required with --bedtime-enabled.",
+)
 @click.option("--bedtime-end-minute", type=int, default=0, show_default=True, help="End minute (0-59).")
 @click.pass_obj
 def set_day_restrictions(obj: dict, args: tuple, **restrictions: Any) -> None:

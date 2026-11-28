@@ -164,16 +164,19 @@ def _describe_restrictions(params: SetDayRestrictionsInput, device) -> str:
 
 
 async def _set_day_restrictions(device, params: SetDayRestrictionsInput) -> None:
+    # pynintendoparental names the bedtime as the time the device may be used:
+    # it starts in the morning (our bedtime end) and ends in the evening (our
+    # alarm). Its weekdays are lowercase.
     bedtime_start = None
     bedtime_end = None
     if params.bedtime_enabled:
-        bedtime_start = time(params.bedtime_alarm_hour, params.bedtime_alarm_minute or 0)
-        bedtime_end = time(params.bedtime_end_hour, params.bedtime_end_minute or 0)
+        bedtime_start = time(params.bedtime_end_hour, params.bedtime_end_minute or 0)
+        bedtime_end = time(params.bedtime_alarm_hour, params.bedtime_alarm_minute or 0)
 
     await device.set_daily_restrictions(
         enabled=params.playtime_enabled,
         bedtime_enabled=params.bedtime_enabled,
-        day_of_week=params.day_of_week.value,
+        day_of_week=params.day_of_week.value.lower(),
         bedtime_start=bedtime_start,
         bedtime_end=bedtime_end,
         max_daily_playtime=params.max_playtime_minutes if params.playtime_enabled else None,

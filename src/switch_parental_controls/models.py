@@ -177,7 +177,7 @@ class SetDayRestrictionsInput(_DeviceModel):
     bedtime_enabled: bool = Field(..., description="Whether to enable bedtime restrictions for this day.")
     bedtime_alarm_hour: int | None = Field(
         default=None,
-        description="Hour for the bedtime alarm (16-23). Required if bedtime_enabled is true.",
+        description="Hour for the bedtime alarm (16-23, 23 only as 23:00). Required if bedtime_enabled is true.",
         ge=16,
         le=23,
     )
@@ -189,7 +189,10 @@ class SetDayRestrictionsInput(_DeviceModel):
     )
     bedtime_end_hour: int | None = Field(
         default=None,
-        description="Hour when bedtime ends / device can be used again (5-9). Required if bedtime_enabled is true.",
+        description=(
+            "Hour when bedtime ends / device can be used again (5-9, 9 only as 09:00). "
+            "Required if bedtime_enabled is true."
+        ),
         ge=5,
         le=9,
     )
@@ -215,6 +218,15 @@ class SetDayRestrictionsInput(_DeviceModel):
             raise ValueError("bedtime_alarm_hour and bedtime_end_hour are required when bedtime_enabled is true")
         if not self.bedtime_enabled and self._has_bedtime_values():
             raise ValueError("bedtime fields must not be set when bedtime_enabled is false")
+        return self
+
+    @model_validator(mode="after")
+    def validate_bedtime_bounds(self) -> "SetDayRestrictionsInput":
+        """Nintendo takes 23:00 as the latest alarm and 09:00 as the latest end."""
+        if self.bedtime_alarm_hour == 23 and self.bedtime_alarm_minute:
+            raise ValueError("the latest bedtime alarm is 23:00")
+        if self.bedtime_end_hour == 9 and self.bedtime_end_minute:
+            raise ValueError("the latest bedtime end is 09:00")
         return self
 
 

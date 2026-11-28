@@ -394,7 +394,7 @@ async def test_set_day_restrictions_playtime_only(mock_device):
     mock_device.set_daily_restrictions.assert_called_once_with(
         enabled=True,
         bedtime_enabled=False,
-        day_of_week="MONDAY",
+        day_of_week="monday",
         bedtime_start=None,
         bedtime_end=None,
         max_daily_playtime=120,
@@ -428,9 +428,10 @@ async def test_set_day_restrictions_bedtime_only(mock_device):
     mock_device.set_daily_restrictions.assert_called_once_with(
         enabled=False,
         bedtime_enabled=True,
-        day_of_week="FRIDAY",
-        bedtime_start=time(21, 30),
-        bedtime_end=time(7, 0),
+        day_of_week="friday",
+        # pynintendoparental: bedtime_start is the morning end, bedtime_end the evening alarm
+        bedtime_start=time(7, 0),
+        bedtime_end=time(21, 30),
         max_daily_playtime=None,
     )
     assert "21:30" in result
@@ -515,6 +516,75 @@ def test_set_day_restrictions_bedtime_enabled_without_hours_rejected():
             playtime_enabled=False,
             bedtime_enabled=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("alarm", "end", "message"),
+    [((23, 30), (7, 0), "latest bedtime alarm is 23:00"), ((21, 0), (9, 15), "latest bedtime end is 09:00")],
+)
+def test_set_day_restrictions_bedtime_after_the_latest_time_rejected(alarm, end, message):
+    """Nintendo takes 23:00 as the latest alarm and 09:00 as the latest end."""
+    from pydantic import ValidationError
+
+    from switch_parental_controls.models import SetDayRestrictionsInput
+
+    with pytest.raises(ValidationError, match=message):
+        SetDayRestrictionsInput(
+            device_id="device-001",
+            day_of_week="MONDAY",
+            playtime_enabled=False,
+            bedtime_enabled=True,
+            bedtime_alarm_hour=alarm[0],
+            bedtime_alarm_minute=alarm[1],
+            bedtime_end_hour=end[0],
+            bedtime_end_minute=end[1],
+        )
+
+
+def test_set_day_restrictions_latest_times_accepted():
+    """23:00 and 09:00 themselves are valid."""
+    from switch_parental_controls.models import SetDayRestrictionsInput
+
+    params = SetDayRestrictionsInput(
+        device_id="device-001",
+        day_of_week="MONDAY",
+        playtime_enabled=False,
+        bedtime_enabled=True,
+        bedtime_alarm_hour=23,
+        bedtime_end_hour=9,
+    )
+    assert (params.bedtime_alarm_hour, params.bedtime_end_hour) == (23, 9)
+
+
+@pytest.mark.asyncio
+async def test_set_day_restrictions_passes_the_real_library_checks(mock_device):
+    """The arguments must pass the weekday and bedtime checks of pynintendoparental itself."""
+    from pynintendoparental.const import DAYS_OF_WEEK
+    from pynintendoparental.device._helpers import (
+        validate_daily_restriction_bedtime_end,
+        validate_daily_restriction_bedtime_start,
+    )
+
+    from switch_parental_controls.device_settings import switch_set_day_restrictions
+    from switch_parental_controls.models import SetDayRestrictionsInput
+
+    await switch_set_day_restrictions(
+        SetDayRestrictionsInput(
+            device_id="device-001",
+            day_of_week="SUNDAY",
+            playtime_enabled=False,
+            bedtime_enabled=True,
+            bedtime_alarm_hour=20,
+            bedtime_end_hour=6,
+            bedtime_end_minute=30,
+        ),
+        MagicMock(),
+    )
+
+    kwargs = mock_device.set_daily_restrictions.call_args.kwargs
+    assert kwargs["day_of_week"] in DAYS_OF_WEEK
+    validate_daily_restriction_bedtime_start(kwargs["bedtime_start"])
+    validate_daily_restriction_bedtime_end(kwargs["bedtime_end"])
 
 
 # --- switch_set_bedtime_end_time ---
